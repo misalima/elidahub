@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FelixHub
 
-## Getting Started
+O FelixHub é uma plataforma abrangente desenvolvida para centralizar e otimizar a comunicação entre a escola e toda a comunidade escolar. Nosso objetivo é criar um ambiente unificado onde informações, agendamentos e interações fluam de forma eficiente e transparente.
 
-First, run the development server:
+## Módulo Inicial: Vem que Dá Tempo (VQDT)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+O módulo "Vem que Dá Tempo" (VQDT) é dedicado ao gerenciamento de agendamentos e à comunicação direta entre os bolsistas do programa (coordenadora e professores) e os cidadãos participantes.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Funcionalidades Principais do VQDT:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+*   **Gerenciamento de Agendamentos:** Criação, visualização, edição e controle de agendamentos para cursos e provas.
+*   **Comunicação via WhatsApp:** Envio automático de mensagens de confirmação, avisos em massa, e reagendamentos para os cidadãos inscritos.
+*   **Bot Automatizado:** Bot que responde dúvidas frequentes por texto, interpreta respostas simples dos cidadãos e encaminha casos complexos para atendimento humano.
+*   **Painel de Gestão:** Interface web para a equipe gestora acompanhar agendamentos, histórico de mensagens, status de atendimento e enviar mensagens diretamente.
+*   **Controle de Presença e Metas:** Acompanhamento do status de comparecimento e definição de metas mensais de agendamento.
+*   **Relatórios e Exportação:** Geração de relatórios básicos e exportação de dados em formatos CSV ou Excel.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Tecnologias Utilizadas:
 
-## Learn More
+*   **Frontend:** [Next.js](https://nextjs.org/) com App Router.
+*   **Banco de Dados e Autenticação:** [Supabase](https://supabase.com/) (PostgreSQL e Supabase Auth).
+*   **Componentes UI:** [Shadcn UI](https://ui.shadcn.com/) e Tailwind CSS.
+*   **Integração WhatsApp:** Provavelmente API Z-API para envio e recebimento de mensagens (ainda analisando outras possíveis soluções).
+*   **Bot:** Implementação própria com possibilidade de integração opcional com OpenAI GPT.
 
-To learn more about Next.js, take a look at the following resources:
+### Estrutura do Banco de Dados (Schemas `public` e `vqdt`):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+O banco de dados é dividido em dois schemas principais para organizar as informações:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+*   **`public`:** Tabelas gerais como perfis de usuários (`profiles`), mensagens (`messages`) e FAQ (`faq_entries`).
+*   **`vqdt`:** Tabelas específicas do módulo, incluindo cidadãos (`citizens`), agendamentos (`schedules`), agendamentos de cidadãos (`citizen_schedules`), metas mensais (`monthly_targets`) e lotes de mensagens em massa (`bulk_message_batches`).
 
-## Deploy on Vercel
+### Diagramas do banco
+O primeiro é o diagrama do schema "public". O segundo, do schema "vqdt": 
+<figure>
+  <img width="589" height="639" alt="public_erd" src="https://github.com/user-attachments/assets/0ba61d2d-2c03-4575-a92c-b51a24d1309d" />
+</figure> 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<figure>
+  <img width="655" height="695" alt="vqdt_erd" src="https://github.com/user-attachments/assets/1ba3e65f-e8af-4bad-8110-fe91aa739d1b" />
+</figure> 
+
