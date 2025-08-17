@@ -14,7 +14,7 @@ export default function LoginPage() {
     if (error) {
       alert(`Erro: ${error}`);
     } else {
-      window.location.href = "/"; 
+      window.location.href = "/dashboard"; 
     }
   };
 
