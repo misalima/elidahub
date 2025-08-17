@@ -32,7 +32,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .select('role')
           .eq('id', session.user.id)
           .single();
-        console.log('Supabase role data:', data, 'Error:', error);
         if (!error && data) {
           setUser({ id: session.user.id, email: session.user.email || '', role: data.role });
         } else {
