@@ -1,7 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { NextApiRequest, NextApiResponse } from "next";
 
-export async function GET(_req: NextApiRequest, _res: NextApiResponse) {
+export async function GET(_req: Request) {
   const { error } = await supabaseAdmin.from('profiles').select('id').limit(1);
 
   if (error) {
