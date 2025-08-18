@@ -39,5 +39,76 @@ O primeiro é o diagrama do schema "public". O segundo, do schema "vqdt":
 
 <figure>
   <img width="655" height="695" alt="vqdt_erd" src="https://github.com/user-attachments/assets/1ba3e65f-e8af-4bad-8110-fe91aa739d1b" />
-</figure> 
+</figure>
+
+## Como rodar o projeto
+
+### Pré-requisitos
+
+1. **Node.js**: Certifique-se de ter o Node.js instalado (versão recomendada: 18 ou superior).
+2. **Gerenciador de pacotes**: Utilize o `npm` ou `yarn` para instalar as dependências.
+3. **Variáveis de ambiente**: Configure as variáveis de ambiente conforme o arquivo `.env.example`.
+
+### Passos para rodar localmente
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/misalima/felixhub.git
+   cd felixhub
+   ```
+
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+3. Configure as variáveis de ambiente:
+   - Copie o arquivo `.env.example` para `.env.local`:
+     ```bash
+     cp .env.example .env.local
+     ```
+   - Edite o arquivo `.env.local` e preencha os valores necessários.
+
+4. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+
+5. Acesse o projeto no navegador:
+   - O projeto estará disponível em [http://localhost:3000](http://localhost:3000).
+
+### Comandos úteis
+
+- **Iniciar o servidor de desenvolvimento**:
+  ```bash
+  npm run dev
+  ```
+- **Build para produção**:
+  ```bash
+  npm run build
+  ```
+- **Iniciar o servidor em produção**:
+  ```bash
+  npm run start
+  ```
+- **Verificar erros de lint**:
+  ```bash
+  npm run lint
+  ```
+- **Corrigir erros de lint**:
+  ```bash
+  npm run lint:fix
+  ```
+- **Checar tipos TypeScript**:
+  ```bash
+  npm run type-check
+  ```
+
+### Fluxo de login
+
+1. Acesse a página de login em `/vqdt/login`.
+2. Insira suas credenciais.
+3. Após o login, você será redirecionado para o dashboard.
+
+
 

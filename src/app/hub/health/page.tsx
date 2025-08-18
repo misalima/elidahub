@@ -8,7 +8,7 @@ export default function Health() {
 
   async function checkHealth() {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/healthcheck`);
+      const res = await fetch(`${API_BASE_URL}/healthcheck`);
       if (!res.ok) throw new Error("Network response was not ok");
       const data = await res.json();
       return data.status === "connected";
