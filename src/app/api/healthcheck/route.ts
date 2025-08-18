@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function GET(_req: Request) {
+  
   const { error } = await supabaseAdmin.from('profiles').select('id').limit(1);
 
   if (error) {
@@ -15,3 +16,4 @@ export async function GET(_req: Request) {
     headers: { 'Content-Type': 'application/json' },
   });
 }
+
