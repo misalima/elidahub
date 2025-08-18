@@ -54,7 +54,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Roda em tudo, exceto internos do Next e arquivos com extensão
-    '/((?!_next/|.*\\..*).*)',
+    // Roda em tudo, exceto internos do Next, arquivos com extensão e rotas de API
+    '/((?!_next/|api/|.*\\..*).*)',
   ],
 };
