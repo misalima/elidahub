@@ -109,7 +109,7 @@ export default function VqdtLayout({ children }: VqdtLayoutProps) {
         router={router}
       />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 md:p-10 bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-b border-[var(--sidebar-border)] flex items-center px-2 md:px-8 shadow-sm gap-2 justify-between sticky top-0 z-30">
+        <header className="h-16 sticky bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-b border-[var(--sidebar-border)] flex items-center px-2 md:px-8 shadow-sm gap-2 justify-between top-0 z-30">
           <Button
             variant="ghost"
             size="icon"

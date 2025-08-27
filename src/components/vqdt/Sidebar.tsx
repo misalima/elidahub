@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-r border-[var(--sidebar-border)] flex flex-col shadow-sm h-screen
         fixed z-50 top-0 left-0 w-56 px-0
         transition-transform duration-300 ease-in-out
-        md:static md:z-auto md:flex md:translate-x-0 md:opacity-100 md:pointer-events-auto
+        md:sticky md:z-auto md:flex md:translate-x-0 md:opacity-100 md:pointer-events-auto
         ${sidebarMobile ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}
         md:transition-all md:duration-300 md:ease-in-out
         ${(sidebarOpen || sidebarHover) && !sidebarMobile ? 'md:w-56 md:px-0' : 'md:w-16 md:px-2'}
@@ -136,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={logout}
           >
             <LogOut className="size-5" />
-            {showMenuText && (sidebarOpen || sidebarHover || sidebarMobile) && <span className="text-white">Sair</span>}
+            {showMenuText && (sidebarOpen || sidebarHover || sidebarMobile) && <p>Sair</p>}
           </Button>
         </div>
       </div>
