@@ -122,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Logout at bottom, com espaçamento inferior agradável */}
         <div className={`flex pb-4 ${isSidebarExpanded ? 'md:justify-start md:px-4 justify-end px-4' : 'justify-center'}`}>
           <Button
-            variant="destructive"
+            variant="ghost"
             className={`flex items-center gap-2 transition-all duration-150 hover:text-white w-full ${sidebarOpen || sidebarHover || sidebarMobile ? 'px-0' : ''}`}
             style={{ transition: 'all 0.15s cubic-bezier(.4,0,.2,1)' }}
             onMouseEnter={e => {
