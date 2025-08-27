@@ -1,14 +1,36 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/components/vqdt/Sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { useAuth } from "@/providers/AuthProvider";
-import { useRouter } from "next/navigation";
-import { LayoutDashboard, FileBarChart2, Settings, ChevronRight } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  FileBarChart2,
+  Settings,
+  ChevronRight,
+} from "lucide-react";
 
-export default function VqdtLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
+interface VqdtLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function VqdtLayout({ children }: VqdtLayoutProps) {
+  const pathname = usePathname();
+
+  // Define o título da página conforme a rota
+  let pageTitle = "";
+  if (pathname?.startsWith("/vqdt/dashboard")) {
+    pageTitle = "Visão Geral";
+  } else if (pathname?.startsWith("/vqdt/reports")) {
+    pageTitle = "Relatórios";
+  } else if (pathname?.startsWith("/vqdt/settings")) {
+    pageTitle = "Configurações";
+  }
+  const [sidebarOpen, setSidebarOpen] = useState(
+    typeof window !== "undefined" ? window.innerWidth >= 768 : true
+  );
   const [sidebarMobile, setSidebarMobile] = useState(false);
   const [sidebarHover, setSidebarHover] = useState(false);
   const [showMenuText, setShowMenuText] = useState(false);
@@ -17,16 +39,17 @@ export default function VqdtLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
 
   const sidebarMenu = [
-    { label: "Dashboard", href: "/vqdt/dashboard", icon: LayoutDashboard },
+    { label: "Visão Geral", href: "/vqdt/dashboard", icon: LayoutDashboard },
     { label: "Relatórios", href: "/vqdt/reports", icon: FileBarChart2 },
     { label: "Configurações", href: "/vqdt/settings", icon: Settings },
   ];
 
-  const isSidebarExpanded = sidebarOpen || sidebarHover || sidebarMobile || showMenuText;
+  const isSidebarExpanded =
+    sidebarOpen || sidebarHover || sidebarMobile || showMenuText;
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-    if ((sidebarHover || sidebarOpen || sidebarMobile)) {
+    if (sidebarHover || sidebarOpen || sidebarMobile) {
       timeout = setTimeout(() => setShowMenuText(true), 180);
     } else {
       setShowMenuText(false);
@@ -58,7 +81,11 @@ export default function VqdtLayout({ children }: { children: React.ReactNode }) 
     <div className="flex min-h-screen bg-muted">
       {/* Mobile sidebar overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 md:hidden ${sidebarMobile ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 md:hidden ${
+          sidebarMobile
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
         onClick={() => setSidebarMobile(false)}
       />
       <Sidebar
@@ -70,7 +97,7 @@ export default function VqdtLayout({ children }: { children: React.ReactNode }) 
         isSidebarExpanded={isSidebarExpanded}
         sidebarMenu={sidebarMenu}
         onSidebarToggle={() => {
-          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          if (typeof window !== "undefined" && window.innerWidth < 768) {
             setSidebarMobile(false);
           } else {
             setSidebarOpen((v) => !v);
@@ -82,7 +109,7 @@ export default function VqdtLayout({ children }: { children: React.ReactNode }) 
         router={router}
       />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-b border-[var(--sidebar-border)] flex items-center px-2 md:px-8 shadow-sm gap-2 justify-between sticky top-0 z-30">
+        <header className="h-16 md:p-10 bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-b border-[var(--sidebar-border)] flex items-center px-2 md:px-8 shadow-sm gap-2 justify-between sticky top-0 z-30">
           <Button
             variant="ghost"
             size="icon"
@@ -92,10 +119,13 @@ export default function VqdtLayout({ children }: { children: React.ReactNode }) 
           >
             <ChevronRight className="size-6" />
           </Button>
-          <span className="text-base md:text-lg font-semibold truncate">Olá, {user.email} ({user.role})</span>
+          <div className="flex flex-col items-center justify-center md:items-start">
+            <h1 className="text-sm md:text-2xl font-bold">{pageTitle}</h1>
+            <span className="text-muted-foreground text-xs md:text-base">Programa Vem Que Dá Tempo</span>
+          </div>
           <ThemeToggleButton />
         </header>
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto">
           {children}
         </main>
       </div>
