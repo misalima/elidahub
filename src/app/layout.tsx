@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { AppThemeProvider } from "@/providers/AppThemeProvider";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TanstackQueryProvider } from "@/providers/TanstackQueryProvider";
 
 const geistSans = Geist({
@@ -20,8 +19,6 @@ export const metadata: Metadata = {
   title: "FelixHub",
   description: "FelixHub é uma plataforma de comunicação entre escola e família.",
 };
-
-const queryClient = new QueryClient()
 
 export default function RootLayout({
   children,

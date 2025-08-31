@@ -29,8 +29,8 @@ export function useCreateCitizen() {
     try {
       const citizen = await createCitizen(payload);
       return citizen;
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError((e as Error).message);
       throw e;
     } finally {
       setLoading(false);
@@ -50,8 +50,8 @@ export function useUpdateCitizen() {
     try {
       const citizen = await updateCitizen(id, payload);
       return citizen;
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError((e as Error).message);
       throw e;
     } finally {
       setLoading(false);
@@ -71,8 +71,8 @@ export function useDeleteCitizen() {
     try {
       await deleteCitizen(id);
       return true;
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError((e as Error).message);
       throw e;
     } finally {
       setLoading(false);

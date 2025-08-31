@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   useCitizens,
   useCreateCitizen,
@@ -7,8 +7,17 @@ import {
   useDeleteCitizen,
 } from "@/hooks/useCitizens";
 import { formatBrazilianPhoneNumber } from "@/lib/formatBrazilianPhoneNumber";
-import { formatPhoneDisplay } from "@/lib/formatPhoneDisplay";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { CitizensTable } from "@/components/vqdt/citizens/CitizensTable";
 import { CitizenSearchBar } from "@/components/vqdt/citizens/CitizenSearchBar";
@@ -19,6 +28,7 @@ import { NoCitizensMessage } from "@/components/vqdt/citizens/NoCitizensMessage"
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import { Plus, Users } from "lucide-react";
+import { Citizen } from "@/services/citizenService";
 
 export default function CitizensPage() {
   const [page, setPage] = useState(1);
@@ -47,9 +57,6 @@ export default function CitizensPage() {
   ) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +64,8 @@ export default function CitizensPage() {
     let formattedPhone = "";
     try {
       formattedPhone = formatBrazilianPhoneNumber(form.phone);
-    } catch (err: any) {
-      setPhoneError(err.message);
+    } catch (err) {
+      setPhoneError((err as Error).message);
       return;
     }
     try {
@@ -76,7 +83,7 @@ export default function CitizensPage() {
     } catch {}
   };
 
-  const handleEdit = (citizen: any) => {
+  const handleEdit = (citizen: Citizen) => {
     setEditId(citizen.id);
     setEditForm({
       full_name: citizen.full_name,
@@ -94,8 +101,8 @@ export default function CitizensPage() {
     let formattedPhone = "";
     try {
       formattedPhone = formatBrazilianPhoneNumber(editForm.phone);
-    } catch (err: any) {
-      setPhoneError(err.message);
+    } catch (err) {
+      setPhoneError((err as Error).message);
       return;
     }
     try {
@@ -107,13 +114,23 @@ export default function CitizensPage() {
     } catch {}
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Excluir este cidadão?")) return;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const handleDelete = (id: string) => {
+    setPendingDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
     try {
-      await remove(id);
+      await remove(pendingDeleteId);
       toast.success("Cidadão excluído!");
       refetch();
     } catch {}
+    setDeleteDialogOpen(false);
+    setPendingDeleteId(null);
   };
 
   const citizens = data?.data || [];
@@ -172,7 +189,40 @@ export default function CitizensPage() {
           isBusy={isBusy}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          editId={editId}
+          editForm={editForm}
+          onEditFormChange={(e) => {
+            setEditForm(f => ({ ...f, [e.target.name]: e.target.value }));
+          }}
+          onSaveEdit={() => {
+            // Create a synthetic event to satisfy handleUpdate signature
+            const event = { preventDefault: () => {} } as React.FormEvent;
+            handleUpdate(event);
+          }}
+          onCancelEdit={() => {
+            setEditId(null);
+            setEditForm({ full_name: "", phone: "", email: "", observations: "" });
+            setPhoneError(null);
+          }}
         />
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir cidadão?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este cidadão? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} autoFocus>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         {!loading && citizens.length === 0 && <NoCitizensMessage />}
         <div />
         {citizens.length > 0 && (
