@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { AppThemeProvider } from "@/providers/AppThemeProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TanstackQueryProvider } from "@/providers/TanstackQueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,6 +21,8 @@ export const metadata: Metadata = {
   description: "FelixHub é uma plataforma de comunicação entre escola e família.",
 };
 
+const queryClient = new QueryClient()
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,10 +30,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}> 
         <AppThemeProvider>
           <AuthProvider>
-            {children}
+            <TanstackQueryProvider>
+              {children}
+            </TanstackQueryProvider> 
           </AuthProvider>
         </AppThemeProvider>
       </body>

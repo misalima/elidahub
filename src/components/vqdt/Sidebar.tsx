@@ -97,7 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onMouseEnter={() => { if (typeof window !== 'undefined' && window.innerWidth >= 768 && !sidebarOpen) onSidebarHover(true); }}
         onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth >= 768 && !sidebarOpen) onSidebarHover(false); }}
       >
-        <nav className="flex flex-col gap-2 mt-4 flex-1">
+        <nav className="flex flex-col gap-2 mt-4 flex-1 px-2">
           {sidebarMenu.map((item) => {
             const Icon = item.icon;
             return (
