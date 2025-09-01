@@ -1,3 +1,13 @@
+export async function bulkDeleteCitizens(ids: string[]) {
+  if (!ids.length) return true;
+  const { error } = await supabase
+    .schema(CITIZENS_SCHEMA)
+    .from(CITIZENS_TABLE)
+    .update({ is_active: false })
+    .in('id', ids);
+  if (error) throw error;
+  return true;
+}
 import { supabase } from '../lib/supabaseClient';
 import { Tables, TablesInsert, TablesUpdate } from '../types/database.types';
 

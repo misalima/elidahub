@@ -28,10 +28,42 @@ import { CitizensPagination } from "@/components/vqdt/citizens/CitizensPaginatio
 import { NoCitizensMessage } from "@/components/vqdt/citizens/NoCitizensMessage";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, Trash2 } from "lucide-react";
 import { Citizen } from "@/services/citizenService";
 
 export default function CitizensPage() {
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  // Bulk delete handler
+  const handleBulkDelete = () => {
+    setBulkDeleteDialogOpen(true);
+    setOperationError(null);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (!selectedIds.length) return;
+    try {
+      const { bulkDeleteCitizens } = await import("@/services/citizenService");
+      await bulkDeleteCitizens(selectedIds);
+      toast.success("Cidadãos excluídos!");
+      setSelectedIds([]);
+      refetch();
+    } catch (err) {
+      setOperationError("Erro ao excluir cidadãos: " + ((err && (err as Error).message) || "Erro desconhecido"));
+    }
+    setBulkDeleteDialogOpen(false);
+  };
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Selection handlers
+  const handleSelect = (id: string, checked: boolean) => {
+    setSelectedIds(prev =>
+      checked ? [...prev, id] : prev.filter(_id => _id !== id)
+    );
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? citizens.map(c => c.id) : []);
+  };
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 300);
@@ -159,15 +191,47 @@ export default function CitizensPage() {
         </div>
         <div className="flex justify-between">
           <CitizenSearchBar search={search} setSearch={setSearch} />
-          <Button
-            type="button"
-            onClick={() => setShowAddForm((v) => !v)}
-            variant="default"
-            className="flex items-center gap-1"
-          >
-            <Plus className="w-4 h-4" />
-            Novo cidadão
-          </Button>
+          <div className="flex gap-2">
+            {selectedIds.length > 0 && (
+              <Button
+                type="button"
+                variant="destructive"
+                className="flex items-center gap-1"
+                onClick={handleBulkDelete}
+                disabled={isBusy}
+              >
+                <Trash2 className="w-4 h-4" />
+                Excluir selecionados
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={() => setShowAddForm((v) => !v)}
+              variant="default"
+              className="flex items-center gap-1"
+            >
+              <Plus className="w-4 h-4" />
+              Novo cidadão
+            </Button>
+          </div>
+        <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir cidadãos selecionados?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir os cidadãos selecionados? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setBulkDeleteDialogOpen(false)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmBulkDelete} autoFocus>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         </div>
         <AnimatePresence>
           {showAddForm && (
@@ -216,29 +280,15 @@ export default function CitizensPage() {
           onDelete={handleDelete}
           editId={editId}
           editForm={editForm}
-          onEditFormChange={(e) => {
-            setEditForm(f => ({ ...f, [e.target.name]: e.target.value }));
-          }}
-          onSaveEdit={() => {
-            // Create a synthetic event to satisfy handleUpdate signature
-            const event = { preventDefault: () => {} } as React.FormEvent;
-            handleUpdate(event);
-          }}
-          onCancelEdit={() => {
-            setEditId(null);
-            setEditForm({ full_name: "", phone: "", email: "", observations: "" });
-            setPhoneError(null);
-          }}
+          onEditFormChange={e => setEditForm(f => ({ ...f, [e.target.name]: e.target.value }))}
+          onSaveEdit={() => { const event = { preventDefault: () => {} } as React.FormEvent; handleUpdate(event); }}
+          onCancelEdit={() => { setEditId(null); setEditForm({ full_name: "", phone: "", email: "", observations: "" }); setPhoneError(null); }}
           orderBy={orderBy}
           orderDir={orderDir}
-          onOrderChange={(col: string) => {
-            if (orderBy === col) {
-              setOrderDir(orderDir === 'asc' ? 'desc' : 'asc');
-            } else {
-              setOrderBy(col);
-              setOrderDir('asc');
-            }
-          }}
+          onOrderChange={col => { if (orderBy === col) { setOrderDir(orderDir === 'asc' ? 'desc' : 'asc'); } else { setOrderBy(col); setOrderDir('asc'); } }}
+          selectedIds={selectedIds}
+          onSelect={handleSelect}
+          onSelectAll={handleSelectAll}
         />
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>

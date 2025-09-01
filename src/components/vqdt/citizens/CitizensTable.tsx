@@ -21,7 +21,10 @@ export function CitizensTable({
   onCancelEdit,
   orderBy,
   orderDir,
-  onOrderChange
+  onOrderChange,
+  selectedIds,
+  onSelect,
+  onSelectAll
 }: {
   citizens: Citizen[];
   loading: boolean;
@@ -36,6 +39,9 @@ export function CitizensTable({
   orderBy: string;
   orderDir: 'asc' | 'desc';
   onOrderChange: (col: string) => void;
+  selectedIds: string[];
+  onSelect: (id: string, checked: boolean) => void;
+  onSelectAll: (checked: boolean) => void;
 }) {
   return (
   <TooltipProvider delayDuration={700}>
@@ -43,6 +49,14 @@ export function CitizensTable({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8 text-center">
+                <input
+                  type="checkbox"
+                  checked={citizens.length > 0 && selectedIds.length === citizens.length}
+                  onChange={e => onSelectAll(e.target.checked)}
+                  aria-label="Selecionar todos"
+                />
+              </TableHead>
               <TableHead
                 className="px-4 min-w-[180px] w-[30%] cursor-pointer select-none group"
                 onClick={() => onOrderChange('full_name')}
@@ -95,6 +109,7 @@ export function CitizensTable({
               <AnimatePresence initial={false}>
                 {citizens.map((citizen, idx) => {
                   const isEditing = editId === citizen.id;
+                  const isSelected = selectedIds.includes(citizen.id);
                   return (
                     <motion.tr
                       key={citizen.id}
@@ -108,6 +123,15 @@ export function CitizensTable({
                         "transition-colors duration-200 hover:bg-accent/60"
                       ].join(" ")}
                     >
+                      <TableCell className="w-8 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={e => onSelect(citizen.id, e.target.checked)}
+                          aria-label={`Selecionar ${citizen.full_name}`}
+                          disabled={isEditing}
+                        />
+                      </TableCell>
                       <TableCell className="px-4 min-w-[180px] w-[30%]">
                         {isEditing ? (
                           <input
@@ -225,14 +249,14 @@ export function CitizensTable({
                             </>
                           ) : (
                             <>
-                              <Button size="icon" variant="outline" onClick={() => onEdit(citizen)} disabled={isBusy} aria-label="Editar">
+                              <Button size="icon" variant="outline" onClick={() => onEdit(citizen)} disabled={isBusy || selectedIds.length > 0} aria-label="Editar">
                                 <Pencil className="w-4 h-4" />
                               </Button>
                               <Button
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => onDelete(citizen.id)}
-                                disabled={isBusy}
+                                disabled={isBusy || selectedIds.length > 0}
                                 aria-label="Excluir"
                                 className="text-destructive hover:bg-destructive/10 hover:text-destructive focus-visible:ring-destructive"
                               >
