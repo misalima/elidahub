@@ -11,10 +11,10 @@ import {
 } from '@/services/citizenService';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
-export function useCitizens(page: number, search: string) {
+export function useCitizens(page: number, search: string, orderBy: string = 'created_at', orderDir: 'asc' | 'desc' = 'desc') {
   return useQuery({
-    queryKey: ['citizens', page, search],
-    queryFn: () => getCitizens(page, search),
+    queryKey: ['citizens', page, search, orderBy, orderDir],
+    queryFn: () => getCitizens(page, search, orderBy, orderDir),
     placeholderData: keepPreviousData
   });
 }

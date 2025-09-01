@@ -1,8 +1,9 @@
 "use client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Loader2, Check, X } from "lucide-react";
+import { Pencil, Trash2, Check, X } from "lucide-react";
 import { formatPhoneDisplay } from "@/lib/formatPhoneDisplay";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Citizen } from "@/services/citizenService";
@@ -17,7 +18,10 @@ export function CitizensTable({
   editForm,
   onEditFormChange,
   onSaveEdit,
-  onCancelEdit
+  onCancelEdit,
+  orderBy,
+  orderDir,
+  onOrderChange
 }: {
   citizens: Citizen[];
   loading: boolean;
@@ -29,6 +33,9 @@ export function CitizensTable({
   onEditFormChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
+  orderBy: string;
+  orderDir: 'asc' | 'desc';
+  onOrderChange: (col: string) => void;
 }) {
   return (
   <TooltipProvider delayDuration={700}>
@@ -36,7 +43,23 @@ export function CitizensTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="px-4 min-w-[180px] w-[30%]">Nome</TableHead>
+              <TableHead
+                className="px-4 min-w-[180px] w-[30%] cursor-pointer select-none group"
+                onClick={() => onOrderChange('full_name')}
+              >
+                <span className="inline-flex items-center gap-1">
+                  Nome
+                  {orderBy === 'full_name' ? (
+                    orderDir === 'asc' ? (
+                      <svg className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/></svg>
+                    ) : (
+                      <svg className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    )
+                  ) : (
+                    <svg className="w-4 h-4 opacity-0 group-hover:opacity-60 transition-opacity" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/></svg>
+                  )}
+                </span>
+              </TableHead>
               <TableHead className="min-w-[160px] w-[20%]">Telefone</TableHead>
               <TableHead className="min-w-[180px] w-[25%]">Email</TableHead>
               <TableHead className="min-w-[220px] w-[25%]">Observações</TableHead>
@@ -45,14 +68,32 @@ export function CitizensTable({
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 min-w-[480px]">
-                  <Loader2 className="w-6 h-6 mx-auto animate-spin" />
-                </TableCell>
-              </TableRow>
+              // Exibe 10 linhas de skeleton para simular o carregamento da tabela
+              Array.from({ length: 10 }).map((_, idx) => (
+                <TableRow key={idx}>
+                  <TableCell className="px-4 min-w-[180px] w-[30%]">
+                    <Skeleton className="h-5 w-32" />
+                  </TableCell>
+                  <TableCell className="min-w-[160px] w-[20%]">
+                    <Skeleton className="h-5 w-24" />
+                  </TableCell>
+                  <TableCell className="min-w-[180px] w-[25%]">
+                    <Skeleton className="h-5 w-28" />
+                  </TableCell>
+                  <TableCell className="min-w-[220px] w-[25%]">
+                    <Skeleton className="h-5 w-40" />
+                  </TableCell>
+                  <TableCell className="text-center min-w-[120px] w-[15%]">
+                    <div className="flex gap-2 justify-center">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             ) : (
               <AnimatePresence initial={false}>
-                {citizens.map(citizen => {
+                {citizens.map((citizen, idx) => {
                   const isEditing = editId === citizen.id;
                   return (
                     <motion.tr
@@ -61,7 +102,11 @@ export function CitizensTable({
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className={isEditing ? "bg-muted" : undefined}
+                      className={[
+                        isEditing ? "bg-muted" : "",
+                        idx % 2 === 0 ? "bg-background" : "bg-muted/50",
+                        "transition-colors duration-200 hover:bg-accent/60"
+                      ].join(" ")}
                     >
                       <TableCell className="px-4 min-w-[180px] w-[30%]">
                         {isEditing ? (
@@ -81,7 +126,7 @@ export function CitizensTable({
                               }
                             }}
                           />
-                        ) : (
+                        ) : ( 
                           <span className="font-semibold">{citizen.full_name}</span>
                         )}
                       </TableCell>
@@ -183,7 +228,14 @@ export function CitizensTable({
                               <Button size="icon" variant="outline" onClick={() => onEdit(citizen)} disabled={isBusy} aria-label="Editar">
                                 <Pencil className="w-4 h-4" />
                               </Button>
-                              <Button size="icon" variant="destructive" onClick={() => onDelete(citizen.id)} disabled={isBusy} aria-label="Excluir">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => onDelete(citizen.id)}
+                                disabled={isBusy}
+                                aria-label="Excluir"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive focus-visible:ring-destructive"
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </>

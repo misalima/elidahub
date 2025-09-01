@@ -10,16 +10,17 @@ const CITIZENS_SCHEMA = 'vqdt';
 const PAGE_SIZE = 30;
 
 
-export async function getCitizens(page = 1, search = "") {
+
+export async function getCitizens(page = 1, search = "", orderBy: string = "created_at", orderDir: 'asc' | 'desc' = 'desc') {
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
   let query = supabase
     .schema(CITIZENS_SCHEMA)
     .from(CITIZENS_TABLE)
     .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
+    .order(orderBy, { ascending: orderDir === 'asc' })
     .range(from, to);
-  
+
   if (search.trim()) {
     query = query.or(`full_name.ilike.%${search}%,phone.ilike.%${search}%`)
   }

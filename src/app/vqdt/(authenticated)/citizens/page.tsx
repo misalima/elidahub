@@ -19,6 +19,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Toaster } from "@/components/ui/sonner";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { CitizensTable } from "@/components/vqdt/citizens/CitizensTable";
 import { CitizenSearchBar } from "@/components/vqdt/citizens/CitizenSearchBar";
 import { CitizenForm } from "@/components/vqdt/citizens/CitizenForm";
@@ -34,12 +35,14 @@ export default function CitizensPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 300);
+  const [orderBy, setOrderBy] = useState<string>("created_at");
+  const [orderDir, setOrderDir] = useState<'asc' | 'desc'>('desc');
   const {
     data,
     isLoading: loading,
     error,
     refetch,
-  } = useCitizens(page, debouncedSearch);
+  } = useCitizens(page, debouncedSearch, orderBy, orderDir);
   const count = data?.count ?? 0;
   const { create, loading: creating } = useCreateCitizen();
   const { update, loading: updating } = useUpdateCitizen();
@@ -48,6 +51,7 @@ export default function CitizensPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ full_name: "", phone: "", email: "", observations: "" });
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [operationError, setOperationError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const isBusy = loading || creating || updating || deleting;
@@ -60,7 +64,8 @@ export default function CitizensPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPhoneError(null);
+  setPhoneError(null);
+  setOperationError(null);
     let formattedPhone = "";
     try {
       formattedPhone = formatBrazilianPhoneNumber(form.phone);
@@ -80,7 +85,9 @@ export default function CitizensPage() {
       setShowAddForm(false);
       toast.success("Cidadão criado com sucesso!");
       refetch();
-    } catch {}
+    } catch (err) {
+      setOperationError("Erro ao criar cidadão: " + ((err && (err as Error).message) || "Erro desconhecido"));
+    }
   };
 
   const handleEdit = (citizen: Citizen) => {
@@ -91,13 +98,15 @@ export default function CitizensPage() {
       email: citizen.email || "",
       observations: citizen.observations || "",
     });
-    setPhoneError(null);
+  setPhoneError(null);
+  setOperationError(null);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editId) return;
-    setPhoneError(null);
+  setPhoneError(null);
+  setOperationError(null);
     let formattedPhone = "";
     try {
       formattedPhone = formatBrazilianPhoneNumber(editForm.phone);
@@ -111,15 +120,18 @@ export default function CitizensPage() {
       setEditForm({ full_name: "", phone: "", email: "", observations: "" });
       toast.success("Cidadão atualizado!");
       refetch();
-    } catch {}
+    } catch (err) {
+      setOperationError("Erro ao atualizar cidadão: " + ((err && (err as Error).message) || "Erro desconhecido"));
+    }
   };
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const handleDelete = (id: string) => {
-    setPendingDeleteId(id);
-    setDeleteDialogOpen(true);
+  setPendingDeleteId(id);
+  setDeleteDialogOpen(true);
+  setOperationError(null);
   };
 
   const confirmDelete = async () => {
@@ -128,7 +140,9 @@ export default function CitizensPage() {
       await remove(pendingDeleteId);
       toast.success("Cidadão excluído!");
       refetch();
-    } catch {}
+    } catch (err) {
+      setOperationError("Erro ao excluir cidadão: " + ((err && (err as Error).message) || "Erro desconhecido"));
+    }
     setDeleteDialogOpen(false);
     setPendingDeleteId(null);
   };
@@ -136,10 +150,10 @@ export default function CitizensPage() {
   const citizens = data?.data || [];
 
   return (
-  <motion.div layout className="w-full min-h-[calc(100vh-120px)] flex flex-col bg-background py-10 px-4 rounded-2xl">
+  <div className="w-full min-h-[calc(100vh-120px)] flex flex-col bg-background py-10 px-4 rounded-2xl">
       <Toaster />
   <div className="flex flex-col gap-8 px-4 flex-1">
-        <div className="flex items-center gap-2 text-2xl font-semibold mb-6">
+        <div className="flex items-center gap-2 text-2xl font-semibold mb-2">
           <Users className="w-6 h-6" />
           Gerenciar Cidadãos
         </div>
@@ -179,10 +193,21 @@ export default function CitizensPage() {
             </motion.div>
           )}
         </AnimatePresence>
+        {operationError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>{operationError}</AlertDescription>
+          </Alert>
+        )}
         {phoneError && !showAddForm && (
           <div className="text-red-500 mb-4">{phoneError}</div>
         )}
-        {error && <div className="text-red-500 mb-2">{error.message}</div>}
+        {error && (
+          <Alert variant="destructive" className="mb-2">
+            <AlertTitle>Erro ao buscar cidadãos</AlertTitle>
+            <AlertDescription>{error.message}</AlertDescription>
+          </Alert>
+        )}
         <CitizensTable
           citizens={citizens}
           loading={loading}
@@ -203,6 +228,16 @@ export default function CitizensPage() {
             setEditId(null);
             setEditForm({ full_name: "", phone: "", email: "", observations: "" });
             setPhoneError(null);
+          }}
+          orderBy={orderBy}
+          orderDir={orderDir}
+          onOrderChange={(col: string) => {
+            if (orderBy === col) {
+              setOrderDir(orderDir === 'asc' ? 'desc' : 'asc');
+            } else {
+              setOrderBy(col);
+              setOrderDir('asc');
+            }
           }}
         />
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -236,6 +271,6 @@ export default function CitizensPage() {
           </div>
         )}
       </div>
-  </motion.div>
+  </div>
   );
 }
