@@ -18,6 +18,7 @@ export async function getCitizens(page = 1, search = "", orderBy: string = "crea
     .schema(CITIZENS_SCHEMA)
     .from(CITIZENS_TABLE)
     .select('*', { count: 'exact' })
+    .eq('is_active', true)
     .order(orderBy, { ascending: orderDir === 'asc' })
     .range(from, to);
 
@@ -72,7 +73,7 @@ export async function deleteCitizen(id: string) {
   const { error } = await supabase
     .schema(CITIZENS_SCHEMA)
     .from(CITIZENS_TABLE)
-    .delete()
+    .update({ is_active: false })
     .eq('id', id);
   if (error) throw error;
   return true;
