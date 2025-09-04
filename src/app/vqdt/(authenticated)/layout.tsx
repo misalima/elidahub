@@ -10,6 +10,7 @@ import {
   FileBarChart2,
   Settings,
   ChevronRight,
+  Users,
 } from "lucide-react";
 
 interface VqdtLayoutProps {
@@ -19,12 +20,13 @@ interface VqdtLayoutProps {
 export default function VqdtLayout({ children }: VqdtLayoutProps) {
   const pathname = usePathname();
 
-  // Define o título da página conforme a rota
   let pageTitle = "";
   if (pathname?.startsWith("/vqdt/dashboard")) {
     pageTitle = "Visão Geral";
   } else if (pathname?.startsWith("/vqdt/reports")) {
     pageTitle = "Relatórios";
+  } else if (pathname?.startsWith("/vqdt/citizens")) {
+    pageTitle = "Cidadãos";
   } else if (pathname?.startsWith("/vqdt/settings")) {
     pageTitle = "Configurações";
   }
@@ -40,6 +42,7 @@ export default function VqdtLayout({ children }: VqdtLayoutProps) {
 
   const sidebarMenu = [
     { label: "Visão Geral", href: "/vqdt/dashboard", icon: LayoutDashboard },
+    { label: "Cidadãos", href: "/vqdt/citizens", icon: Users },
     { label: "Relatórios", href: "/vqdt/reports", icon: FileBarChart2 },
     { label: "Configurações", href: "/vqdt/settings", icon: Settings },
   ];
@@ -121,7 +124,6 @@ export default function VqdtLayout({ children }: VqdtLayoutProps) {
           </Button>
           <div className="flex flex-col items-center justify-center md:items-start">
             <h1 className="text-sm md:text-2xl font-bold">{pageTitle}</h1>
-            <span className="text-muted-foreground text-xs md:text-base">Programa Vem Que Dá Tempo</span>
           </div>
           <ThemeToggleButton />
         </header>
