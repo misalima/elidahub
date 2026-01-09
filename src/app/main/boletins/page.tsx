@@ -86,7 +86,7 @@ export default function PaginaBoletim() {
       const result = await res.json();
 
       if (res.ok && result.url) {
-        window.open(result.url, "_blank");
+        window.location.href = result.url;
       } else {
         setError(
           result.error ||
@@ -211,12 +211,31 @@ export default function PaginaBoletim() {
               disabled={
                 loading || !selectedAlunoId || dataNascExibicao.length < 10
               }
-              className="w-full text-white font-black py-5 rounded-xl shadow-lg transform transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none mt-4 flex items-center justify-center text-lg tracking-wider"
+              className="w-full cursor-pointer text-white font-black py-5 rounded-xl shadow-lg transform transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none mt-4 flex items-center justify-center text-lg tracking-wider hover:shadow-2xl hover:-translate-y-1"
               style={{
                 backgroundColor:
                   loading || !selectedAlunoId || dataNascExibicao.length < 10
                     ? "#d1d5db"
                     : "#3e4095",
+                transition: "all 0.2s ease-in-out",
+              }}
+              onMouseEnter={(e) => {
+                if (
+                  !loading &&
+                  selectedAlunoId &&
+                  dataNascExibicao.length === 10
+                ) {
+                  e.currentTarget.style.backgroundColor = "#2f3270"; // Azul mais escuro no hover
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (
+                  !loading &&
+                  selectedAlunoId &&
+                  dataNascExibicao.length === 10
+                ) {
+                  e.currentTarget.style.backgroundColor = "#3e4095"; // Volta ao azul original
+                }
               }}
             >
               {loading ? (
