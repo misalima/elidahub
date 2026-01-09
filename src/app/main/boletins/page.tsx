@@ -3,9 +3,14 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 
+interface Aluno {
+  id: string;
+  nome_completo: string;
+}
+
 export default function PaginaBoletim() {
   const [turmas, setTurmas] = useState<string[]>([]);
-  const [alunos, setAlunos] = useState<any[]>([]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
 
   const [selectedTurma, setSelectedTurma] = useState("");
   const [selectedAlunoId, setSelectedAlunoId] = useState("");
@@ -64,7 +69,7 @@ export default function PaginaBoletim() {
             "Dados incorretos. Verifique se a data de nascimento está certa."
         );
       }
-    } catch (err) {
+    } catch {
       setError("Ocorreu um erro ao processar sua solicitação.");
     } finally {
       setLoading(false);
