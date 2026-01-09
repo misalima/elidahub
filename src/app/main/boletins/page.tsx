@@ -14,7 +14,7 @@ export default function PaginaBoletim() {
 
   const [selectedTurma, setSelectedTurma] = useState("");
   const [selectedAlunoId, setSelectedAlunoId] = useState("");
-  const [dataNasc, setDataNasc] = useState("");
+  const [dataNascExibicao, setDataNascExibicao] = useState(""); // Para o input com máscara (DD/MM/AAAA)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,9 +45,33 @@ export default function PaginaBoletim() {
     setError("");
   }, [selectedTurma]);
 
+  // Função para aplicar máscara de data (DD/MM/AAAA)
+  const handleDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é número
+    if (value.length > 8) value = value.slice(0, 8); // Limita a 8 dígitos
+
+    // Aplica a máscara
+    if (value.length >= 5) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length >= 3) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+
+    setDataNascExibicao(value);
+  };
+
   const handleDownload = async () => {
     setLoading(true);
     setError("");
+
+    // Converte DD/MM/AAAA para YYYY-MM-DD para a API
+    const partes = dataNascExibicao.split("/");
+    if (partes.length !== 3 || dataNascExibicao.length !== 10) {
+      setError("Por favor, digite a data completa (DD/MM/AAAA)");
+      setLoading(false);
+      return;
+    }
+    const dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
 
     try {
       const res = await fetch("/api/boletim/download", {
@@ -55,7 +79,7 @@ export default function PaginaBoletim() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           alunoId: selectedAlunoId,
-          dataNascimento: dataNasc,
+          dataNascimento: dataFormatada,
         }),
       });
 
@@ -170,34 +194,29 @@ export default function PaginaBoletim() {
                 3. Informe sua Data de Nascimento
               </label>
               <input
-                type="date"
+                type="text"
+                inputMode="numeric"
+                placeholder="Ex: 15/04/2008"
                 className="w-full p-4 bg-white border-2 border-gray-200 text-gray-900 rounded-xl outline-none transition-all font-medium"
-                onChange={(e) => setDataNasc(e.target.value)}
+                value={dataNascExibicao}
+                onChange={handleDataChange}
               />
               <p className="text-[10px] text-gray-400 mt-1 ml-1 italic">
-                * Usamos sua data para garantir que só você baixe seu boletim.
+                * Digite apenas os números da sua data de nascimento.
               </p>
             </div>
 
             <button
               onClick={handleDownload}
-              disabled={loading || !selectedAlunoId || !dataNasc}
+              disabled={
+                loading || !selectedAlunoId || dataNascExibicao.length < 10
+              }
               className="w-full text-white font-black py-5 rounded-xl shadow-lg transform transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none mt-4 flex items-center justify-center text-lg tracking-wider"
               style={{
                 backgroundColor:
-                  loading || !selectedAlunoId || !dataNasc
+                  loading || !selectedAlunoId || dataNascExibicao.length < 10
                     ? "#d1d5db"
                     : "#3e4095",
-              }}
-              onMouseEnter={(e) => {
-                if (!loading && selectedAlunoId && dataNasc) {
-                  e.currentTarget.style.backgroundColor = "#2f3270";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!loading && selectedAlunoId && dataNasc) {
-                  e.currentTarget.style.backgroundColor = "#3e4095";
-                }
               }}
             >
               {loading ? (
