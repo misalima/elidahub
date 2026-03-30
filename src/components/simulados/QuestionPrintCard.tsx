@@ -1,6 +1,8 @@
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import type { Question } from "@/types/simulados";
 
 interface QuestionPrintCardProps {
@@ -22,7 +24,9 @@ export function QuestionPrintCard({ question, number }: QuestionPrintCardProps) 
 
       {/* Enunciado */}
       <div className="statement">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{question.statement}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+          {question.statement}
+        </ReactMarkdown>
       </div>
 
       {/* Imagem */}
@@ -44,7 +48,11 @@ export function QuestionPrintCard({ question, number }: QuestionPrintCardProps) 
         {OPTION_KEYS.map((key, i) => (
           <div key={key} className="option-item">
             <span className="option-label">{OPTION_LABELS[i]})</span>
-            <span className="option-text">{question[key]}</span>
+            <span className="option-text prose prose-sm dark:prose-invert break-words">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                {String(question[key])}
+              </ReactMarkdown>
+            </span>
           </div>
         ))}
       </div>

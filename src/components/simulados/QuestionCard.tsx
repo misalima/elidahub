@@ -3,6 +3,8 @@
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -18,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Trash2, User, Calendar, Eye } from "lucide-react";
+import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import type { Question } from "@/types/simulados";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -37,6 +39,12 @@ const AREA_COLORS: Record<string, string> = {
   "Ciências Humanas e suas Tecnologias": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   "Ciências da Natureza e suas Tecnologias": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
   "Matemática e suas Tecnologias": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+};
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  "Fácil": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  "Médio": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  "Difícil": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
 };
 
 const OPTION_KEYS = ["option_a", "option_b", "option_c", "option_d", "option_e"] as const;
@@ -72,7 +80,7 @@ export function QuestionCard({
   return (
     <Card
       className={`flex flex-col transition-all ${
-        selected ? "ring-2 ring-primary shadow-md" : "hover:shadow-md"
+        selected ? "border-primary bg-primary/5 shadow-sm" : "hover:border-primary/50 hover:shadow-sm"
       } ${selectable ? "cursor-pointer" : ""}`}
       onClick={selectable && onSelect ? () => onSelect(question) : undefined}
     >
@@ -85,6 +93,16 @@ export function QuestionCard({
             <Badge variant="outline" className="text-xs">
               {question.subject}
             </Badge>
+            {question.difficulty && (
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
+                {question.difficulty}
+              </span>
+            )}
+            {question.level && (
+              <Badge variant="secondary" className="text-xs">
+                {question.level}
+              </Badge>
+            )}
           </div>
           {questionNumber !== undefined && (
             <span className="text-xs font-mono text-muted-foreground">#{questionNumber}</span>
@@ -124,11 +142,25 @@ export function QuestionCard({
                   {question.knowledge_area}
                 </span>
                 <Badge variant="outline">{question.subject}</Badge>
+                {question.difficulty && (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
+                    <BarChart3 className="w-3 h-3 inline mr-0.5" />
+                    {question.difficulty}
+                  </span>
+                )}
+                {question.level && (
+                  <Badge variant="secondary" className="text-xs">
+                    <GraduationCap className="w-3 h-3 mr-0.5" />
+                    {question.level}
+                  </Badge>
+                )}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-2">
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{question.statement}</ReactMarkdown>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-[0.82rem] leading-relaxed">
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {question.statement}
+                </ReactMarkdown>
               </div>
 
               {question.image_url && (
@@ -154,7 +186,11 @@ export function QuestionCard({
                     >
                       {OPTION_LABELS[i]}
                     </span>
-                    <span>{question[key]}</span>
+                    <span className="flex-1 mt-[2px] text-sm break-words prose prose-sm dark:prose-invert">
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {String(question[key])}
+                      </ReactMarkdown>
+                    </span>
                   </div>
                 ))}
               </div>

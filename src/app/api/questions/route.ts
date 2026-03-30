@@ -6,6 +6,8 @@ export async function GET(req: NextRequest) {
   const area = searchParams.get('area');
   const subject = searchParams.get('subject');
   const search = searchParams.get('search');
+  const difficulty = searchParams.get('difficulty');
+  const level = searchParams.get('level');
 
   let query = supabaseAdmin
     .from('questions')
@@ -15,6 +17,8 @@ export async function GET(req: NextRequest) {
   if (area) query = query.eq('knowledge_area', area);
   if (subject) query = query.ilike('subject', `%${subject}%`);
   if (search) query = query.ilike('statement', `%${search}%`);
+  if (difficulty) query = query.eq('difficulty', difficulty);
+  if (level) query = query.eq('level', level);
 
   const { data, error } = await query;
 
@@ -37,6 +41,8 @@ export async function POST(req: NextRequest) {
       option_e,
       answer,
       teacher_name,
+      difficulty,
+      level,
     } = body;
 
     if (
@@ -67,6 +73,8 @@ export async function POST(req: NextRequest) {
         option_e,
         answer,
         teacher_name: teacher_name || null,
+        difficulty: difficulty || null,
+        level: level || null,
       })
       .select()
       .single();

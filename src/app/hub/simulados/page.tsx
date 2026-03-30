@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,10 +32,12 @@ import { Plus, Printer, Pencil, Trash2, Loader2, FileText, BookOpen } from "luci
 import type { Exam } from "@/types/simulados";
 
 export default function SimuladosPage() {
+  const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [titleError, setTitleError] = useState(false);
   const [newExam, setNewExam] = useState({
     title: "",
     grade: "",
@@ -64,6 +67,7 @@ export default function SimuladosPage() {
 
   async function createExam() {
     if (!newExam.title.trim()) {
+      setTitleError(true);
       toast.error("O título é obrigatório.");
       return;
     }
@@ -76,10 +80,9 @@ export default function SimuladosPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setExams((prev) => [data, ...prev]);
       setDialogOpen(false);
-      setNewExam({ title: "", grade: "", date_label: "", duration: "", school_year: "", instructions: "Leia atentamente cada questão. Assinale apenas uma alternativa. Não é permitido o uso de corretivo." });
       toast.success("Simulado criado!");
+      router.push(`/hub/simulados/${data.id}`);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Erro ao criar.");
     } finally {
@@ -129,8 +132,15 @@ export default function SimuladosPage() {
                 <Input
                   placeholder="Ex: Simulado ENEM — Ciências da Natureza"
                   value={newExam.title}
-                  onChange={(e) => setNewExam((m) => ({ ...m, title: e.target.value }))}
+                  onChange={(e) => {
+                    setNewExam((m) => ({ ...m, title: e.target.value }));
+                    if (e.target.value.trim()) setTitleError(false);
+                  }}
+                  className={titleError ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {titleError && (
+                  <p className="text-xs text-destructive">O título é obrigatório.</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">

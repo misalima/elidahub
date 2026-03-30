@@ -77,13 +77,15 @@ export default function PrintPage({ params }: PrintPageProps) {
             Este simulado não possui questões.
           </p>
         ) : (
-          orderedQuestions.map((eq, index) => (
-            <QuestionPrintCard
-              key={eq.id}
-              question={eq.question}
-              number={index + 1}
-            />
-          ))
+          <div className="questions-columns">
+            {orderedQuestions.map((eq, index) => (
+              <QuestionPrintCard
+                key={eq.id}
+                question={eq.question}
+                number={index + 1}
+              />
+            ))}
+          </div>
         )}
       </div>
     </>

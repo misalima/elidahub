@@ -5,6 +5,14 @@ export type KnowledgeArea =
   | 'Matemática e suas Tecnologias'
   | 'Interdisciplinar';
 
+export type Difficulty = 'Fácil' | 'Médio' | 'Difícil';
+
+export const DIFFICULTIES: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
+
+export type Level = '1ª Série' | '2ª Série' | '3ª Série' | 'EJA';
+
+export const LEVELS: Level[] = ['1ª Série', '2ª Série', '3ª Série', 'EJA'];
+
 export const KNOWLEDGE_AREAS: KnowledgeArea[] = [
   'Linguagens, Códigos e suas Tecnologias',
   'Ciências Humanas e suas Tecnologias',
@@ -66,6 +74,8 @@ export interface Question {
   option_e: string;
   answer: AnswerOption;
   teacher_name: string | null;
+  difficulty: Difficulty | null;
+  level: Level | null;
 }
 
 export interface Exam {
@@ -107,6 +117,8 @@ export interface CreateQuestionPayload {
   option_e: string;
   answer: AnswerOption;
   teacher_name?: string;
+  difficulty?: Difficulty | null;
+  level?: Level | null;
 }
 
 export interface CreateExamPayload {

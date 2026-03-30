@@ -4,6 +4,8 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, type KnowledgeArea, type AnswerOption } from "@/types/simulados";
-import { Upload, X, Loader2, CheckCircle2 } from "lucide-react";
+import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea, type AnswerOption, type Difficulty, type Level } from "@/types/simulados";
+import { Upload, X, Loader2, CheckCircle2, Info } from "lucide-react";
 
 const emptyForm = {
   knowledge_area: "" as KnowledgeArea | "",
@@ -31,6 +33,8 @@ const emptyForm = {
   option_e: "",
   answer: "" as AnswerOption | "",
   image_url: null as string | null,
+  difficulty: "" as Difficulty | "",
+  level: "" as Level | "",
 };
 
 const ANSWER_OPTIONS: AnswerOption[] = ["A", "B", "C", "D", "E"];
@@ -87,7 +91,11 @@ export function QuestionForm() {
       const res = await fetch("/api/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          difficulty: form.difficulty || null,
+          level: form.level || null,
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Erro ao salvar");
@@ -177,9 +185,51 @@ export function QuestionForm() {
           />
         </div>
 
+        {/* Dificuldade + Nível */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="difficulty">Dificuldade</Label>
+            <Select
+              value={form.difficulty}
+              onValueChange={(v) => set("difficulty", v)}
+            >
+              <SelectTrigger id="difficulty" className="w-full">
+                <SelectValue placeholder="Opcional" />
+              </SelectTrigger>
+              <SelectContent>
+                {DIFFICULTIES.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="level">Nível / Série</Label>
+            <Select
+              value={form.level}
+              onValueChange={(v) => set("level", v)}
+            >
+              <SelectTrigger id="level" className="w-full">
+                <SelectValue placeholder="Opcional" />
+              </SelectTrigger>
+              <SelectContent>
+                {LEVELS.map((l) => (
+                  <SelectItem key={l} value={l}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Enunciado */}
         <div className="space-y-1.5">
-          <Label htmlFor="statement">Enunciado da Questão *</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="statement">Enunciado da Questão *</Label>
+          </div>
           <Textarea
             id="statement"
             placeholder="Digite o enunciado completo da questão aqui..."
@@ -187,6 +237,12 @@ export function QuestionForm() {
             value={form.statement}
             onChange={(e) => set("statement", e.target.value)}
           />
+          <p className="text-xs text-muted-foreground flex items-start gap-1.5 mt-1">
+            <Info className="w-4 h-4 shrink-0 text-blue-500" />
+            <span>
+              <strong>Dica de Matemática:</strong> Para equações dentro do texto use cifrão no início o no fim. Ex.: <code className="bg-muted px-1 py-0.5 rounded text-foreground">$1+1=2$</code>. Para blocos isolados use dois cifrões no início o no fim. Ex.: <code className="bg-muted px-1 py-0.5 rounded text-foreground">$$f(x)=x^2$$</code> (Sintaxe LaTeX).
+            </span>
+          </p>
         </div>
 
         {/* Upload de Imagem */}
@@ -351,7 +407,9 @@ function QuestionPreview({ form }: { form: FormState }) {
 
       {form.statement && (
         <div className="mb-4 prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.statement}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+            {form.statement}
+          </ReactMarkdown>
         </div>
       )}
 
@@ -381,7 +439,11 @@ function QuestionPreview({ form }: { form: FormState }) {
               >
                 {label}
               </span>
-              <span>{value}</span>
+              <span className="flex-1 text-sm break-words prose prose-sm dark:prose-invert">
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {String(value)}
+                </ReactMarkdown>
+              </span>
             </div>
           ) : null
         )}
@@ -390,6 +452,8 @@ function QuestionPreview({ form }: { form: FormState }) {
       {form.answer && (
         <p className="mt-3 pt-2 border-t text-xs font-sans text-muted-foreground">
           Gabarito: <strong className="text-foreground">{form.answer}</strong>
+          {form.difficulty && ` · ${form.difficulty}`}
+          {form.level && ` · ${form.level}`}
         </p>
       )}
     </div>

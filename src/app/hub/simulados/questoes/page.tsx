@@ -14,19 +14,37 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Database } from "lucide-react";
 import { toast } from "sonner";
 import type { Question } from "@/types/simulados";
-import { KNOWLEDGE_AREAS } from "@/types/simulados";
+import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea } from "@/types/simulados";
 
 export default function QuestoesPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterArea, setFilterArea] = useState("all");
+  const [filterSubject, setFilterSubject] = useState("all");
+  const [filterDifficulty, setFilterDifficulty] = useState("all");
+  const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
 
-  const fetch = useCallback(async () => {
+  // When area changes, reset discipline filter
+  function handleAreaChange(value: string) {
+    setFilterArea(value);
+    setFilterSubject("all");
+  }
+
+  // Get available disciplines based on selected area
+  const availableDisciplines =
+    filterArea && filterArea !== "all"
+      ? DISCIPLINES_BY_AREA[filterArea as KnowledgeArea] ?? []
+      : Object.values(DISCIPLINES_BY_AREA).flat().filter((v, i, a) => a.indexOf(v) === i);
+
+  const fetchQuestions = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filterArea && filterArea !== "all") params.set("area", filterArea);
+      if (filterSubject && filterSubject !== "all") params.set("subject", filterSubject);
+      if (filterDifficulty && filterDifficulty !== "all") params.set("difficulty", filterDifficulty);
+      if (filterLevel && filterLevel !== "all") params.set("level", filterLevel);
       if (filterSearch) params.set("search", filterSearch);
       const res = await window.fetch(`/api/questions?${params.toString()}`);
       const data = await res.json();
@@ -37,12 +55,12 @@ export default function QuestoesPage() {
     } finally {
       setLoading(false);
     }
-  }, [filterArea, filterSearch]);
+  }, [filterArea, filterSubject, filterDifficulty, filterLevel, filterSearch]);
 
   useEffect(() => {
-    const timer = setTimeout(fetch, 300);
+    const timer = setTimeout(fetchQuestions, 300);
     return () => clearTimeout(timer);
-  }, [fetch]);
+  }, [fetchQuestions]);
 
   function handleDelete(id: string) {
     setQuestions((prev) => prev.filter((q) => q.id !== id));
@@ -62,34 +80,82 @@ export default function QuestoesPage() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Buscar no enunciado..."
-            value={filterSearch}
-            onChange={(e) => setFilterSearch(e.target.value)}
-          />
+      <div className="space-y-3 mb-6">
+        {/* Linha 1: Busca + Área */}
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Buscar no enunciado..."
+              value={filterSearch}
+              onChange={(e) => setFilterSearch(e.target.value)}
+            />
+          </div>
+          <Select value={filterArea} onValueChange={handleAreaChange}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Filtrar por área" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as áreas</SelectItem>
+              {KNOWLEDGE_AREAS.map((area) => (
+                <SelectItem key={area} value={area}>
+                  {area}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={filterArea} onValueChange={setFilterArea}>
-          <SelectTrigger className="w-[240px]">
-            <SelectValue placeholder="Filtrar por área" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as áreas</SelectItem>
-            {KNOWLEDGE_AREAS.map((area) => (
-              <SelectItem key={area} value={area}>
-                {area}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
 
-        <div className="flex items-center">
-          <Badge variant="secondary" className="text-sm px-3 py-1.5">
-            {loading ? "…" : questions.length} quest{questions.length !== 1 ? "ões" : "ão"}
-          </Badge>
+        {/* Linha 2: Disciplina + Dificuldade + Nível + Counter */}
+        <div className="flex flex-wrap gap-3">
+          <Select value={filterSubject} onValueChange={setFilterSubject}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Disciplina" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as disciplinas</SelectItem>
+              {availableDisciplines.map((disc) => (
+                <SelectItem key={disc} value={disc}>
+                  {disc}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Dificuldade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {DIFFICULTIES.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterLevel} onValueChange={setFilterLevel}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Nível" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os níveis</SelectItem>
+              {LEVELS.map((l) => (
+                <SelectItem key={l} value={l}>
+                  {l}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="flex items-center">
+            <Badge variant="secondary" className="text-sm px-3 py-1.5">
+              {loading ? "…" : questions.length} quest{questions.length !== 1 ? "ões" : "ão"}
+            </Badge>
+          </div>
         </div>
       </div>
 
@@ -102,7 +168,7 @@ export default function QuestoesPage() {
         <div className="text-center py-20 border-2 border-dashed rounded-2xl">
           <Database className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground font-medium">Nenhuma questão encontrada.</p>
-          {filterSearch || filterArea ? (
+          {filterSearch || filterArea !== "all" || filterSubject !== "all" || filterDifficulty !== "all" || filterLevel !== "all" ? (
             <p className="text-sm text-muted-foreground mt-1">
               Tente ajustar os filtros de busca.
             </p>
