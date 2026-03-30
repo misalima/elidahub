@@ -5,7 +5,6 @@ import { ExamHeader } from "@/components/simulados/ExamHeader";
 import { QuestionPrintCard } from "@/components/simulados/QuestionPrintCard";
 import type { ExamWithQuestions } from "@/types/simulados";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { use } from "react";
 
 interface PrintPageProps {
