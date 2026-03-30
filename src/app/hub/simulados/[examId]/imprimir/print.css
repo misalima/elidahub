@@ -1,0 +1,280 @@
+/* ============================================================
+   PRINT.CSS — Layout A4 para impressão de simulados
+   Importado APENAS pelo layout isolado de impressão
+   ============================================================ */
+
+/* Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---- Configuração da página A4 ---- */
+@page {
+  size: A4 portrait;
+  margin: 18mm 15mm 18mm 15mm;
+}
+
+html,
+body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 11pt;
+  line-height: 1.45;
+  color: #000;
+  background: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ---- Preview em tela: simula folha A4 ---- */
+@media screen {
+  body {
+    background: #e5e7eb;
+    padding: 24px 0 48px;
+  }
+
+  .print-page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 18mm 15mm;
+    background: #fff;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.15);
+  }
+
+  .no-print {
+    display: block;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-page {
+    padding: 0;
+  }
+}
+
+/* ---- Cabeçalho da escola ---- */
+.exam-header {
+  margin-bottom: 12pt;
+}
+
+.exam-header-top {
+  display: flex;
+  align-items: center;
+  gap: 10pt;
+  margin-bottom: 6pt;
+}
+
+.exam-logo-wrapper {
+  flex-shrink: 0;
+}
+
+.exam-logo {
+  width: 60pt;
+  height: 60pt;
+  object-fit: contain;
+}
+
+.exam-school-info {
+  flex: 1;
+}
+
+.exam-school-name {
+  font-size: 12pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.exam-school-year {
+  font-size: 9pt;
+  color: #555;
+}
+
+.exam-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24pt;
+  font-size: 10.5pt;
+  margin-bottom: 4pt;
+}
+
+.exam-student-field {
+  flex: 1;
+}
+
+.underline-field {
+  letter-spacing: 0.1em;
+}
+
+.exam-instructions {
+  font-size: 9.5pt;
+  color: #333;
+  margin-top: 4pt;
+}
+
+.exam-header-divider {
+  border-top: 2pt solid #000;
+  margin-top: 8pt;
+  margin-bottom: 14pt;
+}
+
+/* ---- Bloco de questão ---- */
+.question-block {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin-bottom: 16pt;
+  padding-bottom: 8pt;
+  border-bottom: 0.5pt solid #ccc;
+}
+
+.question-block:last-child {
+  border-bottom: none;
+}
+
+/* Número + área */
+.question-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6pt;
+  margin-bottom: 4pt;
+}
+
+.question-number {
+  font-size: 11pt;
+  font-weight: bold;
+}
+
+.question-area {
+  font-size: 9pt;
+  color: #555;
+  font-style: italic;
+}
+
+/* Enunciado (texto puro / react-markdown) */
+.statement {
+  font-size: 11pt;
+  line-height: 1.5;
+  margin-bottom: 6pt;
+}
+
+.statement p {
+  margin-bottom: 4pt;
+}
+
+.statement ul,
+.statement ol {
+  margin: 0 0 4pt 16pt;
+}
+
+.statement strong {
+  font-weight: bold;
+}
+
+.statement em {
+  font-style: italic;
+}
+
+/* Imagem */
+.question-image-wrapper {
+  margin: 6pt 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  text-align: center;
+}
+
+.question-image {
+  max-width: 100%;
+  max-height: 120pt;
+  object-fit: contain;
+}
+
+/* Alternativas em 2 colunas */
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3pt 14pt;
+  margin-top: 4pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.option-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4pt;
+  font-size: 10.5pt;
+}
+
+.option-label {
+  font-weight: bold;
+  min-width: 14pt;
+  flex-shrink: 0;
+}
+
+.option-text {
+  flex: 1;
+}
+
+/* ---- Botões de controle (somente tela) ---- */
+.print-controls {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+
+.btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background 0.15s;
+}
+
+.btn-print:hover {
+  background: #1e40af;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: background 0.15s;
+}
+
+.btn-back:hover {
+  background: #f9fafb;
+}

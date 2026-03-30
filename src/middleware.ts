@@ -5,7 +5,22 @@ import type { NextRequest } from 'next/server'
 const PUBLIC_FILE = /\.(.*)$/;
 const PREFIXES = ['/main', '/hub', '/vqdt'];
 
-export function middleware(req: NextRequest) {
+// Rotas do professor que exigem cookie teacher_session válido
+const TEACHER_PROTECTED_PATHS = ['/simulados/professor/nova-questao'];
+
+async function validateTeacherSession(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  const password = process.env.TEACHER_ACCESS_PASSWORD;
+  if (!password) return false;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const expected = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return token === expected;
+}
+
+export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const { pathname, search } = url;
 
@@ -48,7 +63,17 @@ export function middleware(req: NextRequest) {
   //   return new NextResponse('Not Found', { status: 404 });
   // }
 
-  // 6) Reescreve preservando caminho e querystring
+  // 6) Proteção das rotas do professor (hub) com cookie teacher_session
+  if (sub === 'hub' && TEACHER_PROTECTED_PATHS.some((p) => pathname.startsWith(p))) {
+    const token = req.cookies.get('teacher_session')?.value;
+    const valid = await validateTeacherSession(token);
+    if (!valid) {
+      // Redireciona para a página de login do professor
+      return NextResponse.redirect(new URL(`${prefix}/simulados/professor${search}`, req.url));
+    }
+  }
+
+  // 7) Reescreve preservando caminho e querystring
   return NextResponse.rewrite(new URL(`${prefix}${pathname}${search}`, req.url));
 }
 
