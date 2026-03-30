@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -241,6 +242,9 @@ export function QuestionForm() {
             <Info className="w-4 h-4 shrink-0 text-blue-500" />
             <span>
               <strong>Dica de Matemática:</strong> Para equações dentro do texto use cifrão no início o no fim. Ex.: <code className="bg-muted px-1 py-0.5 rounded text-foreground">$1+1=2$</code>. Para blocos isolados use dois cifrões no início o no fim. Ex.: <code className="bg-muted px-1 py-0.5 rounded text-foreground">$$f(x)=x^2$$</code> (Sintaxe LaTeX).
+              <Link href="/hub/simulados/professor/guia-matematica" target="_blank" className="font-medium text-primary hover:underline ml-1 whitespace-nowrap">
+                Ver Guia de Símbolos &rarr;
+              </Link>
             </span>
           </p>
         </div>
