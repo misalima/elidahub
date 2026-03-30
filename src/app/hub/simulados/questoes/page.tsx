@@ -19,14 +19,14 @@ import { KNOWLEDGE_AREAS } from "@/types/simulados";
 export default function QuestoesPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterArea, setFilterArea] = useState("");
+  const [filterArea, setFilterArea] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
 
   const fetch = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filterArea) params.set("area", filterArea);
+      if (filterArea && filterArea !== "all") params.set("area", filterArea);
       if (filterSearch) params.set("search", filterSearch);
       const res = await window.fetch(`/api/questions?${params.toString()}`);
       const data = await res.json();
@@ -77,7 +77,7 @@ export default function QuestoesPage() {
             <SelectValue placeholder="Filtrar por área" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as áreas</SelectItem>
+            <SelectItem value="all">Todas as áreas</SelectItem>
             {KNOWLEDGE_AREAS.map((area) => (
               <SelectItem key={area} value={area}>
                 {area}
@@ -88,7 +88,7 @@ export default function QuestoesPage() {
 
         <div className="flex items-center">
           <Badge variant="secondary" className="text-sm px-3 py-1.5">
-            {loading ? "…" : questions.length} questão{questions.length !== 1 ? "ões" : ""}
+            {loading ? "…" : questions.length} quest{questions.length !== 1 ? "ões" : "ão"}
           </Badge>
         </div>
       </div>

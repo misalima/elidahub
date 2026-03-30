@@ -31,7 +31,7 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
   );
   const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
   const [loadingBank, setLoadingBank] = useState(false);
-  const [filterArea, setFilterArea] = useState("");
+  const [filterArea, setFilterArea] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -49,7 +49,7 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
     setLoadingBank(true);
     try {
       const params = new URLSearchParams();
-      if (filterArea) params.set("area", filterArea);
+      if (filterArea && filterArea !== "all") params.set("area", filterArea);
       if (filterSearch) params.set("search", filterSearch);
       const res = await fetch(`/api/questions?${params.toString()}`);
       const data = await res.json();
@@ -305,7 +305,7 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
               <SelectValue placeholder="Filtrar por área" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as áreas</SelectItem>
+              <SelectItem value="all">Todas as áreas</SelectItem>
               {KNOWLEDGE_AREAS.map((area) => (
                 <SelectItem key={area} value={area}>
                   {area.split(" ")[0]}…

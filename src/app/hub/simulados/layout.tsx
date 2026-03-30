@@ -15,11 +15,12 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
 
   // Rotas do professor usam autenticação por cookie — sem Supabase Auth
   const isProfessorRoute = pathname.includes("/professor");
+  const isPrintRoute = pathname.includes("/imprimir");
 
   useEffect(() => {
-    if (isProfessorRoute) return; // professor não precisa de Supabase auth
+    if (isProfessorRoute) return;
     if (!loading && !user) {
-      router.replace("/hub");
+      router.replace("/hub/login");
     }
   }, [user, loading, router, isProfessorRoute]);
 
@@ -37,6 +38,11 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
   }
 
   if (!user) return null;
+
+  // Print: sem sidebar, mas mantém auth guard
+  if (isPrintRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">

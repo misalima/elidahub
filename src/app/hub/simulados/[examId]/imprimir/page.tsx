@@ -63,10 +63,10 @@ export default function PrintPage({ params }: PrintPageProps) {
           <Printer size={16} />
           Imprimir / Salvar PDF
         </button>
-        <Link href={`/hub/simulados/${examId}`} className="btn-back">
+        <a href={`/hub/simulados/${examId}`} className="btn-back">
           <ArrowLeft size={14} />
           Voltar ao Simulado
-        </Link>
+        </a>
       </div>
 
       <div className="print-page">
