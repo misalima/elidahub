@@ -45,6 +45,19 @@ body {
     box-shadow: 0 4px 32px rgba(0, 0, 0, 0.15);
   }
 
+  /* Tela: grid 2 colunas — sem bug de quebra de página */
+  .questions-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8mm;
+    align-items: start;
+  }
+
+  .questions-col {
+    display: flex;
+    flex-direction: column;
+  }
+
   .no-print {
     display: block;
   }
@@ -59,8 +72,48 @@ body {
     display: none !important;
   }
 
+  /* Impressão: multicol no container pai, wrappers viram transparentes */
   .print-page {
     padding: 0;
+    column-count: 2;
+    column-gap: 8mm;
+  }
+
+  /* Cabeçalho vaza por cima das duas colunas */
+  .exam-header {
+    column-span: all;
+    -webkit-column-span: all;
+  }
+
+  /* Divs intermediários somem do layout — question-blocks fluem direto no multicol */
+  .questions-columns,
+  .questions-col {
+    display: contents;
+  }
+
+  /* Permite quebra natural entre enunciado e alternativas */
+  .question-block {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Alternativas e número de questão nunca quebram no meio */
+  /* Imagens fluem livremente — Chrome decide se encaixa na coluna atual */
+  .options-grid,
+  .question-meta {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Impede disciplina de ficar órfã separada do enunciado */
+  .question-discipline {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Imagens no máximo 80pt para não consumir a coluna inteira */
+  .question-image {
+    max-height: 80pt;
   }
 }
 
@@ -130,17 +183,11 @@ body {
   margin-bottom: 14pt;
 }
 
-/* ---- Bloco das questões em duas colunas ---- */
-.questions-columns {
-  column-count: 2;
-  column-gap: 8mm;
-}
+/* .questions-columns e .questions-col só existem em @media screen e @media print acima */
 
 .question-block {
+  break-inside: avoid;
   page-break-inside: avoid;
-  break-inside: avoid-column;
-  display: inline-block;
-  width: 100%;
   margin-bottom: 12pt;
   padding-bottom: 10pt;
   border-bottom: 0.5pt solid #ddd;
@@ -150,26 +197,31 @@ body {
   border-bottom: none;
 }
 
-/* Número + área */
-.question-meta {
+/* Disciplina / Assunto (linha acima do enunciado) */
+.question-discipline {
+  font-size: 9pt;
+  font-style: italic;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 3pt;
+  /* break-after: avoid definido em @media print */
+}
+
+/* Número inline com enunciado */
+.question-statement-wrap {
   display: flex;
-  align-items: baseline;
-  gap: 6pt;
-  margin-bottom: 4pt;
+  gap: 4pt;
+  align-items: first baseline;
 }
 
 .question-number {
   font-size: 11pt;
   font-weight: bold;
+  flex-shrink: 0;
+  line-height: 1.45;
 }
 
-.question-area {
-  font-size: 9pt;
-  color: #555;
-  font-style: italic;
-}
-
-/* Enunciado (texto puro / react-markdown) */
+/* Enunciado */
 .statement {
   font-size: 11pt;
   line-height: 1.25;
@@ -197,28 +249,35 @@ body {
 /* Imagem */
 .question-image-wrapper {
   margin: 6pt 0;
-  page-break-inside: avoid;
   break-inside: avoid;
+  page-break-inside: avoid;
   text-align: center;
 }
 
 .question-image {
   width: 80%;
   height: auto;
-  max-height: 280pt; /* Limite seguro para não ocupar uma folha inteira */
+  max-height: 280pt;
   object-fit: contain;
   margin: 0 auto;
   display: block;
 }
 
-/* Alternativas fluem melhor em uma coluna quando o simulado já está particionado em duas colunas */
+/* Alternativas — 1 coluna por padrão */
 .options-grid {
   display: flex;
   flex-direction: column;
   gap: 3pt;
   margin-top: 4pt;
-  page-break-inside: avoid;
   break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Alternativas curtas (≤ 40 chars): lado a lado em 2 colunas */
+.options-grid--inline {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2pt 6pt;
 }
 
 .option-item {

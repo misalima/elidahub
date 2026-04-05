@@ -24,6 +24,7 @@ import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap } from "lucide-re
 import { useState } from "react";
 import type { Question } from "@/types/simulados";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useDeleteQuestion } from "@/hooks/useQuestions";
 
 interface QuestionCardProps {
   question: Question;
@@ -58,19 +59,15 @@ export function QuestionCard({
   onSelect,
   questionNumber,
 }: QuestionCardProps) {
-  const [deleting, setDeleting] = useState(false);
+  const { mutateAsync: deleteQuestion, isPending: deleting } = useDeleteQuestion();
 
   async function handleDelete() {
-    setDeleting(true);
     try {
-      const res = await fetch(`/api/questions/${question.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Erro ao excluir");
+      await deleteQuestion(question.id);
       onDelete?.(question.id);
       toast.success("Questão excluída.");
-    } catch {
-      toast.error("Erro ao excluir questão.");
-    } finally {
-      setDeleting(false);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao excluir questão.");
     }
   }
 

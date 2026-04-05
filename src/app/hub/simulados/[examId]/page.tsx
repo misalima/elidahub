@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ExamBuilder } from "@/components/simulados/ExamBuilder";
 import { Loader2, ArrowLeft, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import type { ExamWithQuestions } from "@/types/simulados";
 import { use } from "react";
+import { useExam } from "@/hooks/useExams";
+import type { ExamWithQuestions } from "@/types/simulados";
 
 interface ExamEditPageProps {
   params: Promise<{ examId: string }>;
@@ -14,23 +14,13 @@ interface ExamEditPageProps {
 
 export default function ExamEditPage({ params }: ExamEditPageProps) {
   const { examId } = use(params);
-  const [data, setData] = useState<ExamWithQuestions | null>(null);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetch(`/api/exams/${examId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) setError(d.error);
-        else setData(d);
-      })
-      .catch(() => setError("Erro ao carregar simulado."));
-  }, [examId]);
+  const { data, isLoading, isError } = useExam(examId);
 
-  if (error) {
+  if (isError) {
     return (
       <div className="p-6">
-        <p className="text-destructive">{error}</p>
+        <p className="text-destructive">Erro ao carregar simulado.</p>
         <Link href="/hub/simulados" className="text-sm text-primary mt-2 inline-block">
           ← Voltar aos simulados
         </Link>

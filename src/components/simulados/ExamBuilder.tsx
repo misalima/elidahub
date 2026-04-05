@@ -19,6 +19,8 @@ import { ChevronUp, ChevronDown, X, Loader2, Plus, Search } from "lucide-react";
 import type { Exam, Question, ExamWithQuestions } from "@/types/simulados";
 import { KNOWLEDGE_AREAS } from "@/types/simulados";
 import { Badge } from "@/components/ui/badge";
+import { useQuestions } from "@/hooks/useQuestions";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface ExamBuilderProps {
   exam: Exam;
@@ -29,8 +31,6 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
   const [examQuestions, setExamQuestions] = useState(
     [...initialQuestions].sort((a, b) => a.position - b.position)
   );
-  const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
-  const [loadingBank, setLoadingBank] = useState(false);
   const [filterArea, setFilterArea] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
   const [saving, setSaving] = useState(false);
@@ -44,27 +44,13 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
     school_year: exam.school_year ?? "",
     instructions: exam.instructions ?? "",
   });
+  
+  const debouncedSearch = useDebounce(filterSearch, 300);
 
-  const fetchBank = useCallback(async () => {
-    setLoadingBank(true);
-    try {
-      const params = new URLSearchParams();
-      if (filterArea && filterArea !== "all") params.set("area", filterArea);
-      if (filterSearch) params.set("search", filterSearch);
-      const res = await fetch(`/api/questions?${params.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setBankQuestions(data);
-    } catch {
-      toast.error("Erro ao carregar banco de questões.");
-    } finally {
-      setLoadingBank(false);
-    }
-  }, [filterArea, filterSearch]);
-
-  useEffect(() => {
-    fetchBank();
-  }, [fetchBank]);
+  const { data: bankQuestions = [], isLoading: loadingBank } = useQuestions({
+    area: filterArea !== "all" ? filterArea : null,
+    search: debouncedSearch || null,
+  });
 
   const selectedIds = new Set(examQuestions.map((eq) => eq.question_id));
 
