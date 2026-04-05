@@ -69,8 +69,9 @@ export function QuestionCard({
       await deleteQuestion(question.id);
       onDelete?.(question.id);
       toast.success("Questão excluída.");
-    } catch (e: any) {
-      toast.error(e.message || "Erro ao excluir questão.");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro ao excluir questão.";
+      toast.error(message);
     }
   }
 

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { QuestionForm } from "@/components/simulados/QuestionForm";
 import { TeacherBankModal } from "@/components/simulados/TeacherBankModal";
-import { BookOpen, Plus, Database } from "lucide-react";
+import { Plus, Database } from "lucide-react";
 
 export default function NovaQuestaoPage() {
   const [bankOpen, setBankOpen] = useState(false);

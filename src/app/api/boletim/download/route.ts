@@ -8,17 +8,19 @@ export async function POST(req: Request) {
 
     const url = await generateBoletimDownloadUrl(alunoId, dataNascimento);
     return NextResponse.json({ url });
-  } catch (err: any) {
-    console.error("Erro na API de download:", err);
-    if (err.message === 'Dados incompletos') {
+  } catch (error: unknown) {
+    console.error("Erro na API de download:", error);
+    const message = error instanceof Error ? error.message : "Erro interno no servidor";
+    
+    if (message === 'Dados incompletos') {
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
     }
-    if (err.message === 'Aluno não encontrado') {
+    if (message === 'Aluno não encontrado') {
       return NextResponse.json({ error: "Aluno não encontrado" }, { status: 404 });
     }
-    if (err.message === 'Data de nascimento incorreta') {
+    if (message === 'Data de nascimento incorreta') {
       return NextResponse.json({ error: "Data de nascimento incorreta" }, { status: 401 });
     }
-    return NextResponse.json({ error: err.message || "Erro interno no servidor" }, { status: 500 });
+    return NextResponse.json({ error: message || "Erro interno no servidor" }, { status: 500 });
   }
 }

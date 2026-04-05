@@ -2,7 +2,6 @@
 
 import { ExamHeader } from "@/components/simulados/ExamHeader";
 import { QuestionPrintCard } from "@/components/simulados/QuestionPrintCard";
-import type { ExamWithQuestions } from "@/types/simulados";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
 import { use } from "react";
 import { useExam } from "@/hooks/useExams";
@@ -14,7 +13,7 @@ interface PrintPageProps {
 export default function PrintPage({ params }: PrintPageProps) {
   const { examId } = use(params);
   
-  const { data, isLoading, isError } = useExam(examId);
+  const { data, isLoading: _isLoading, isError } = useExam(examId);
 
   if (isError) {
     return (

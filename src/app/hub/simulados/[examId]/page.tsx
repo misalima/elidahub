@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { use } from "react";
 import { useExam } from "@/hooks/useExams";
-import type { ExamWithQuestions } from "@/types/simulados";
+
 
 interface ExamEditPageProps {
   params: Promise<{ examId: string }>;
@@ -15,7 +15,7 @@ interface ExamEditPageProps {
 export default function ExamEditPage({ params }: ExamEditPageProps) {
   const { examId } = use(params);
 
-  const { data, isLoading, isError } = useExam(examId);
+  const { data, isLoading: _isLoading, isError } = useExam(examId);
 
   if (isError) {
     return (

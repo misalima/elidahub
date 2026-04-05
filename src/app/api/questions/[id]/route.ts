@@ -10,8 +10,9 @@ export async function PATCH(
     const body = await req.json();
     const updated = await updateQuestion(id, body);
     return NextResponse.json(updated);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -23,7 +24,8 @@ export async function DELETE(
     const { id } = await params;
     await deleteQuestion(id);
     return NextResponse.json({ ok: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

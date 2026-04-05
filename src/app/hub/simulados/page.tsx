@@ -60,8 +60,9 @@ export default function SimuladosPage() {
       setDialogOpen(false);
       toast.success("Simulado criado!");
       router.push(`/hub/simulados/${data.id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao criar.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao criar.";
+      toast.error(message);
     }
   }
 

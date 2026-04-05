@@ -49,7 +49,7 @@ export default function QuestoesPage() {
       ? DISCIPLINES_BY_AREA[filterArea as KnowledgeArea] ?? []
       : Object.values(DISCIPLINES_BY_AREA).flat().filter((v, i, a) => a.indexOf(v) === i);
 
-  function handleDelete(id: string) {
+  function handleDelete(_id: string) {
     // The visual deletion is now handled by optimistic UI or React Query invalidation in QuestionCard
   }
 

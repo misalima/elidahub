@@ -13,8 +13,9 @@ export async function GET(req: NextRequest) {
       level: searchParams.get('level'),
     });
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -23,8 +24,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = await createQuestion(body);
     return NextResponse.json(data, { status: 201 });
-  } catch (error: any) {
-    if (error.message === 'Preencha todos os campos obrigatórios.') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === 'Preencha todos os campos obrigatórios.') {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json({ error: 'Erro interno.' }, { status: 500 });

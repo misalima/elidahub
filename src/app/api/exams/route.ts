@@ -5,8 +5,9 @@ export async function GET() {
   try {
     const data = await getExams();
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -15,8 +16,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = await createExam(body);
     return NextResponse.json(data, { status: 201 });
-  } catch (error: any) {
-    if (error.message === 'Título é obrigatório.') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === 'Título é obrigatório.') {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json({ error: 'Erro interno.' }, { status: 500 });

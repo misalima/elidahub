@@ -32,6 +32,8 @@ import {
   DIFFICULTIES,
   LEVELS,
   type KnowledgeArea,
+  type Difficulty,
+  type Level,
 } from "@/types/simulados";
 import { useUpdateQuestion } from "@/hooks/useQuestions";
 
@@ -54,7 +56,7 @@ export function QuestionEditModal({ question, open, onOpenChange }: QuestionEdit
   // Sync form if question prop changes (e.g. parent re-renders with updated data)
   useEffect(() => {
     setForm({ ...question });
-  }, [question.id]);
+  }, [question]);
 
   function handleField<K extends keyof Question>(key: K, value: Question[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -68,13 +70,14 @@ export function QuestionEditModal({ question, open, onOpenChange }: QuestionEdit
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const { id, created_at, updated_at, ...payload } = form;
+    const { id, created_at: _c, updated_at: _u, ...payload } = form;
     try {
       await updateQuestion({ id, payload });
       toast.success("Questão atualizada com sucesso.");
       onOpenChange(false);
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao salvar a questão.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao salvar a questão.";
+      toast.error(message);
     }
   }
 
@@ -229,7 +232,7 @@ export function QuestionEditModal({ question, open, onOpenChange }: QuestionEdit
               <Label>Dificuldade</Label>
               <Select
                 value={form.difficulty ?? ""}
-                onValueChange={(v) => handleField("difficulty", v as any || null)}
+                onValueChange={(v) => handleField("difficulty", (v as Difficulty) || null)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar" />
@@ -245,7 +248,7 @@ export function QuestionEditModal({ question, open, onOpenChange }: QuestionEdit
               <Label>Nível</Label>
               <Select
                 value={form.level ?? ""}
-                onValueChange={(v) => handleField("level", v as any || null)}
+                onValueChange={(v) => handleField("level", (v as Level) || null)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar" />

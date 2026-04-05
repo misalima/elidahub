@@ -9,8 +9,9 @@ export async function GET(
     const { examId } = await params;
     const data = await getExamById(examId);
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -23,8 +24,9 @@ export async function PATCH(
     const body = await req.json();
     const data = await updateExam(examId, body);
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -36,7 +38,8 @@ export async function DELETE(
     const { examId } = await params;
     await deleteExam(examId);
     return NextResponse.json({ ok: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
