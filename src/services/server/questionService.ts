@@ -16,7 +16,7 @@ export async function getQuestions(filters: {
 
   if (filters.area) query = query.eq('knowledge_area', filters.area);
   if (filters.subject) query = query.ilike('subject', `%${filters.subject}%`);
-  if (filters.search) query = query.ilike('statement', `%${filters.search}%`);
+  if (filters.search) query = query.or(`statement.ilike.%${filters.search}%,topic.ilike.%${filters.search}%`);
   if (filters.difficulty) query = query.eq('difficulty', filters.difficulty);
   if (filters.level) query = query.eq('level', filters.level);
 

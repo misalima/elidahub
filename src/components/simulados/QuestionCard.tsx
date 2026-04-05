@@ -94,6 +94,11 @@ export function QuestionCard({
             <Badge variant="outline" className="text-xs">
               {question.subject}
             </Badge>
+            {question.topic && (
+              <Badge variant="outline" className="text-xs bg-muted/50 border-dashed">
+                {question.topic}
+              </Badge>
+            )}
             {question.difficulty && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
                 {question.difficulty}
