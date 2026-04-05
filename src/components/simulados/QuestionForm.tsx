@@ -25,6 +25,7 @@ import { Upload, X, Loader2, CheckCircle2, Info } from "lucide-react";
 const emptyForm = {
   knowledge_area: "" as KnowledgeArea | "",
   subject: "",
+  topic: "",
   statement: "",
   teacher_name: "",
   option_a: "",
@@ -45,6 +46,7 @@ export function QuestionForm() {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [imageInputMode, setImageInputMode] = useState<"upload" | "url">("upload");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const set = (key: keyof typeof emptyForm, value: string | null) =>
@@ -173,6 +175,16 @@ export function QuestionForm() {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="topic">Conteúdo / Tópico <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+            <Input
+              id="topic"
+              placeholder="Ex: Era Vargas, Funções do 2º grau, Fotossíntese..."
+              value={form.topic}
+              onChange={(e) => set("topic", e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Nome do Professor */}
@@ -249,9 +261,30 @@ export function QuestionForm() {
           </p>
         </div>
 
-        {/* Upload de Imagem */}
+        {/* Imagem (opcional) */}
         <div className="space-y-1.5">
-          <Label>Imagem (opcional)</Label>
+          <div className="flex items-center justify-between">
+            <Label>Imagem (opcional)</Label>
+            {!form.image_url && (
+              <div className="flex rounded-md border text-xs overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setImageInputMode("upload")}
+                  className={`px-3 py-1 transition-colors ${imageInputMode === "upload" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                >
+                  Upload
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageInputMode("url")}
+                  className={`px-3 py-1 transition-colors ${imageInputMode === "url" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                >
+                  URL
+                </button>
+              </div>
+            )}
+          </div>
+
           {form.image_url ? (
             <div className="relative inline-block">
               <Image
@@ -270,6 +303,21 @@ export function QuestionForm() {
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
+          ) : imageInputMode === "url" ? (
+            <Input
+              placeholder="https://exemplo.com/imagem.png"
+              onBlur={(e) => {
+                const url = e.target.value.trim();
+                if (url) set("image_url", url);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const url = (e.target as HTMLInputElement).value.trim();
+                  if (url) set("image_url", url);
+                }
+              }}
+            />
           ) : (
             <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
               {uploading ? (

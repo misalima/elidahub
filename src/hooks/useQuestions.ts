@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Question } from '@/types/simulados';
-import type { TablesInsert } from '@/types/database.types';
+import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
 interface FetchQuestionsParams {
   area?: string | null;
@@ -68,6 +68,29 @@ export function useDeleteQuestion() {
         throw new Error(errorData.error || 'Erro ao excluir questão');
       }
       return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    },
+  });
+}
+
+export function useUpdateQuestion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: TablesUpdate<'questions'> }) => {
+      const res = await fetch(`/api/questions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Erro ao atualizar questão');
+      }
+      return res.json() as Promise<Question>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] });

@@ -20,11 +20,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap } from "lucide-react";
+import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap, Pencil } from "lucide-react";
 import { useState } from "react";
 import type { Question } from "@/types/simulados";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDeleteQuestion } from "@/hooks/useQuestions";
+import { QuestionEditModal } from "@/components/simulados/QuestionEditModal";
 
 interface QuestionCardProps {
   question: Question;
@@ -60,6 +61,8 @@ export function QuestionCard({
   questionNumber,
 }: QuestionCardProps) {
   const { mutateAsync: deleteQuestion, isPending: deleting } = useDeleteQuestion();
+  const [editOpen, setEditOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
 
   async function handleDelete() {
     try {
@@ -126,7 +129,7 @@ export function QuestionCard({
 
       <CardFooter className="pt-0 gap-2 flex-wrap">
         {/* Visualizar completo */}
-        <Dialog>
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={(e) => e.stopPropagation()}>
               <Eye className="w-3.5 h-3.5" /> Ver Questão
@@ -192,9 +195,22 @@ export function QuestionCard({
                 ))}
               </div>
 
-              <div className="text-xs text-muted-foreground border-t pt-2">
-                Gabarito: <strong className="text-foreground">{question.answer}</strong>
-                {question.teacher_name && ` · Prof. ${question.teacher_name}`}
+              <div className="text-xs text-muted-foreground border-t pt-2 flex items-center justify-between">
+                <span>
+                  Gabarito: <strong className="text-foreground">{question.answer}</strong>
+                  {question.teacher_name && ` · Prof. ${question.teacher_name}`}
+                </span>
+                {onDelete && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => { setViewOpen(false); setEditOpen(true); }}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Editar Questão
+                  </Button>
+                )}
               </div>
             </div>
           </DialogContent>
@@ -212,6 +228,18 @@ export function QuestionCard({
             }}
           >
             {selected ? "Remover" : "Adicionar"}
+          </Button>
+        )}
+
+        {/* Editar */}
+        {onDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
+          >
+            <Pencil className="w-4 h-4" />
           </Button>
         )}
 
@@ -249,6 +277,13 @@ export function QuestionCard({
           </AlertDialog>
         )}
       </CardFooter>
+
+      {/* Modal de edição — montado fora do CardFooter para evitar conflito de eventos */}
+      <QuestionEditModal
+        question={question}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </Card>
   );
 }

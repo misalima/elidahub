@@ -317,6 +317,7 @@ export type Database = {
           statement: string
           subject: string
           teacher_name: string | null
+          topic: string | null
           updated_at: string
         }
         Insert: {
@@ -335,6 +336,7 @@ export type Database = {
           statement: string
           subject: string
           teacher_name?: string | null
+          topic?: string | null
           updated_at?: string
         }
         Update: {
@@ -353,6 +355,7 @@ export type Database = {
           statement?: string
           subject?: string
           teacher_name?: string | null
+          topic?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -26,8 +26,11 @@ export function QuestionPrintCard({ question, number }: QuestionPrintCardProps) 
 
   return (
     <div className="question-block">
-      {/* Disciplina acima — nunca se separa do número/enunciado abaixo */}
-      <p className="question-discipline">{question.subject}</p>
+      {/* Disciplina + Tópico acima — nunca se separa do número/enunciado abaixo */}
+      <p className="question-discipline">
+        {question.subject}
+        {question.topic && <span className="question-topic"> — {question.topic}</span>}
+      </p>
 
       {/* Número inline com o enunciado */}
       <div className="question-statement-wrap">

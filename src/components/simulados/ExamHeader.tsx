@@ -8,64 +8,77 @@ interface ExamHeaderProps {
 export function ExamHeader({ exam }: ExamHeaderProps) {
   return (
     <div className="exam-header">
-      {/* Linha 1: Logo + Nome da escola */}
-      <div className="exam-header-top">
-        <div className="exam-logo-wrapper">
-          <Image
-            src="/logo_escola.png"
-            alt="Logo da Escola"
-            width={70}
-            height={70}
-            className="exam-logo"
-            unoptimized
-          />
+      {/* Caixa principal do cabeçalho */}
+      <div className="exam-header-box">
+
+        {/* Topo: Logo + Nome da escola */}
+        <div className="exam-header-top">
+          <div className="exam-logo-wrapper">
+            <Image
+              src="/logo_escola.png"
+              alt="Logo da Escola"
+              width={70}
+              height={70}
+              className="exam-logo"
+              unoptimized
+            />
+          </div>
+          <div className="exam-school-info">
+            <p className="exam-school-name">{exam.school_name}</p>
+            {exam.school_year && (
+              <p className="exam-school-year">Ano Letivo: {exam.school_year}</p>
+            )}
+          </div>
         </div>
-        <div className="exam-school-info">
-          <p className="exam-school-name">{exam.school_name}</p>
-          {exam.school_year && (
-            <p className="exam-school-year">Ano Letivo: {exam.school_year}</p>
+
+        {/* Divisor interno */}
+        <div className="exam-header-inner-divider" />
+
+        {/* Linha de dados do simulado */}
+        <div className="exam-info-row">
+          <div className="exam-info-cell exam-info-cell--grow">
+            <span className="exam-info-label">Simulado</span>
+            <span className="exam-info-value">{exam.title}</span>
+          </div>
+          {exam.date_label && (
+            <div className="exam-info-cell">
+              <span className="exam-info-label">Data</span>
+              <span className="exam-info-value">{exam.date_label}</span>
+            </div>
+          )}
+          {exam.duration && (
+            <div className="exam-info-cell">
+              <span className="exam-info-label">Duração</span>
+              <span className="exam-info-value">{exam.duration}</span>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Linha 2: Dados do simulado */}
-      <div className="exam-header-row">
-        <span>
-          <strong>Simulado:</strong> {exam.title}
-        </span>
-        {exam.date_label && (
-          <span>
-            <strong>Data:</strong> {exam.date_label}
-          </span>
-        )}
-        {exam.duration && (
-          <span>
-            <strong>Duração:</strong> {exam.duration}
-          </span>
-        )}
-      </div>
-
-      {/* Linha 3: Turma + Aluno */}
-      <div className="exam-header-row">
-        {exam.grade && (
-          <span>
-            <strong>Turma:</strong> {exam.grade}
-          </span>
-        )}
-        <span className="exam-student-field">
-          <strong>Aluno(a):</strong>{" "}
-          <span className="underline-field">______________________________________________</span>
-        </span>
-      </div>
-
-      {/* Linha 4: Instruções */}
-      {exam.instructions && (
-        <div className="exam-instructions">
-          <strong>Instruções:</strong> {exam.instructions}
+        {/* Linha: Turma + Aluno */}
+        <div className="exam-info-row">
+          {exam.grade && (
+            <div className="exam-info-cell exam-info-cell--fixed">
+              <span className="exam-info-label">Turma</span>
+              <span className="exam-info-value">{exam.grade}</span>
+            </div>
+          )}
+          <div className="exam-info-cell exam-info-cell--grow">
+            <span className="exam-info-label">Aluno(a)</span>
+            <span className="exam-info-value exam-info-underline">&nbsp;</span>
+          </div>
+          <div className="exam-info-cell exam-info-cell--fixed">
+            <span className="exam-info-label">Nota</span>
+            <span className="exam-info-value exam-info-underline">&nbsp;</span>
+          </div>
         </div>
-      )}
 
-      <div className="exam-header-divider" />
+        {/* Instruções */}
+        {exam.instructions && (
+          <div className="exam-instructions">
+            <strong>Instruções:</strong> {exam.instructions}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
