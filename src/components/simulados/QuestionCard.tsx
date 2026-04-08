@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
@@ -83,15 +84,25 @@ export function QuestionCard({
   return (
     <>
       <Card
-        className={`flex flex-col transition-all ${
-          selected ? "border-primary bg-primary/5 shadow-sm" : "hover:border-primary/50 hover:shadow-sm"
-        } ${selectable ? "cursor-pointer" : ""}`}
-        onClick={selectable && onSelect ? () => onSelect(question) : undefined}
+        className={cn(
+          "flex flex-col transition-all duration-300",
+          !selectable && "cursor-pointer",
+          selected 
+            ? "border-primary bg-primary/5 shadow-sm" 
+            : "border-border/40 hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg"
+        )}
+        onClick={() => {
+          // Only open the full view when the card is not in selectable mode.
+          // In selectable mode (e.g., exam edit), adding/removing is handled by the buttons.
+          if (!selectable) {
+            setViewOpen(true);
+          }
+        }}
       >
         <CardHeader className="pb-2 space-y-2">
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <div className="flex flex-wrap gap-1.5">
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${areaColor}`}>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full cursor-default select-none ${areaColor}`}>
                 {formatAreaBadge(question.knowledge_area)}
               </span>
               <Badge variant="outline" className="text-xs">
@@ -103,7 +114,7 @@ export function QuestionCard({
                 </Badge>
               )}
               {question.difficulty && (
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-default select-none ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
                   {question.difficulty}
                 </span>
               )}
@@ -118,7 +129,7 @@ export function QuestionCard({
             )}
           </div>
 
-          <p className="text-sm text-foreground line-clamp-3 leading-relaxed">{preview}</p>
+          <p className="text-[15px] font-serif text-foreground line-clamp-3 leading-relaxed">{preview}</p>
         </CardHeader>
 
         <CardContent className="flex-1 pb-2">
@@ -141,7 +152,7 @@ export function QuestionCard({
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 gap-1.5" 
+            className="flex-1 gap-1.5 active:scale-95 transition-transform" 
             onClick={(e) => { e.stopPropagation(); setViewOpen(true); }}
           >
             <Eye className="w-3.5 h-3.5" /> Ver Questão
@@ -152,7 +163,7 @@ export function QuestionCard({
             <Button
               variant={selected ? "default" : "secondary"}
               size="sm"
-              className="flex-1"
+              className="flex-1 active:scale-95 transition-transform"
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect?.(question);
@@ -194,12 +205,12 @@ export function QuestionCard({
         <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 flex-wrap">
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${areaColor}`}>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full cursor-default select-none ${areaColor}`}>
                 {formatAreaBadge(question.knowledge_area)}
               </span>
               <Badge variant="outline">{question.subject}</Badge>
               {question.difficulty && (
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full cursor-default select-none ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
                   <BarChart3 className="w-3 h-3 inline mr-0.5" />
                   {question.difficulty}
                 </span>
@@ -213,7 +224,7 @@ export function QuestionCard({
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <div className="prose prose-sm dark:prose-invert max-w-none text-[0.82rem] leading-relaxed">
+            <div className="prose font-serif text-[15px] dark:prose-invert max-w-none leading-relaxed">
               <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                 {question.statement}
               </ReactMarkdown>
@@ -242,7 +253,7 @@ export function QuestionCard({
                   >
                     {OPTION_LABELS[i]}
                   </span>
-                  <span className="flex-1 mt-[2px] text-sm break-words prose prose-sm dark:prose-invert">
+                  <span className="flex-1 mt-[2px] font-serif text-[15px] break-words prose dark:prose-invert">
                     <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                       {String(question[key])}
                     </ReactMarkdown>
