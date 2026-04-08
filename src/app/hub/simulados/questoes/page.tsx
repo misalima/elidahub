@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Database } from "lucide-react";
 import { toast } from "sonner";
-import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea } from "@/types/simulados";
+import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea, formatAreaSelect } from "@/types/simulados";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -82,14 +82,14 @@ export default function QuestoesPage() {
             />
           </div>
           <Select value={filterArea} onValueChange={handleAreaChange}>
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger className="w-full sm:w-[240px]">
               <SelectValue placeholder="Filtrar por área" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as áreas</SelectItem>
               {KNOWLEDGE_AREAS.map((area) => (
                 <SelectItem key={area} value={area}>
-                  {area}
+                  {formatAreaSelect(area)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -99,7 +99,7 @@ export default function QuestoesPage() {
         {/* Linha 2: Disciplina + Dificuldade + Nível + Counter */}
         <div className="flex flex-wrap gap-3">
           <Select value={filterSubject} onValueChange={setFilterSubject}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Disciplina" />
             </SelectTrigger>
             <SelectContent>
@@ -113,7 +113,7 @@ export default function QuestoesPage() {
           </Select>
 
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Dificuldade" />
             </SelectTrigger>
             <SelectContent>
@@ -127,7 +127,7 @@ export default function QuestoesPage() {
           </Select>
 
           <Select value={filterLevel} onValueChange={setFilterLevel}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Nível" />
             </SelectTrigger>
             <SelectContent>
