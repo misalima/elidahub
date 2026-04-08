@@ -28,16 +28,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         document.cookie = `sb_access_token=${session.access_token}; path=/; max-age=${session.expires_in}; samesite=lax`;
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
-          .single();
-        if (!error && data) {
-          setUser({ id: session.user.id, email: session.user.email || '', role: data.role });
-        } else {
-          setUser(null);
-        }
+          .maybeSingle();
+        
+        setUser({ 
+          id: session.user.id, 
+          email: session.user.email || '', 
+          role: data?.role || 'coordenador' 
+        });
       } else {
         document.cookie = `sb_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
         setUser(null);
@@ -53,13 +54,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
-          .single()
-          .then(({ data, error }) => {
-            if (!error && data) {
-              setUser({ id: session.user.id, email: session.user.email || '', role: data.role });
-            } else {
-              setUser(null);
-            }
+          .maybeSingle()
+          .then(({ data }) => {
+            setUser({ 
+              id: session.user.id, 
+              email: session.user.email || '', 
+              role: data?.role || 'coordenador' 
+            });
           });
       } else {
         document.cookie = `sb_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;

@@ -18,10 +18,10 @@ export default function HubLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Se já estiver logado, vai direto para simulados
+  // Se já estiver logado, vai direto para a home do hub
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/hub/simulados");
+      router.replace("/hub");
     }
   }, [user, loading, router]);
 
@@ -35,7 +35,7 @@ export default function HubLoginPage() {
       return;
     }
     toast.success("Bem-vindo!");
-    router.push("/hub/simulados");
+    router.push("/hub");
   }
 
   if (loading) {
@@ -166,8 +166,9 @@ export default function HubLoginPage() {
             </Button>
           </form>
 
-          <p className="text-xs text-muted-foreground text-center mt-8">
-            FelixHub · Plataforma de gestão escolar
+          <p className="text-xs text-muted-foreground text-center mt-8 leading-relaxed">
+            FelixHub · Plataforma de gestão escolar<br />
+            All rights reserved &copy; {new Date().getFullYear()} Desenvolvido por Misael Lima
           </p>
         </div>
       </div>

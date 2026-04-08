@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Database, FileText, Settings } from "lucide-react";
+import { BookOpen, Database, FileText, LogOut, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/useUser";
 
 export function SimuladosSidebarContent() {
-  const { user } = useUser();
+  const { user, logout } = useUser();
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-card">
@@ -39,14 +39,21 @@ export function SimuladosSidebarContent() {
         />
       </nav>
 
-      <div className="p-3 border-t">
+      <div className="p-3 border-t space-y-1">
         <Link
           href="/hub"
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
-          <Settings className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" />
           Voltar ao Hub
         </Link>
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Sair
+        </button>
       </div>
     </div>
   );
