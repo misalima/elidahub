@@ -190,9 +190,9 @@ export default function SimuladosPage() {
           {exams.map((exam) => (
             <div
               key={exam.id}
-              className="flex items-center gap-4 p-4 rounded-xl border bg-white dark:bg-card hover:shadow-sm transition-shadow"
+              className="flex flex-col sm:flex-row sm:items-center items-start gap-4 p-4 rounded-xl border bg-white dark:bg-card hover:shadow-sm transition-shadow"
             >
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 w-full">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-foreground truncate">{exam.title}</h3>
                   <Badge variant={exam.status === "published" ? "default" : "secondary"} className="text-xs">
@@ -209,17 +209,17 @@ export default function SimuladosPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1.5"
+                  className="gap-1.5 flex-1 sm:flex-none"
                   onClick={() => window.open(`/hub/simulados/${exam.id}/imprimir`, "_blank")}
                 >
                   <Printer className="w-3.5 h-3.5" />
                   Imprimir
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 flex-1 sm:flex-none" asChild>
                   <Link href={`/hub/simulados/${exam.id}`}>
                     <Pencil className="w-3.5 h-3.5" />
                     Editar

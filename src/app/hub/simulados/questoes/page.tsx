@@ -82,7 +82,7 @@ export default function QuestoesPage() {
             />
           </div>
           <Select value={filterArea} onValueChange={handleAreaChange}>
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger className="w-full sm:w-[240px]">
               <SelectValue placeholder="Filtrar por área" />
             </SelectTrigger>
             <SelectContent>
@@ -99,7 +99,7 @@ export default function QuestoesPage() {
         {/* Linha 2: Disciplina + Dificuldade + Nível + Counter */}
         <div className="flex flex-wrap gap-3">
           <Select value={filterSubject} onValueChange={setFilterSubject}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Disciplina" />
             </SelectTrigger>
             <SelectContent>
@@ -113,7 +113,7 @@ export default function QuestoesPage() {
           </Select>
 
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Dificuldade" />
             </SelectTrigger>
             <SelectContent>
@@ -127,7 +127,7 @@ export default function QuestoesPage() {
           </Select>
 
           <Select value={filterLevel} onValueChange={setFilterLevel}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Nível" />
             </SelectTrigger>
             <SelectContent>

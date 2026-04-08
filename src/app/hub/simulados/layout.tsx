@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
 import { useUser } from "@/hooks/useUser";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { BookOpen, Database, FileText, Settings } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { SimuladosSidebarContent } from "@/components/simulados/SimuladosSidebar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function SimuladosLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -45,46 +45,28 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">
-      {/* Sidebar */}
-      <aside className="w-64 shrink-0 border-r bg-white dark:bg-card flex flex-col">
-        <div className="p-4 flex items-center gap-3 border-b">
-          <Image
-            src="/logo_escola.png"
-            alt="Logo"
-            width={32}
-            height={32}
-            className="object-contain"
-          />
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-foreground leading-tight truncate">
-              Módulo de Simulados
-            </p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-          </div>
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-900">
+      {/* Mobile Top Header */}
+      <header className="flex md:hidden items-center justify-between p-4 border-b bg-white dark:bg-card">
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5" />
+          <span className="font-bold text-sm">Simulados</span>
         </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="w-5 h-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-72">
+            <SimuladosSidebarContent />
+          </SheetContent>
+        </Sheet>
+      </header>
 
-        <nav className="flex-1 p-3 space-y-1">
-          <NavLink href="/hub/simulados" icon={<FileText className="w-4 h-4" />} label="Simulados" />
-          <NavLink href="/hub/simulados/questoes" icon={<Database className="w-4 h-4" />} label="Banco de Questões" />
-          <Separator className="my-2" />
-          <NavLink
-            href="/hub/simulados/professor"
-            icon={<BookOpen className="w-4 h-4" />}
-            label="Link do Professor"
-            external
-          />
-        </nav>
-
-        <div className="p-3 border-t">
-          <Link
-            href="/hub"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            Voltar ao Hub
-          </Link>
-        </div>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 shrink-0 border-r bg-white dark:bg-card flex-col">
+        <SimuladosSidebarContent />
       </aside>
 
       {/* Main content */}
@@ -92,28 +74,5 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
         {children}
       </main>
     </div>
-  );
-}
-
-function NavLink({
-  href,
-  icon,
-  label,
-  external,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  external?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      target={external ? "_blank" : undefined}
-      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-    >
-      {icon}
-      {label}
-    </Link>
   );
 }
