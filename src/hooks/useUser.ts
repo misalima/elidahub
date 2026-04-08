@@ -1,6 +1,6 @@
 import { useAuth } from '../providers/AuthProvider';
 
 export function useUser() {
-  const { user, loading } = useAuth();
-  return { user, loading, role: user?.role };
+  const { user, loading, logout } = useAuth();
+  return { user, loading, logout, role: user?.role };
 }
