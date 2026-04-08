@@ -9,6 +9,7 @@ export async function POST(req: Request) {
     const url = await generateBoletimDownloadUrl(alunoId, dataNascimento);
     return NextResponse.json({ url });
   } catch (error: unknown) {
+    // eslint-disable-next-line no-console
     console.error("Erro na API de download:", error);
     const message = error instanceof Error ? error.message : "Erro interno no servidor";
     

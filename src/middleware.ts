@@ -8,7 +8,7 @@ const PREFIXES = ['/main', '/hub', '/vqdt'];
 // Rotas do professor que exigem cookie teacher_session válido
 const TEACHER_PROTECTED_PATHS = ['/simulados/professor/nova-questao'];
 
-import { validateTeacherSession } from '@/lib/authServer';
+import { validateTeacherSession } from '@/lib/authTeacherEdge';
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
