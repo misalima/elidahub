@@ -1,10 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import { QuestionForm } from "@/components/simulados/QuestionForm";
-import { BookOpen, Plus } from "lucide-react";
+import { TeacherBankModal } from "@/components/simulados/TeacherBankModal";
+import { Plus, Database } from "lucide-react";
 
 export default function NovaQuestaoPage() {
+  const [bankOpen, setBankOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
@@ -26,10 +31,15 @@ export default function NovaQuestaoPage() {
               Nova Questão
             </h1>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <BookOpen className="w-3.5 h-3.5" />
-            Banco de Questões
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 shrink-0"
+            onClick={() => setBankOpen(true)}
+          >
+            <Database className="w-3.5 h-3.5" />
+            Ver Banco de Questões
+          </Button>
         </div>
       </header>
 
@@ -50,6 +60,8 @@ export default function NovaQuestaoPage() {
 
         <QuestionForm />
       </main>
+
+      <TeacherBankModal open={bankOpen} onOpenChange={setBankOpen} />
     </div>
   );
 }

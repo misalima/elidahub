@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import 'dotenv/config';
 import { supabaseAdmin } from '../supabaseAdmin';
 import { citizens } from './citizens';

@@ -18,7 +18,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { Toaster } from "@/components/ui/sonner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { CitizensTable } from "@/components/vqdt/citizens/CitizensTable";
 import { CitizenSearchBar } from "@/components/vqdt/citizens/CitizenSearchBar";
@@ -182,8 +181,6 @@ export default function CitizensPage() {
   const citizens = data?.data || [];
 
   return (
-  <div className="w-full min-h-[calc(100vh-120px)] flex flex-col bg-background py-10 px-4 rounded-2xl">
-      <Toaster />
   <div className="flex flex-col gap-8 px-4 flex-1">
         <div className="flex items-center gap-2 text-2xl font-semibold mb-2">
           <Users className="w-6 h-6" />
@@ -321,6 +318,5 @@ export default function CitizensPage() {
           </div>
         )}
       </div>
-  </div>
   );
 }

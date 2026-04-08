@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { AppThemeProvider } from "@/providers/AppThemeProvider";
 import { TanstackQueryProvider } from "@/providers/TanstackQueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
           <AuthProvider>
             <TanstackQueryProvider>
               {children}
+              <Toaster />
             </TanstackQueryProvider> 
           </AuthProvider>
         </AppThemeProvider>

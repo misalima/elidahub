@@ -45,6 +45,19 @@ body {
     box-shadow: 0 4px 32px rgba(0, 0, 0, 0.15);
   }
 
+  /* Tela: grid 2 colunas — sem bug de quebra de página */
+  .questions-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8mm;
+    align-items: start;
+  }
+
+  .questions-col {
+    display: flex;
+    flex-direction: column;
+  }
+
   .no-print {
     display: block;
   }
@@ -59,21 +72,73 @@ body {
     display: none !important;
   }
 
+  /* Impressão: multicol no container pai, wrappers viram transparentes */
   .print-page {
     padding: 0;
+    column-count: 2;
+    column-gap: 8mm;
+  }
+
+  /* Cabeçalho vaza por cima das duas colunas */
+  .exam-header {
+    column-span: all;
+    -webkit-column-span: all;
+  }
+
+  /* Divs intermediários somem do layout — question-blocks fluem direto no multicol */
+  .questions-columns,
+  .questions-col {
+    display: contents;
+  }
+
+  /* Permite quebra natural entre enunciado e alternativas */
+  .question-block {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Alternativas e número de questão nunca quebram no meio */
+  /* Imagens fluem livremente — Chrome decide se encaixa na coluna atual */
+  .options-grid,
+  .question-meta {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Impede disciplina de ficar órfã separada do enunciado */
+  .question-discipline {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Imagens no máximo 80pt para não consumir a coluna inteira */
+  .question-image {
+    max-height: 80pt;
   }
 }
 
 /* ---- Cabeçalho da escola ---- */
 .exam-header {
-  margin-bottom: 12pt;
+  margin-bottom: 14pt;
 }
 
+/* Caixa principal com borda */
+.exam-header-box {
+  border: 1.5pt solid #000;
+  border-radius: 2pt;
+  overflow: hidden;
+}
+
+/* Topo: logo + nome */
 .exam-header-top {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10pt;
-  margin-bottom: 6pt;
+  padding: 8pt 12pt;
+  border-bottom: 1pt solid #000;
+  background: #f5f5f5;
+  text-align: center;
 }
 
 .exam-logo-wrapper {
@@ -81,8 +146,8 @@ body {
 }
 
 .exam-logo {
-  width: 60pt;
-  height: 60pt;
+  width: 48pt;
+  height: 48pt;
   object-fit: contain;
 }
 
@@ -91,56 +156,94 @@ body {
 }
 
 .exam-school-name {
-  font-size: 12pt;
+  font-size: 11.5pt;
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
 }
 
 .exam-school-year {
-  font-size: 9pt;
-  color: #555;
+  font-size: 8.5pt;
+  color: #444;
+  margin-top: 2pt;
 }
 
-.exam-header-row {
+/* Divisor interno leve */
+.exam-header-inner-divider {
+  border-top: 0.5pt solid #ccc;
+}
+
+/* Linhas de informação */
+.exam-info-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0 24pt;
-  font-size: 10.5pt;
-  margin-bottom: 4pt;
+  border-bottom: 1pt solid #000;
 }
 
-.exam-student-field {
+.exam-info-row:last-of-type {
+  border-bottom: none;
+}
+
+.exam-info-cell {
+  display: flex;
+  flex-direction: column;
+  padding: 4pt 8pt;
+  border-right: 1pt solid #000;
+  min-width: 60pt;
+}
+
+.exam-info-cell:last-child {
+  border-right: none;
+}
+
+.exam-info-cell--grow {
   flex: 1;
 }
 
-.underline-field {
-  letter-spacing: 0.1em;
+.exam-info-cell--fixed {
+  min-width: 50pt;
+  max-width: 80pt;
 }
 
+.exam-info-label {
+  font-size: 7.5pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+  line-height: 1;
+  margin-bottom: 2pt;
+}
+
+.exam-info-value {
+  font-size: 10pt;
+  line-height: 1.2;
+}
+
+/* Campo de preenchimento (Aluno/Nota) */
+.exam-info-underline {
+  border-bottom: 0.75pt solid #444;
+  display: block;
+  min-height: 12pt;
+  margin-top: 1pt;
+}
+
+/* Instruções */
 .exam-instructions {
-  font-size: 9.5pt;
+  font-size: 8.5pt;
   color: #333;
-  margin-top: 4pt;
+  padding: 7pt 12pt;
+  border-top: 1pt solid #000;
+  background: #fafafa;
+  line-height: 1.35;
+  text-align: center;
 }
 
-.exam-header-divider {
-  border-top: 2pt solid #000;
-  margin-top: 8pt;
-  margin-bottom: 14pt;
-}
-
-/* ---- Bloco das questões em duas colunas ---- */
-.questions-columns {
-  column-count: 2;
-  column-gap: 8mm;
-}
+/* .questions-columns e .questions-col só existem em @media screen e @media print acima */
 
 .question-block {
+  break-inside: avoid;
   page-break-inside: avoid;
-  break-inside: avoid-column;
-  display: inline-block;
-  width: 100%;
   margin-bottom: 12pt;
   padding-bottom: 10pt;
   border-bottom: 0.5pt solid #ddd;
@@ -150,26 +253,35 @@ body {
   border-bottom: none;
 }
 
-/* Número + área */
-.question-meta {
+/* Disciplina / Assunto (linha acima do enunciado) */
+.question-discipline {
+  font-size: 9pt;
+  font-style: italic;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 3pt;
+  /* break-after: avoid definido em @media print */
+}
+
+.question-topic {
+  font-weight: 400;
+}
+
+/* Número inline com enunciado */
+.question-statement-wrap {
   display: flex;
-  align-items: baseline;
-  gap: 6pt;
-  margin-bottom: 4pt;
+  gap: 4pt;
+  align-items: first baseline;
 }
 
 .question-number {
   font-size: 11pt;
   font-weight: bold;
+  flex-shrink: 0;
+  line-height: 1.45;
 }
 
-.question-area {
-  font-size: 9pt;
-  color: #555;
-  font-style: italic;
-}
-
-/* Enunciado (texto puro / react-markdown) */
+/* Enunciado */
 .statement {
   font-size: 11pt;
   line-height: 1.25;
@@ -197,28 +309,35 @@ body {
 /* Imagem */
 .question-image-wrapper {
   margin: 6pt 0;
-  page-break-inside: avoid;
   break-inside: avoid;
+  page-break-inside: avoid;
   text-align: center;
 }
 
 .question-image {
   width: 80%;
   height: auto;
-  max-height: 280pt; /* Limite seguro para não ocupar uma folha inteira */
+  max-height: 280pt;
   object-fit: contain;
   margin: 0 auto;
   display: block;
 }
 
-/* Alternativas fluem melhor em uma coluna quando o simulado já está particionado em duas colunas */
+/* Alternativas — 1 coluna por padrão */
 .options-grid {
   display: flex;
   flex-direction: column;
   gap: 3pt;
   margin-top: 4pt;
-  page-break-inside: avoid;
   break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Alternativas curtas (≤ 40 chars): lado a lado em 2 colunas */
+.options-grid--inline {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2pt 6pt;
 }
 
 .option-item {
