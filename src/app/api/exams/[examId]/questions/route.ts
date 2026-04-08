@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyApiAuth } from '@/lib/authServer';
 
 // POST: add question to exam
 export async function POST(
@@ -8,6 +9,11 @@ export async function POST(
 ) {
   const { examId } = await params;
   const { question_id, position } = await req.json();
+
+  const isAuth = await verifyApiAuth(req);
+  if (!isAuth) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
 
   if (!question_id) {
     return NextResponse.json({ error: 'question_id é obrigatório.' }, { status: 400 });
@@ -43,6 +49,11 @@ export async function DELETE(
   const { examId } = await params;
   const { question_id } = await req.json();
 
+  const isAuth = await verifyApiAuth(req);
+  if (!isAuth) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+
   const { error } = await supabaseAdmin
     .from('exam_questions')
     .delete()
@@ -61,6 +72,11 @@ export async function PATCH(
   const { examId } = await params;
   // positions: Array<{ id: string; position: number }>
   const { positions } = await req.json();
+
+  const isAuth = await verifyApiAuth(req);
+  if (!isAuth) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
 
   if (!Array.isArray(positions)) {
     return NextResponse.json({ error: 'positions deve ser um array.' }, { status: 400 });

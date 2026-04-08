@@ -74,6 +74,7 @@ export interface Question {
   option_e: string;
   answer: AnswerOption;
   teacher_name: string | null;
+  topic: string | null;
   difficulty: Difficulty | null;
   level: Level | null;
 }
@@ -116,6 +117,7 @@ export interface CreateQuestionPayload {
   option_d: string;
   option_e: string;
   answer: AnswerOption;
+  topic?: string | null;
   teacher_name?: string;
   difficulty?: Difficulty | null;
   level?: Level | null;

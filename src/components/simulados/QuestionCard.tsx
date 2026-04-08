@@ -20,10 +20,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap } from "lucide-react";
+import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap, Pencil } from "lucide-react";
 import { useState } from "react";
 import type { Question } from "@/types/simulados";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useDeleteQuestion } from "@/hooks/useQuestions";
+import { QuestionEditModal } from "@/components/simulados/QuestionEditModal";
 
 interface QuestionCardProps {
   question: Question;
@@ -58,19 +60,18 @@ export function QuestionCard({
   onSelect,
   questionNumber,
 }: QuestionCardProps) {
-  const [deleting, setDeleting] = useState(false);
+  const { mutateAsync: deleteQuestion, isPending: deleting } = useDeleteQuestion();
+  const [editOpen, setEditOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
 
   async function handleDelete() {
-    setDeleting(true);
     try {
-      const res = await fetch(`/api/questions/${question.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Erro ao excluir");
+      await deleteQuestion(question.id);
       onDelete?.(question.id);
       toast.success("Questão excluída.");
-    } catch {
-      toast.error("Erro ao excluir questão.");
-    } finally {
-      setDeleting(false);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erro ao excluir questão.";
+      toast.error(message);
     }
   }
 
@@ -93,6 +94,11 @@ export function QuestionCard({
             <Badge variant="outline" className="text-xs">
               {question.subject}
             </Badge>
+            {question.topic && (
+              <Badge variant="outline" className="text-xs bg-muted/50 border-dashed">
+                {question.topic}
+              </Badge>
+            )}
             {question.difficulty && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[question.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
                 {question.difficulty}
@@ -129,7 +135,7 @@ export function QuestionCard({
 
       <CardFooter className="pt-0 gap-2 flex-wrap">
         {/* Visualizar completo */}
-        <Dialog>
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={(e) => e.stopPropagation()}>
               <Eye className="w-3.5 h-3.5" /> Ver Questão
@@ -195,9 +201,22 @@ export function QuestionCard({
                 ))}
               </div>
 
-              <div className="text-xs text-muted-foreground border-t pt-2">
-                Gabarito: <strong className="text-foreground">{question.answer}</strong>
-                {question.teacher_name && ` · Prof. ${question.teacher_name}`}
+              <div className="text-xs text-muted-foreground border-t pt-2 flex items-center justify-between">
+                <span>
+                  Gabarito: <strong className="text-foreground">{question.answer}</strong>
+                  {question.teacher_name && ` · Prof. ${question.teacher_name}`}
+                </span>
+                {onDelete && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => { setViewOpen(false); setEditOpen(true); }}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Editar Questão
+                  </Button>
+                )}
               </div>
             </div>
           </DialogContent>
@@ -215,6 +234,18 @@ export function QuestionCard({
             }}
           >
             {selected ? "Remover" : "Adicionar"}
+          </Button>
+        )}
+
+        {/* Editar */}
+        {onDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
+          >
+            <Pencil className="w-4 h-4" />
           </Button>
         )}
 
@@ -252,6 +283,13 @@ export function QuestionCard({
           </AlertDialog>
         )}
       </CardFooter>
+
+      {/* Modal de edição — montado fora do CardFooter para evitar conflito de eventos */}
+      <QuestionEditModal
+        question={question}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </Card>
   );
 }

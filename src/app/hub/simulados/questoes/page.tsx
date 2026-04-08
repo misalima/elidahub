@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { QuestionCard } from "@/components/simulados/QuestionCard";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,17 +13,31 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Database } from "lucide-react";
 import { toast } from "sonner";
-import type { Question } from "@/types/simulados";
 import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea } from "@/types/simulados";
+import { useQuestions } from "@/hooks/useQuestions";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function QuestoesPage() {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filterArea, setFilterArea] = useState("all");
   const [filterSubject, setFilterSubject] = useState("all");
   const [filterDifficulty, setFilterDifficulty] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
+  const debouncedSearch = useDebounce(filterSearch, 300);
+
+  const { data: questions = [], isLoading: loading, isError } = useQuestions({
+    area: filterArea !== "all" ? filterArea : null,
+    subject: filterSubject !== "all" ? filterSubject : null,
+    difficulty: filterDifficulty !== "all" ? filterDifficulty : null,
+    level: filterLevel !== "all" ? filterLevel : null,
+    search: debouncedSearch || null,
+  });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error("Erro ao carregar questões.");
+    }
+  }, [isError]);
 
   // When area changes, reset discipline filter
   function handleAreaChange(value: string) {
@@ -37,33 +51,8 @@ export default function QuestoesPage() {
       ? DISCIPLINES_BY_AREA[filterArea as KnowledgeArea] ?? []
       : Object.values(DISCIPLINES_BY_AREA).flat().filter((v, i, a) => a.indexOf(v) === i);
 
-  const fetchQuestions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (filterArea && filterArea !== "all") params.set("area", filterArea);
-      if (filterSubject && filterSubject !== "all") params.set("subject", filterSubject);
-      if (filterDifficulty && filterDifficulty !== "all") params.set("difficulty", filterDifficulty);
-      if (filterLevel && filterLevel !== "all") params.set("level", filterLevel);
-      if (filterSearch) params.set("search", filterSearch);
-      const res = await window.fetch(`/api/questions?${params.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setQuestions(data);
-    } catch {
-      toast.error("Erro ao carregar questões.");
-    } finally {
-      setLoading(false);
-    }
-  }, [filterArea, filterSubject, filterDifficulty, filterLevel, filterSearch]);
-
-  useEffect(() => {
-    const timer = setTimeout(fetchQuestions, 300);
-    return () => clearTimeout(timer);
-  }, [fetchQuestions]);
-
-  function handleDelete(id: string) {
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
+  function handleDelete(_id: string) {
+    // The visual deletion is now handled by optimistic UI or React Query invalidation in QuestionCard
   }
 
   return (
@@ -87,7 +76,7 @@ export default function QuestoesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Buscar no enunciado..."
+              placeholder="Buscar enunciado ou conteúdo..."
               value={filterSearch}
               onChange={(e) => setFilterSearch(e.target.value)}
             />

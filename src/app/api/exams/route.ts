@@ -1,52 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getExams, createExam } from '@/services/server/examService';
+import { verifyApiAuth } from '@/lib/authServer';
 
 export async function GET() {
-  const { data, error } = await supabaseAdmin
-    .from('exams')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  try {
+    const data = await getExams();
+    return NextResponse.json(data);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const {
-      title,
-      description,
-      school_name,
-      school_year,
-      grade,
-      date_label,
-      duration,
-      instructions,
-    } = body;
-
-    if (!title) {
-      return NextResponse.json({ error: 'Título é obrigatório.' }, { status: 400 });
+    const isAuth = await verifyApiAuth(req);
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('exams')
-      .insert({
-        title,
-        description: description || null,
-        school_name: school_name || 'ESCOLA ESTADUAL PROFESSOR JOSÉ FÉLIX DE CARVALHO ALVES',
-        school_year: school_year || null,
-        grade: grade || null,
-        date_label: date_label || null,
-        duration: duration || null,
-        instructions: instructions || null,
-      })
-      .select()
-      .single();
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const body = await req.json();
+    const data = await createExam(body);
     return NextResponse.json(data, { status: 201 });
-  } catch {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === 'Título é obrigatório.') {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: 'Erro interno.' }, { status: 500 });
   }
 }

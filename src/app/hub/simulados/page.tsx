@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -29,13 +29,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Printer, Pencil, Trash2, Loader2, FileText, BookOpen } from "lucide-react";
-import type { Exam } from "@/types/simulados";
+import { useExams, useCreateExam, useDeleteExam } from "@/hooks/useExams";
 
 export default function SimuladosPage() {
   const router = useRouter();
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [titleError, setTitleError] = useState(false);
   const [newExam, setNewExam] = useState({
@@ -47,23 +44,9 @@ export default function SimuladosPage() {
     instructions: "Leia atentamente cada questão. Assinale apenas uma alternativa. Não é permitido o uso de corretivo.",
   });
 
-  async function fetchExams() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/exams");
-      const data = await res.json();
-      if (!res.ok) throw new Error();
-      setExams(data);
-    } catch {
-      toast.error("Erro ao carregar simulados.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchExams();
-  }, []);
+  const { data: exams = [], isLoading: loading } = useExams();
+  const { mutateAsync: createExamMutation, isPending: creating } = useCreateExam();
+  const { mutateAsync: deleteExamMutation } = useDeleteExam();
 
   async function createExam() {
     if (!newExam.title.trim()) {
@@ -71,30 +54,21 @@ export default function SimuladosPage() {
       toast.error("O título é obrigatório.");
       return;
     }
-    setCreating(true);
+    
     try {
-      const res = await fetch("/api/exams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newExam),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await createExamMutation(newExam);
       setDialogOpen(false);
       toast.success("Simulado criado!");
       router.push(`/hub/simulados/${data.id}`);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erro ao criar.");
-    } finally {
-      setCreating(false);
+      const message = err instanceof Error ? err.message : "Erro ao criar.";
+      toast.error(message);
     }
   }
 
   async function deleteExam(id: string) {
     try {
-      const res = await fetch(`/api/exams/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-      setExams((prev) => prev.filter((e) => e.id !== id));
+      await deleteExamMutation(id);
       toast.success("Simulado excluído.");
     } catch {
       toast.error("Erro ao excluir.");

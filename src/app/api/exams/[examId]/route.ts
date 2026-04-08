@@ -1,51 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getExamById, updateExam, deleteExam } from '@/services/server/examService';
+import { verifyApiAuth } from '@/lib/authServer';
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ examId: string }> }
 ) {
-  const { examId } = await params;
-
-  const { data, error } = await supabaseAdmin
-    .from('exams')
-    .select(
-      `*, exam_questions(*, question:questions(*))`
-    )
-    .eq('id', examId)
-    .order('position', { referencedTable: 'exam_questions', ascending: true })
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  try {
+    const { examId } = await params;
+    const data = await getExamById(examId);
+    return NextResponse.json(data);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ examId: string }> }
 ) {
-  const { examId } = await params;
-  const body = await req.json();
+  try {
+    const isAuth = await verifyApiAuth(req);
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
 
-  const { data, error } = await supabaseAdmin
-    .from('exams')
-    .update(body)
-    .eq('id', examId)
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+    const { examId } = await params;
+    const body = await req.json();
+    const data = await updateExam(examId, body);
+    return NextResponse.json(data);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ examId: string }> }
 ) {
-  const { examId } = await params;
+  try {
+    const isAuth = await verifyApiAuth(_req);
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
 
-  const { error } = await supabaseAdmin.from('exams').delete().eq('id', examId);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+    const { examId } = await params;
+    await deleteExam(examId);
+    return NextResponse.json({ ok: true });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

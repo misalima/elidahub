@@ -1,87 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getQuestions, createQuestion } from '@/services/server/questionService';
+import { verifyApiAuth } from '@/lib/authServer';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const area = searchParams.get('area');
-  const subject = searchParams.get('subject');
-  const search = searchParams.get('search');
-  const difficulty = searchParams.get('difficulty');
-  const level = searchParams.get('level');
-
-  let query = supabaseAdmin
-    .from('questions')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (area) query = query.eq('knowledge_area', area);
-  if (subject) query = query.ilike('subject', `%${subject}%`);
-  if (search) query = query.ilike('statement', `%${search}%`);
-  if (difficulty) query = query.eq('difficulty', difficulty);
-  if (level) query = query.eq('level', level);
-
-  const { data, error } = await query;
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  
+  try {
+    const data = await getQuestions({
+      area: searchParams.get('area'),
+      subject: searchParams.get('subject'),
+      search: searchParams.get('search'),
+      difficulty: searchParams.get('difficulty'),
+      level: searchParams.get('level'),
+    });
+    return NextResponse.json(data);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Desconhecido";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const {
-      knowledge_area,
-      subject,
-      statement,
-      image_url,
-      option_a,
-      option_b,
-      option_c,
-      option_d,
-      option_e,
-      answer,
-      teacher_name,
-      difficulty,
-      level,
-    } = body;
-
-    if (
-      !knowledge_area ||
-      !subject ||
-      !statement ||
-      !option_a ||
-      !option_b ||
-      !option_c ||
-      !option_d ||
-      !option_e ||
-      !answer
-    ) {
-      return NextResponse.json({ error: 'Preencha todos os campos obrigatórios.' }, { status: 400 });
+    const isAuth = await verifyApiAuth(req);
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('questions')
-      .insert({
-        knowledge_area,
-        subject,
-        statement,
-        image_url: image_url || null,
-        option_a,
-        option_b,
-        option_c,
-        option_d,
-        option_e,
-        answer,
-        teacher_name: teacher_name || null,
-        difficulty: difficulty || null,
-        level: level || null,
-      })
-      .select()
-      .single();
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const body = await req.json();
+    const data = await createQuestion(body);
     return NextResponse.json(data, { status: 201 });
-  } catch {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === 'Preencha todos os campos obrigatórios.') {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: 'Erro interno.' }, { status: 500 });
   }
 }

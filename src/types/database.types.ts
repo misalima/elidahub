@@ -12,8 +12,155 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
+      alunos_boletins: {
+        Row: {
+          created_at: string | null
+          data_nascimento: string
+          id: string
+          matricula: string | null
+          nome_completo: string
+          storage_path: string
+          turma: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_nascimento: string
+          id?: string
+          matricula?: string | null
+          nome_completo: string
+          storage_path: string
+          turma: string
+        }
+        Update: {
+          created_at?: string | null
+          data_nascimento?: string
+          id?: string
+          matricula?: string | null
+          nome_completo?: string
+          storage_path?: string
+          turma?: string
+        }
+        Relationships: []
+      }
+      exam_questions: {
+        Row: {
+          exam_id: string
+          id: string
+          position: number
+          question_id: string
+        }
+        Insert: {
+          exam_id: string
+          id?: string
+          position?: number
+          question_id: string
+        }
+        Update: {
+          exam_id?: string
+          id?: string
+          position?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_label: string | null
+          description: string | null
+          duration: string | null
+          grade: string | null
+          id: string
+          instructions: string | null
+          school_name: string
+          school_year: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_label?: string | null
+          description?: string | null
+          duration?: string | null
+          grade?: string | null
+          id?: string
+          instructions?: string | null
+          school_name?: string
+          school_year?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_label?: string | null
+          description?: string | null
+          duration?: string | null
+          grade?: string | null
+          id?: string
+          instructions?: string | null
+          school_name?: string
+          school_year?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       faq_entries: {
         Row: {
           answer: string
@@ -153,15 +300,72 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          answer: string
+          created_at: string
+          difficulty: string | null
+          id: string
+          image_url: string | null
+          knowledge_area: string
+          level: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          option_e: string
+          statement: string
+          subject: string
+          teacher_name: string | null
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          image_url?: string | null
+          knowledge_area: string
+          level?: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          option_e: string
+          statement: string
+          subject: string
+          teacher_name?: string | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          image_url?: string | null
+          knowledge_area?: string
+          level?: string | null
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          option_e?: string
+          statement?: string
+          subject?: string
+          teacher_name?: string | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -559,6 +763,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

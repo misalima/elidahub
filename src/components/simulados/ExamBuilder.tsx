@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,8 @@ import { ChevronUp, ChevronDown, X, Loader2, Plus, Search } from "lucide-react";
 import type { Exam, Question, ExamWithQuestions } from "@/types/simulados";
 import { KNOWLEDGE_AREAS } from "@/types/simulados";
 import { Badge } from "@/components/ui/badge";
+import { useQuestions } from "@/hooks/useQuestions";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface ExamBuilderProps {
   exam: Exam;
@@ -29,8 +31,6 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
   const [examQuestions, setExamQuestions] = useState(
     [...initialQuestions].sort((a, b) => a.position - b.position)
   );
-  const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
-  const [loadingBank, setLoadingBank] = useState(false);
   const [filterArea, setFilterArea] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
   const [saving, setSaving] = useState(false);
@@ -44,27 +44,13 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
     school_year: exam.school_year ?? "",
     instructions: exam.instructions ?? "",
   });
+  
+  const debouncedSearch = useDebounce(filterSearch, 300);
 
-  const fetchBank = useCallback(async () => {
-    setLoadingBank(true);
-    try {
-      const params = new URLSearchParams();
-      if (filterArea && filterArea !== "all") params.set("area", filterArea);
-      if (filterSearch) params.set("search", filterSearch);
-      const res = await fetch(`/api/questions?${params.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setBankQuestions(data);
-    } catch {
-      toast.error("Erro ao carregar banco de questões.");
-    } finally {
-      setLoadingBank(false);
-    }
-  }, [filterArea, filterSearch]);
-
-  useEffect(() => {
-    fetchBank();
-  }, [fetchBank]);
+  const { data: bankQuestions = [], isLoading: loadingBank, isError, refetch } = useQuestions({
+    area: filterArea !== "all" ? filterArea : null,
+    search: debouncedSearch || null,
+  });
 
   const selectedIds = new Set(examQuestions.map((eq) => eq.question_id));
 
@@ -320,6 +306,13 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
         {loadingBank ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center text-center py-8">
+            <p className="text-sm text-destructive font-medium mb-3">Erro ao carregar o banco de questões.</p>
+            <Button variant="outline" size="sm" onClick={() => refetch?.()}>
+              Tentar novamente
+            </Button>
           </div>
         ) : bankQuestions.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
