@@ -40,6 +40,7 @@ export async function createQuestion(payload: TablesInsert<'questions'>) {
   const {
     knowledge_area,
     subject,
+    topic,
     statement,
     image_url,
     option_a,
@@ -72,6 +73,7 @@ export async function createQuestion(payload: TablesInsert<'questions'>) {
     .insert({
       knowledge_area,
       subject,
+      topic: topic || null,
       statement,
       image_url: image_url || null,
       option_a,
