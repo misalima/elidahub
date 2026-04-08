@@ -56,7 +56,7 @@ export default function QuestoesPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto min-h-[100dvh]">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-1">
@@ -168,7 +168,7 @@ export default function QuestoesPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {questions.map((q, i) => (
             <QuestionCard
               key={q.id}

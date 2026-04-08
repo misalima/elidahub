@@ -76,7 +76,7 @@ export default function SimuladosPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto min-h-[100dvh]">
       {/* Header */}
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div>
@@ -91,7 +91,7 @@ export default function SimuladosPage() {
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 active:scale-95 transition-transform">
               <Plus className="w-4 h-4" />
               Novo Simulado
             </Button>
@@ -186,11 +186,12 @@ export default function SimuladosPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {exams.map((exam) => (
             <div
               key={exam.id}
-              className="flex flex-col sm:flex-row sm:items-center items-start gap-4 p-4 rounded-xl border bg-white dark:bg-card hover:shadow-sm transition-shadow"
+              onClick={() => router.push(`/hub/simulados/${exam.id}`)}
+              className="flex flex-col cursor-pointer sm:flex-row sm:items-center items-start gap-4 p-4 rounded-xl border border-border/40 bg-white dark:bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
             >
               <div className="flex-1 min-w-0 w-full">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -213,13 +214,22 @@ export default function SimuladosPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1.5 flex-1 sm:flex-none"
-                  onClick={() => window.open(`/hub/simulados/${exam.id}/imprimir`, "_blank")}
+                  className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/hub/simulados/${exam.id}/imprimir`, "_blank");
+                  }}
                 >
                   <Printer className="w-3.5 h-3.5" />
                   Imprimir
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 flex-1 sm:flex-none" asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform" 
+                  onClick={(e) => e.stopPropagation()} 
+                  asChild
+                >
                   <Link href={`/hub/simulados/${exam.id}`}>
                     <Pencil className="w-3.5 h-3.5" />
                     Editar
@@ -230,7 +240,8 @@ export default function SimuladosPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-transform"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

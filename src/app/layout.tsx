@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lora } from "next/font/google";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "FelixHub",
   description: "FelixHub é uma plataforma de comunicação entre escola e família.",
@@ -29,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}> 
+      <body className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} antialiased`}> 
         <AppThemeProvider>
           <AuthProvider>
             <TanstackQueryProvider>
