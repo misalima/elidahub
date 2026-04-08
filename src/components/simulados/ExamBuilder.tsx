@@ -17,7 +17,7 @@ import { QuestionCard } from "@/components/simulados/QuestionCard";
 import { toast } from "sonner";
 import { ChevronUp, ChevronDown, X, Loader2, Plus, Search } from "lucide-react";
 import type { Exam, Question, ExamWithQuestions } from "@/types/simulados";
-import { KNOWLEDGE_AREAS } from "@/types/simulados";
+import { KNOWLEDGE_AREAS, LEVELS, formatAreaSelect } from "@/types/simulados";
 import { Badge } from "@/components/ui/badge";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -32,6 +32,7 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
     [...initialQuestions].sort((a, b) => a.position - b.position)
   );
   const [filterArea, setFilterArea] = useState("all");
+  const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -49,6 +50,7 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
 
   const { data: bankQuestions = [], isLoading: loadingBank, isError, refetch } = useQuestions({
     area: filterArea !== "all" ? filterArea : null,
+    level: filterLevel !== "all" ? filterLevel : null,
     search: debouncedSearch || null,
   });
 
@@ -287,14 +289,27 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
             />
           </div>
           <Select value={filterArea} onValueChange={setFilterArea}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[170px]">
               <SelectValue placeholder="Filtrar por área" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as áreas</SelectItem>
               {KNOWLEDGE_AREAS.map((area) => (
                 <SelectItem key={area} value={area}>
-                  {area.split(" ")[0]}…
+                  {formatAreaSelect(area)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterLevel} onValueChange={setFilterLevel}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Nível" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os níveis</SelectItem>
+              {LEVELS.map((level) => (
+                <SelectItem key={level} value={level}>
+                  {level}
                 </SelectItem>
               ))}
             </SelectContent>

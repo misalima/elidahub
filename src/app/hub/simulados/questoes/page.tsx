@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Database } from "lucide-react";
 import { toast } from "sonner";
-import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea } from "@/types/simulados";
+import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea, formatAreaSelect } from "@/types/simulados";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -89,7 +89,7 @@ export default function QuestoesPage() {
               <SelectItem value="all">Todas as áreas</SelectItem>
               {KNOWLEDGE_AREAS.map((area) => (
                 <SelectItem key={area} value={area}>
-                  {area}
+                  {formatAreaSelect(area)}
                 </SelectItem>
               ))}
             </SelectContent>
