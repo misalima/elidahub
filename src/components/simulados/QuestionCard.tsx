@@ -129,7 +129,11 @@ export function QuestionCard({
             )}
           </div>
 
-          <p className="text-[15px] font-serif text-foreground line-clamp-3 leading-relaxed">{preview}</p>
+          <div className="text-[15px] font-serif text-foreground leading-relaxed line-clamp-3 prose prose-sm dark:prose-invert max-w-none [&_p]:m-0">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                {preview}
+              </ReactMarkdown>
+            </div>
         </CardHeader>
 
         <CardContent className="flex-1 pb-2">
