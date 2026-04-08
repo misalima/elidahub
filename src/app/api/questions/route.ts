@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getQuestions, createQuestion } from '@/services/server/questionService';
+import { verifyApiAuth } from '@/lib/authServer';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -21,6 +22,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const isAuth = await verifyApiAuth(req);
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
     const body = await req.json();
     const data = await createQuestion(body);
     return NextResponse.json(data, { status: 201 });

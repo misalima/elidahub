@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getExamById, updateExam, deleteExam } from '@/services/server/examService';
+import { verifyApiAuth } from '@/lib/authServer';
 
 export async function GET(
   _req: NextRequest,
@@ -20,6 +21,11 @@ export async function PATCH(
   { params }: { params: Promise<{ examId: string }> }
 ) {
   try {
+    const isAuth = await verifyApiAuth(req);
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
     const { examId } = await params;
     const body = await req.json();
     const data = await updateExam(examId, body);
@@ -35,6 +41,11 @@ export async function DELETE(
   { params }: { params: Promise<{ examId: string }> }
 ) {
   try {
+    const isAuth = await verifyApiAuth(_req);
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
     const { examId } = await params;
     await deleteExam(examId);
     return NextResponse.json({ ok: true });

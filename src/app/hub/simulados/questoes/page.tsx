@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QuestionCard } from "@/components/simulados/QuestionCard";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,9 +33,11 @@ export default function QuestoesPage() {
     search: debouncedSearch || null,
   });
 
-  if (isError) {
-    toast.error("Erro ao carregar questões.");
-  }
+  useEffect(() => {
+    if (isError) {
+      toast.error("Erro ao carregar questões.");
+    }
+  }, [isError]);
 
   // When area changes, reset discipline filter
   function handleAreaChange(value: string) {

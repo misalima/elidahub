@@ -8,17 +8,7 @@ const PREFIXES = ['/main', '/hub', '/vqdt'];
 // Rotas do professor que exigem cookie teacher_session válido
 const TEACHER_PROTECTED_PATHS = ['/simulados/professor/nova-questao'];
 
-async function validateTeacherSession(token: string | undefined): Promise<boolean> {
-  if (!token) return false;
-  const password = process.env.TEACHER_ACCESS_PASSWORD;
-  if (!password) return false;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const expected = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-  return token === expected;
-}
+import { validateTeacherSession } from '@/lib/authServer';
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl;

@@ -47,7 +47,7 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
   
   const debouncedSearch = useDebounce(filterSearch, 300);
 
-  const { data: bankQuestions = [], isLoading: loadingBank } = useQuestions({
+  const { data: bankQuestions = [], isLoading: loadingBank, isError, refetch } = useQuestions({
     area: filterArea !== "all" ? filterArea : null,
     search: debouncedSearch || null,
   });
@@ -306,6 +306,13 @@ export function ExamBuilder({ exam, initialQuestions }: ExamBuilderProps) {
         {loadingBank ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center text-center py-8">
+            <p className="text-sm text-destructive font-medium mb-3">Erro ao carregar o banco de questões.</p>
+            <Button variant="outline" size="sm" onClick={() => refetch?.()}>
+              Tentar novamente
+            </Button>
           </div>
         ) : bankQuestions.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
