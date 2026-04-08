@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Database } from "lucide-react";
 import { toast } from "sonner";
-import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea } from "@/types/simulados";
+import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea, formatAreaSelect } from "@/types/simulados";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -56,7 +56,7 @@ export default function QuestoesPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto min-h-[100dvh]">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-1">
@@ -82,14 +82,14 @@ export default function QuestoesPage() {
             />
           </div>
           <Select value={filterArea} onValueChange={handleAreaChange}>
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger className="w-full sm:w-[240px]">
               <SelectValue placeholder="Filtrar por área" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as áreas</SelectItem>
               {KNOWLEDGE_AREAS.map((area) => (
                 <SelectItem key={area} value={area}>
-                  {area}
+                  {formatAreaSelect(area)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -99,7 +99,7 @@ export default function QuestoesPage() {
         {/* Linha 2: Disciplina + Dificuldade + Nível + Counter */}
         <div className="flex flex-wrap gap-3">
           <Select value={filterSubject} onValueChange={setFilterSubject}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Disciplina" />
             </SelectTrigger>
             <SelectContent>
@@ -113,7 +113,7 @@ export default function QuestoesPage() {
           </Select>
 
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Dificuldade" />
             </SelectTrigger>
             <SelectContent>
@@ -127,7 +127,7 @@ export default function QuestoesPage() {
           </Select>
 
           <Select value={filterLevel} onValueChange={setFilterLevel}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Nível" />
             </SelectTrigger>
             <SelectContent>
@@ -168,7 +168,7 @@ export default function QuestoesPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {questions.map((q, i) => (
             <QuestionCard
               key={q.id}

@@ -85,7 +85,7 @@ export function QuestionForm() {
     e.preventDefault();
     if (!form.knowledge_area || !form.subject || !form.statement ||
         !form.option_a || !form.option_b || !form.option_c ||
-        !form.option_d || !form.option_e || !form.answer) {
+        !form.option_d || !form.option_e || !form.answer || !form.level) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
@@ -219,13 +219,13 @@ export function QuestionForm() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="level">Nível / Série</Label>
+            <Label htmlFor="level">Nível / Série *</Label>
             <Select
               value={form.level}
               onValueChange={(v) => set("level", v)}
             >
               <SelectTrigger id="level" className="w-full">
-                <SelectValue placeholder="Opcional" />
+                <SelectValue placeholder="Selecione o nível" />
               </SelectTrigger>
               <SelectContent>
                 {LEVELS.map((l) => (

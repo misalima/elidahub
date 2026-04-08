@@ -21,6 +21,24 @@ export const KNOWLEDGE_AREAS: KnowledgeArea[] = [
   'Interdisciplinar',
 ];
 
+export const formatAreaBadge = (area: string) => {
+  if (area === "Ciências Humanas e suas Tecnologias") return "Humanas";
+  if (area === "Ciências da Natureza e suas Tecnologias") return "Natureza";
+  if (area === "Linguagens, Códigos e suas Tecnologias") return "Linguagens";
+  if (area === "Matemática e suas Tecnologias") return "Matemática";
+  if (area === "Interdisciplinar") return "Interdisciplinar";
+  return area.split(" ")[0] || area;
+};
+
+export const formatAreaSelect = (area: string) => {
+  if (area === "Ciências Humanas e suas Tecnologias") return "C. Humanas";
+  if (area === "Ciências da Natureza e suas Tecnologias") return "C. da Natureza";
+  if (area === "Linguagens, Códigos e suas Tecnologias") return "Linguagens";
+  if (area === "Matemática e suas Tecnologias") return "Matemática";
+  if (area === "Interdisciplinar") return "Interdisciplinar";
+  return area;
+};
+
 export const DISCIPLINES_BY_AREA: Record<KnowledgeArea, string[]> = {
   'Linguagens, Códigos e suas Tecnologias': [
     'Língua Portuguesa',
