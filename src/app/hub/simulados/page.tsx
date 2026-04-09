@@ -257,7 +257,7 @@ export default function SimuladosPage() {
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-destructive hover:bg-destructive/90"
-                        onClick={() => deleteExam(exam.id)}
+                        onClick={(e) => { e.stopPropagation(); deleteExam(exam.id); }}
                       >
                         Excluir
                       </AlertDialogAction>
