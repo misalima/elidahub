@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Printer, Pencil, Trash2, Loader2, FileText, BookOpen } from "lucide-react";
+import { Plus, Printer, Pencil, Trash2, Loader2, FileText, BookOpen, ClipboardCheck } from "lucide-react";
 import { useExams, useCreateExam, useDeleteExam } from "@/hooks/useExams";
+import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT } from "@/types/simulados";
 
 export default function SimuladosPage() {
   const router = useRouter();
@@ -196,11 +197,13 @@ export default function SimuladosPage() {
               <div className="flex-1 min-w-0 w-full">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-foreground truncate">{exam.title}</h3>
-                  <Badge variant={exam.status === "published" ? "default" : "secondary"} className="text-xs">
-                    {exam.status === "published" ? "Publicado" : "Rascunho"}
+                  <Badge variant={EXAM_STATUS_BADGE_VARIANT[exam.status]} className="text-xs">
+                    {EXAM_STATUS_LABELS[exam.status]}
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
+                  <span>{exam.questions_count ?? 0} questões</span>
+                  {exam.questions_count && <span className="text-muted-foreground/30">•</span>}
                   {exam.grade && <span>Turma: {exam.grade}</span>}
                   {exam.date_label && <span>Data: {exam.date_label}</span>}
                   {exam.duration && <span>Duração: {exam.duration}</span>}
@@ -223,6 +226,20 @@ export default function SimuladosPage() {
                   <Printer className="w-3.5 h-3.5" />
                   Imprimir
                 </Button>
+                {exam.status === "ready" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 flex-1 sm:flex-none border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400 active:scale-95 transition-transform"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(`/hub/simulados/${exam.id}/gabarito`, "_blank");
+                    }}
+                  >
+                    <ClipboardCheck className="w-3.5 h-3.5" />
+                    Gabarito
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm" 
