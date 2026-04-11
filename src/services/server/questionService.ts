@@ -12,6 +12,7 @@ export async function getQuestions(filters: {
   let query = supabaseAdmin
     .from('questions')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (filters.area) query = query.eq('knowledge_area', filters.area);
@@ -106,7 +107,11 @@ export async function updateQuestion(id: string, payload: TablesUpdate<'question
 }
 
 export async function deleteQuestion(id: string) {
-  const { error } = await supabaseAdmin.from('questions').delete().eq('id', id);
+  const { error } = await supabaseAdmin
+    .from('questions')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
   return true;
 }

@@ -95,6 +95,7 @@ export interface Question {
   topic: string | null;
   difficulty: Difficulty | null;
   level: Level | null;
+  deleted_at: string | null;
 }
 
 export type ExamStatus = 'draft' | 'ready' | 'editing';
