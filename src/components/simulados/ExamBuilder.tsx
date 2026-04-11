@@ -288,7 +288,17 @@ export function ExamBuilder({
                     {index + 1}.
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{eq.question.subject}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">{eq.question.subject}</p>
+                      {eq.question.deleted_at && (
+                        <Badge 
+                          variant="outline" 
+                          className="h-4 text-[9px] px-1.5 uppercase font-bold tracking-tighter border-red-200 bg-red-50 text-red-600 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
+                        >
+                          Excluída do Banco
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {eq.question.statement.slice(0, 70)}…
                     </p>
