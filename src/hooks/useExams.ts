@@ -95,3 +95,27 @@ export function useDeleteExam() {
     },
   });
 }
+
+export function useUpdateExamStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'draft' | 'ready' | 'editing' }) => {
+      const res = await fetch(`/api/exams/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Erro ao atualizar status');
+      }
+      return res.json() as Promise<import('@/types/simulados').Exam>;
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['exams', id] });
+    },
+  });
+}
+

@@ -16,6 +16,7 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
   // Rotas do professor usam autenticação por cookie — sem Supabase Auth
   const isProfessorRoute = pathname.includes("/professor");
   const isPrintRoute = pathname.includes("/imprimir");
+  const isGabaritoRoute = pathname.includes("/gabarito");
 
   useEffect(() => {
     if (isProfessorRoute) return;
@@ -39,8 +40,8 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
 
   if (!user) return null;
 
-  // Print: sem sidebar, mas mantém auth guard
-  if (isPrintRoute) {
+  // Print ou Gabarito: sem sidebar, mas mantém auth guard
+  if (isPrintRoute || isGabaritoRoute) {
     return <>{children}</>;
   }
 

@@ -3,9 +3,11 @@ import type { Exam } from "@/types/simulados";
 
 interface ExamHeaderProps {
   exam: Exam;
+  customInstructions?: string;
 }
 
-export function ExamHeader({ exam }: ExamHeaderProps) {
+export function ExamHeader({ exam, customInstructions }: ExamHeaderProps) {
+  const instructions = customInstructions || exam.instructions;
   return (
     <div className="exam-header">
       {/* Caixa principal do cabeçalho */}
@@ -73,9 +75,9 @@ export function ExamHeader({ exam }: ExamHeaderProps) {
         </div>
 
         {/* Instruções */}
-        {exam.instructions && (
+        {instructions && (
           <div className="exam-instructions">
-            <strong>Instruções:</strong> {exam.instructions}
+            <strong>Instruções:</strong> {instructions}
           </div>
         )}
       </div>
