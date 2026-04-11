@@ -97,6 +97,20 @@ export interface Question {
   level: Level | null;
 }
 
+export type ExamStatus = 'draft' | 'ready' | 'editing';
+
+export const EXAM_STATUS_LABELS: Record<ExamStatus, string> = {
+  draft: 'Rascunho',
+  editing: 'Em Edição',
+  ready: 'Concluído',
+};
+
+export const EXAM_STATUS_BADGE_VARIANT: Record<ExamStatus, 'secondary' | 'warning' | 'success'> = {
+  draft: 'secondary',
+  editing: 'warning',
+  ready: 'success',
+};
+
 export interface Exam {
   id: string;
   created_at: string;
@@ -110,7 +124,8 @@ export interface Exam {
   date_label: string | null;
   duration: string | null;
   instructions: string | null;
-  status: 'draft' | 'published';
+  status: ExamStatus;
+  questions_count?: number;
 }
 
 export interface ExamQuestion {

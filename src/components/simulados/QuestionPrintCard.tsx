@@ -7,9 +7,12 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import type { Question } from "@/types/simulados";
 
+import { CheckCircle2 } from "lucide-react";
+
 interface QuestionPrintCardProps {
   question: Question;
   number: number;
+  showAnswer?: boolean;
 }
 
 const OPTION_KEYS = ["option_a", "option_b", "option_c", "option_d", "option_e"] as const;
@@ -18,7 +21,7 @@ const OPTION_LABELS = ["A", "B", "C", "D", "E"];
 // Alternativas ficam lado a lado apenas se todas forem curtas (≤ 40 chars)
 const MAX_INLINE_LENGTH = 40;
 
-export function QuestionPrintCard({ question, number }: QuestionPrintCardProps) {
+export function QuestionPrintCard({ question, number, showAnswer }: QuestionPrintCardProps) {
   const maxOptionLength = Math.max(
     ...OPTION_KEYS.map((k) => String(question[k]).length)
   );
@@ -58,16 +61,26 @@ export function QuestionPrintCard({ question, number }: QuestionPrintCardProps) 
 
       {/* Alternativas */}
       <div className={inlineOptions ? "options-grid options-grid--inline" : "options-grid"}>
-        {OPTION_KEYS.map((key, i) => (
-          <div key={key} className="option-item">
-            <span className="option-label">{OPTION_LABELS[i]})</span>
-            <span className="option-text prose prose-sm dark:prose-invert break-words">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
-                {String(question[key])}
-              </ReactMarkdown>
-            </span>
-          </div>
-        ))}
+        {OPTION_KEYS.map((key, i) => {
+          const isCorrect = showAnswer && question.answer.toLowerCase() === OPTION_LABELS[i].toLowerCase();
+          
+          return (
+            <div 
+              key={key} 
+              className={`option-item ${isCorrect ? "option-item--correct" : ""}`}
+            >
+              <span className="option-label">
+                {isCorrect && <CheckCircle2 size={10} className="option-check-icon" />}
+                {OPTION_LABELS[i]})
+              </span>
+              <span className={`option-text prose prose-sm dark:prose-invert break-words ${isCorrect ? "font-bold text-emerald-700 dark:text-emerald-400" : ""}`}>
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {String(question[key])}
+                </ReactMarkdown>
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

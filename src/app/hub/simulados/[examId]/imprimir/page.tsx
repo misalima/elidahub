@@ -3,7 +3,7 @@
 import { ExamHeader } from "@/components/simulados/ExamHeader";
 import { QuestionPrintCard } from "@/components/simulados/QuestionPrintCard";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
-import { use } from "react";
+import { use, useState } from "react";
 import { useExam } from "@/hooks/useExams";
 
 interface PrintPageProps {
@@ -12,6 +12,7 @@ interface PrintPageProps {
 
 export default function PrintPage({ params }: PrintPageProps) {
   const { examId } = use(params);
+  const [showAnswers, setShowAnswers] = useState(false);
   
   const { data, isLoading: _isLoading, isError } = useExam(examId);
 
@@ -47,14 +48,26 @@ export default function PrintPage({ params }: PrintPageProps) {
     <>
       {/* Controles de tela — ocultos na impressão */}
       <div className="print-controls no-print">
+        <a href={`/hub/simulados/${examId}`} className="btn-back" title="Voltar ao Simulado">
+          <ArrowLeft size={16} />
+        </a>
+
+        <label className="switch-container">
+          <span className="switch-label">Respostas</span>
+          <div className="switch">
+            <input 
+              type="checkbox" 
+              checked={showAnswers} 
+              onChange={(e) => setShowAnswers(e.target.checked)}
+            />
+            <span className="slider"></span>
+          </div>
+        </label>
+
         <button className="btn-print" onClick={() => window.print()}>
           <Printer size={16} />
-          Imprimir / Salvar PDF
+          Imprimir
         </button>
-        <a href={`/hub/simulados/${examId}`} className="btn-back">
-          <ArrowLeft size={14} />
-          Voltar ao Simulado
-        </a>
       </div>
 
       <div className="print-page">
@@ -78,6 +91,7 @@ export default function PrintPage({ params }: PrintPageProps) {
                         key={eq.id}
                         question={eq.question}
                         number={i + 1}
+                        showAnswer={showAnswers}
                       />
                     ))}
                   </div>
@@ -88,6 +102,7 @@ export default function PrintPage({ params }: PrintPageProps) {
                         key={eq.id}
                         question={eq.question}
                         number={half + i + 1}
+                        showAnswer={showAnswers}
                       />
                     ))}
                   </div>

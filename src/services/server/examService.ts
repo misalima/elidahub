@@ -5,11 +5,20 @@ import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 export async function getExams() {
   const { data, error } = await supabaseAdmin
     .from('exams')
-    .select('*')
+    .select('*, exam_questions(count)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data as Exam[];
+
+  return (data ?? []).map((exam) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const countArr = (exam as any).exam_questions as { count: number }[] | undefined;
+    const questions_count = countArr?.[0]?.count ?? 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { exam_questions: _eq, ...rest } = exam as any;
+    void _eq;
+    return { ...rest, questions_count } as Exam;
+  });
 }
 
 export async function getExamById(id: string) {
