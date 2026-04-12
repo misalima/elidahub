@@ -267,7 +267,7 @@ export default function SimuladosPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir simulado?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        O simulado &quot;{exam.title}&quot; será excluído permanentemente, incluindo todas as questões vinculadas.
+                         O simulado &quot;{exam.title}&quot; será excluído permanentemente, incluindo todas as questões vinculadas.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

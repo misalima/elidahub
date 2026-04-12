@@ -10,8 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Database } from "lucide-react";
+import { Loader2, Search, Database, BarChart3 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { KNOWLEDGE_AREAS, DISCIPLINES_BY_AREA, DIFFICULTIES, LEVELS, type KnowledgeArea, formatAreaSelect } from "@/types/simulados";
 import { useQuestions } from "@/hooks/useQuestions";
@@ -58,14 +60,22 @@ export default function QuestoesPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto min-h-[100dvh]">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-1">
-          <Database className="w-6 h-6" />
-          Banco de Questões
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Visualize, filtre e exclua questões enviadas pelos professores.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-1">
+            <Database className="w-6 h-6" />
+            Banco de Questões
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Visualize, filtre e exclua questões enviadas pelos professores.
+          </p>
+        </div>
+        <Button asChild variant="outline" className="gap-2 self-start sm:self-center">
+          <Link href="/hub/simulados/questoes/resumo">
+            <BarChart3 className="w-4 h-4" />
+            Ver Resumo
+          </Link>
+        </Button>
       </div>
 
       {/* Filtros */}
