@@ -24,8 +24,19 @@ export async function POST(req: NextRequest) {
     const token = await hashPassword(password);
 
     const response = NextResponse.json({ ok: true });
+    
+    // Main session cookie (secure and HttpOnly)
     response.cookies.set('teacher_session', token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 8, // 8 hours
+      path: '/',
+    });
+
+    // Client-side flag (not HttpOnly)
+    response.cookies.set('teacher_logged_in', 'true', {
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 8, // 8 hours
