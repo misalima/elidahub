@@ -5,7 +5,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { QuestionForm } from "@/components/simulados/QuestionForm";
 import { TeacherBankModal } from "@/components/simulados/TeacherBankModal";
-import { Plus, Database } from "lucide-react";
+import { Plus, Database, BarChart3 } from "lucide-react";
+import Link from "next/link";
 
 export default function NovaQuestaoPage() {
   const [bankOpen, setBankOpen] = useState(false);
@@ -31,15 +32,28 @@ export default function NovaQuestaoPage() {
               Nova Questão
             </h1>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 shrink-0"
-            onClick={() => setBankOpen(true)}
-          >
-            <Database className="w-3.5 h-3.5" />
-            Ver Banco de Questões
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground hover:text-primary hidden sm:flex"
+            >
+              <Link href="/hub/simulados/questoes/resumo">
+                <BarChart3 className="w-3.5 h-3.5" />
+                Resumo do Banco
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setBankOpen(true)}
+            >
+              <Database className="w-3.5 h-3.5" />
+              Ver Banco de Questões
+            </Button>
+          </div>
         </div>
       </header>
 

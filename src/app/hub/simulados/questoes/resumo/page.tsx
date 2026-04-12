@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, 
   BarChart3, 
@@ -20,12 +21,20 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useQuestions } from "@/hooks/useQuestions";
-import { KNOWLEDGE_AREAS, LEVELS, DISCIPLINES_BY_AREA, formatAreaBadge, type KnowledgeArea } from "@/types/simulados";
+import { KNOWLEDGE_AREAS, LEVELS, DISCIPLINES_BY_AREA, formatAreaBadge, type KnowledgeArea, type Question } from "@/types/simulados";
+import { DisciplineQuestionsModal } from "@/components/simulados/DisciplineQuestionsModal";
 
 export default function ResumoQuestoesPage() {
+  const router = useRouter();
   const [filterArea, setFilterArea] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showEJA, setShowEJA] = useState(false);
+  
+  // State for question preview modal
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedDiscipline, setSelectedDiscipline] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
   
   // Custom fetch to get all questions without filters
   const { data: questions = [], isLoading } = useQuestions({});
@@ -121,26 +130,34 @@ export default function ResumoQuestoesPage() {
     return levels;
   }, [showEJA, filterLevel]);
 
+  const handleOpenPreview = (subject: string, level: string) => {
+    const filtered = questions.filter(q => q.subject === subject && q.level === level);
+    setPreviewQuestions(filtered);
+    setSelectedDiscipline(subject);
+    setSelectedLevel(level);
+    setPreviewOpen(true);
+  };
+
   const getAreaColor = (area: string) => {
-    if (area.includes('Linguagens')) return 'from-rose-50/50 to-rose-100/30 border-rose-200/50 text-rose-700';
-    if (area.includes('Humanas')) return 'from-amber-50/50 to-amber-100/30 border-amber-200/50 text-amber-700';
-    if (area.includes('Natureza')) return 'from-sky-50/50 to-sky-100/30 border-sky-200/50 text-sky-700';
-    if (area.includes('Matemática')) return 'from-emerald-50/50 to-emerald-100/30 border-emerald-200/50 text-emerald-700';
-    return 'from-slate-50/50 to-slate-100/30 border-slate-200/50 text-slate-700';
+    if (area.includes('Linguagens')) return 'from-rose-50/50 to-rose-100/30 border-rose-200/50 text-rose-700 dark:from-rose-950/20 dark:to-rose-900/10 dark:border-rose-900/50 dark:text-rose-400';
+    if (area.includes('Humanas')) return 'from-amber-50/50 to-amber-100/30 border-amber-200/50 text-amber-700 dark:from-amber-950/20 dark:to-amber-900/10 dark:border-amber-900/50 dark:text-amber-400';
+    if (area.includes('Natureza')) return 'from-sky-50/50 to-sky-100/30 border-sky-200/50 text-sky-700 dark:from-sky-950/20 dark:to-sky-900/10 dark:border-sky-900/50 dark:text-sky-400';
+    if (area.includes('Matemática')) return 'from-emerald-50/50 to-emerald-100/30 border-emerald-200/50 text-emerald-700 dark:from-emerald-950/20 dark:to-emerald-900/10 dark:border-emerald-900/50 dark:text-emerald-400';
+    return 'from-slate-50/50 to-slate-100/30 border-slate-200/50 text-slate-700 dark:from-slate-900/40 dark:to-slate-950/40 dark:border-slate-800 dark:text-slate-400';
   };
 
   const getLevelColor = (level: string) => {
-    if (level.includes('1ª')) return 'bg-blue-50/40 border-blue-100/50';
-    if (level.includes('2ª')) return 'bg-emerald-50/40 border-emerald-100/50';
-    if (level.includes('3ª')) return 'bg-amber-50/40 border-amber-100/50';
-    return 'bg-purple-50/40 border-purple-100/50';
+    if (level.includes('1ª')) return 'bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/30';
+    if (level.includes('2ª')) return 'bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/30';
+    if (level.includes('3ª')) return 'bg-amber-50/40 border-amber-100/50 dark:bg-amber-950/20 dark:border-amber-900/30';
+    return 'bg-purple-50/40 border-purple-100/50 dark:bg-purple-950/20 dark:border-purple-900/30';
   };
 
   const getLevelIconColor = (level: string) => {
-    if (level.includes('1ª')) return 'text-blue-600';
-    if (level.includes('2ª')) return 'text-emerald-600';
-    if (level.includes('3ª')) return 'text-amber-600';
-    return 'text-purple-600';
+    if (level.includes('1ª')) return 'text-blue-600 dark:text-blue-400';
+    if (level.includes('2ª')) return 'text-emerald-600 dark:text-emerald-400';
+    if (level.includes('3ª')) return 'text-amber-600 dark:text-amber-400';
+    return 'text-purple-600 dark:text-purple-400';
   };
 
   if (isLoading) {
@@ -158,11 +175,16 @@ export default function ResumoQuestoesPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Button asChild variant="ghost" size="sm" className="-ml-2 h-8 text-muted-foreground hover:text-foreground">
-              <Link href="/hub/simulados/questoes" className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="-ml-2 h-8 text-muted-foreground hover:text-foreground"
+              onClick={() => router.back()}
+            >
+              <div className="flex items-center gap-1">
                 <ChevronLeft className="w-4 h-4" />
-                Voltar para o Banco
-              </Link>
+                Voltar
+              </div>
             </Button>
           </div>
           <div className="flex items-center gap-3">
@@ -271,13 +293,24 @@ export default function ResumoQuestoesPage() {
                       return a[0].localeCompare(b[0]); // Alphabetical within same priority
                     })
                     .map(([subject, count], rowIdx) => (
-                      <div key={subject} className={`flex justify-between items-center px-5 py-2 hover:bg-background/60 transition-colors group ${rowIdx % 2 === 0 ? 'bg-background/20' : ''}`}>
-                        <span className="text-[13px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                      <div 
+                        key={subject} 
+                        onClick={() => handleOpenPreview(subject, level)}
+                        className={`flex justify-between items-center px-5 py-2 hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer transition-colors group ${rowIdx % 2 === 0 ? 'bg-background/20 dark:bg-white/5' : ''}`}
+                      >
+                        <span className="text-[13px] font-semibold text-muted-foreground group-hover:text-primary transition-colors">
                           {subject}
                         </span>
-                        <span className={`flex items-center justify-center text-sm font-black h-7 min-w-[1.75rem] px-2.5 rounded-full bg-muted/60 group-hover:bg-primary group-hover:text-primary-foreground transition-all shadow-sm`}>
-                          {count}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {count > 0 && (
+                            <span className="text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                              Ver questões
+                            </span>
+                          )}
+                          <span className={`flex items-center justify-center text-sm font-black h-7 min-w-[1.75rem] px-2.5 rounded-full ${count > 0 ? 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground' : 'bg-muted/60 text-muted-foreground/40'} transition-all shadow-sm`}>
+                            {count}
+                          </span>
+                        </div>
                       </div>
                     ))
                 }
@@ -295,6 +328,14 @@ export default function ResumoQuestoesPage() {
           <span>Exibindo: <strong className="text-primary">{stats.filteredCount}</strong></span>
         </div>
       </div>
+
+      <DisciplineQuestionsModal 
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        questions={previewQuestions}
+        discipline={selectedDiscipline}
+        level={selectedLevel}
+      />
     </div>
   );
 }

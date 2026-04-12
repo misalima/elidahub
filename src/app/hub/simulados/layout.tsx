@@ -17,16 +17,30 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
   const isProfessorRoute = pathname.includes("/professor");
   const isPrintRoute = pathname.includes("/imprimir");
   const isGabaritoRoute = pathname.includes("/gabarito");
+  const isResumoRoute = pathname.includes("/questoes/resumo");
 
   useEffect(() => {
     if (isProfessorRoute) return;
-    if (!loading && !user) {
-      router.replace("/hub/login");
-    }
-  }, [user, loading, router, isProfessorRoute]);
 
-  // Professor: sem sidebar, sem auth guard — só renderiza os filhos
-  if (isProfessorRoute) {
+    if (!loading) {
+      // Regra para a página de Resumo: Admin (Supabase) OU Professor (Cookie)
+      if (isResumoRoute) {
+        const hasTeacherSession = document.cookie.includes("teacher_session=");
+        if (!user && !hasTeacherSession) {
+          router.replace("/hub/simulados/professor");
+        }
+        return;
+      }
+
+      // Regra padrão: exige login do Supabase
+      if (!user) {
+        router.replace("/hub/login");
+      }
+    }
+  }, [user, loading, router, isProfessorRoute, isResumoRoute]);
+
+  // Professor ou Resumo: sem sidebar, sem auth guard — só renderiza os filhos
+  if (isProfessorRoute || isResumoRoute) {
     return <>{children}</>;
   }
 
