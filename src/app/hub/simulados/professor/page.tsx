@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,15 +9,18 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { LockKeyhole, Loader2, Eye, EyeOff } from "lucide-react";
 
-export default function TeacherLoginPage() {
+function TeacherLoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    const redirectTo = searchParams.get('redirect');
+    
     try {
       const res = await fetch("/api/auth/teacher-login", {
         method: "POST",
@@ -30,7 +33,10 @@ export default function TeacherLoginPage() {
         return;
       }
       toast.success("Acesso liberado!");
-      router.push("/hub/simulados/professor/nova-questao");
+      
+      // Se houver um destino específico, vai para lá. Senão, vai para nova-questao padrão.
+      const finalDest = redirectTo ? `/hub${redirectTo}` : "/hub/simulados/professor/nova-questao";
+      router.push(finalDest);
     } catch {
       toast.error("Erro de conexão. Tente novamente.");
     } finally {
@@ -121,5 +127,17 @@ export default function TeacherLoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function TeacherLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    }>
+      <TeacherLoginForm />
+    </Suspense>
   );
 }

@@ -6,7 +6,10 @@ const PUBLIC_FILE = /\.(.*)$/;
 const PREFIXES = ['/main', '/hub', '/vqdt'];
 
 // Rotas do professor que exigem cookie teacher_session válido
-const TEACHER_PROTECTED_PATHS = ['/simulados/professor/nova-questao'];
+const TEACHER_PROTECTED_PATHS = [
+  '/simulados/professor/nova-questao',
+  '/simulados/questoes/resumo'
+];
 
 import { validateTeacherSession } from '@/lib/authTeacherEdge';
 
@@ -57,9 +60,15 @@ export async function middleware(req: NextRequest) {
   if (sub === 'hub' && TEACHER_PROTECTED_PATHS.some((p) => pathname.startsWith(p))) {
     const token = req.cookies.get('teacher_session')?.value;
     const valid = await validateTeacherSession(token);
-    if (!valid) {
-      // Redireciona para a página de login do professor
-      return NextResponse.redirect(new URL(`${prefix}/simulados/professor${search}`, req.url));
+    
+    // Também libera se houver um token do Supabase (Coordenador)
+    const hasSupabase = req.cookies.has('sb_access_token');
+    
+    if (!valid && !hasSupabase) {
+      // Redireciona para a página de login do professor, guardando a origem
+      const redirectUrl = new URL(`${prefix}/simulados/professor${search}`, req.url);
+      redirectUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(redirectUrl);
     }
   }
 

@@ -25,9 +25,11 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
     if (!loading) {
       // Regra para a página de Resumo: Admin (Supabase) OU Professor (Cookie)
       if (isResumoRoute) {
-        const hasTeacherSession = document.cookie.includes("teacher_session=");
+        const hasTeacherSession = document.cookie.includes("teacher_logged_in=");
         if (!user && !hasTeacherSession) {
-          router.replace("/hub/simulados/professor");
+          // Salva a rota atual (removendo o prefixo /hub se necessário) para voltar após o login
+          const redirectPath = pathname.startsWith("/hub") ? pathname.replace("/hub", "") : pathname;
+          router.replace(`/hub/simulados/professor?redirect=${encodeURIComponent(redirectPath)}`);
         }
         return;
       }
