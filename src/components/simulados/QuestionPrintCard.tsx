@@ -1,10 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import type { Question } from "@/types/simulados";
 
 import { CheckCircle2 } from "lucide-react";
@@ -39,9 +36,9 @@ export function QuestionPrintCard({ question, number, showAnswer }: QuestionPrin
       <div className="question-statement-wrap">
         <span className="question-number">{number}.</span>
         <div className="statement">
-          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+          <MarkdownRenderer>
             {question.statement}
-          </ReactMarkdown>
+          </MarkdownRenderer>
         </div>
       </div>
 
@@ -74,9 +71,9 @@ export function QuestionPrintCard({ question, number, showAnswer }: QuestionPrin
                 {OPTION_LABELS[i]})
               </span>
               <span className={`option-text prose prose-sm dark:prose-invert break-words ${isCorrect ? "font-bold text-emerald-700 dark:text-emerald-400" : ""}`}>
-                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                <MarkdownRenderer>
                   {String(question[key])}
-                </ReactMarkdown>
+                </MarkdownRenderer>
               </span>
             </div>
           );

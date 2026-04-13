@@ -1,17 +1,14 @@
 "use client";
 
-import { ArrowLeft, Calculator, SquareSigma, Shapes, FunctionSquare, Plus, Minus } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { ArrowLeft, Calculator, SquareSigma, Shapes, FunctionSquare, Plus, Minus, Beaker } from "lucide-react";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 
 function MathBlock({ children }: { children: string }) {
   return (
     <div className="prose prose-slate dark:prose-invert">
-      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+      <MarkdownRenderer>
         {children}
-      </ReactMarkdown>
+      </MarkdownRenderer>
     </div>
   );
 }
@@ -176,6 +173,42 @@ export default function GuiaMatematicaPage() {
                     <FormulaRow name="Somatório" syntax="$\sum_{i=1}^n x_i$" example="$\sum_{i=1}^n x_i$" />
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* Card 5 - QUÍMICA (NEW) */}
+            <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+              <div className="flex flex-col space-y-1.5 p-6 border-b bg-emerald-500/10">
+                <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+                  <Beaker className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Notação Química (mhchem)
+                </h3>
+              </div>
+              <div className="p-0 overflow-x-auto">
+                <table className="w-full caption-bottom text-sm min-w-[500px]">
+                  <thead className="[&_tr]:border-b">
+                    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Tipo</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Como digitar</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Exemplo Visual</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <FormulaRow name="Isótopos (mhchem)" syntax="$\ce{^{12}_{6}C}$" example="$\ce{^{12}_{6}C}$" />
+                    <FormulaRow name="Isótopos (LaTeX puro)" syntax="$^{12}_{6}\mathrm{C}$" example="$^{12}_{6}\mathrm{C}$" />
+                    <FormulaRow name="Íons e Cargas" syntax="$\ce{Na+}$ e $\ce{SO4^{2-}}$" example="$\ce{Na+}$ e $\ce{SO4^{2-}}$" />
+                    <FormulaRow name="Fórmulas Moleculares" syntax="$\ce{H2O}$, $\ce{CO2}$" example="$\ce{H2O}$ e $\ce{CO2}$" />
+                    <FormulaRow name="Reação Simples" syntax="$\ce{2H2 + O2 -> 2H2O}$" example="$\ce{2H2 + O2 -> 2H2O}$" />
+                    <FormulaRow name="Reação com Condições" syntax="$\ce{N2 + 3H2 ->[Fe][400 ^\circ C] 2NH3}$" example="$\ce{N2 + 3H2 ->[Fe][400 ^\circ C] 2NH3}$" />
+                    <FormulaRow name="Estados Físicos" syntax="$\ce{NaCl_{(aq)} -> Na+ + Cl-}$" example="$\ce{NaCl_{(aq)} -> Na+ + Cl-}$" />
+                    <FormulaRow name="Equilíbrio Químico" syntax="$\ce{A <=> B}$" example="$\ce{A <=> B}$" />
+                    <FormulaRow name="Complexos" syntax="$\ce{[Fe(CN)6]^{3-}}$" example="$\ce{[Fe(CN)6]^{3-}}$" />
+                  </tbody>
+                </table>
+              </div>
+              <div className="p-4 bg-muted/30 border-t">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <strong>Nota:</strong> O comando <code>\ce{`{...}`}</code> facilita muito a escrita química, convertendo automaticamente números para subscritos e tratando setas e cargas. Use sempre que possível em questões de Ciências da Natureza.
+                </p>
               </div>
             </div>
 

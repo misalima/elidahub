@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -156,9 +153,9 @@ export function QuestionEditModal({ question, open, onOpenChange }: QuestionEdit
             </div>
             {previewStatement ? (
               <div className="min-h-[100px] p-3 rounded-md border bg-muted/30 prose prose-sm dark:prose-invert max-w-none text-sm">
-                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                <MarkdownRenderer>
                   {form.statement || "*Enunciado vazio*"}
-                </ReactMarkdown>
+                </MarkdownRenderer>
               </div>
             ) : (
               <Textarea

@@ -9,10 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, GraduationCap, X } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import "katex/dist/katex.min.css";
 import { Question } from "@/types/simulados";
 import { Button } from "@/components/ui/button";
@@ -100,9 +97,9 @@ export function DisciplineQuestionsModal({
 
                     {/* Enunciado */}
                     <div className="prose prose-sm dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 leading-relaxed">
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                      <MarkdownRenderer>
                         {q.statement}
-                      </ReactMarkdown>
+                      </MarkdownRenderer>
                     </div>
 
                     {/* Alternativas */}
@@ -128,9 +125,9 @@ export function DisciplineQuestionsModal({
                               {OPTION_LABELS[idx]}
                             </span>
                             <div className="flex-1 pt-0.5 leading-relaxed">
-                              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                              <MarkdownRenderer>
                                 {String(q[key] || "")}
-                              </ReactMarkdown>
+                              </MarkdownRenderer>
                             </div>
                             {isCorrect && (
                               <Badge variant="ghost" className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 p-0 h-auto">
