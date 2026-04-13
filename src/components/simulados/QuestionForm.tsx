@@ -3,10 +3,7 @@
 import React, { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -459,9 +456,9 @@ function QuestionPreview({ form }: { form: FormState }) {
 
       {form.statement && (
         <div className="mb-4 prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+          <MarkdownRenderer>
             {form.statement}
-          </ReactMarkdown>
+          </MarkdownRenderer>
         </div>
       )}
 
@@ -492,9 +489,9 @@ function QuestionPreview({ form }: { form: FormState }) {
                 {label}
               </span>
               <span className="flex-1 text-sm break-words prose prose-sm dark:prose-invert">
-                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                <MarkdownRenderer>
                   {String(value)}
-                </ReactMarkdown>
+                </MarkdownRenderer>
               </span>
             </div>
           ) : null

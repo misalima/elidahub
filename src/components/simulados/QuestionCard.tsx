@@ -2,10 +2,7 @@
 import { cn } from "@/lib/utils";
 
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -130,9 +127,9 @@ export function QuestionCard({
           </div>
 
           <div className="text-[15px] font-serif text-foreground leading-relaxed line-clamp-3 prose prose-sm dark:prose-invert max-w-none [&_p]:m-0">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+              <MarkdownRenderer>
                 {preview}
-              </ReactMarkdown>
+              </MarkdownRenderer>
             </div>
         </CardHeader>
 
@@ -229,9 +226,9 @@ export function QuestionCard({
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="prose font-serif text-[15px] dark:prose-invert max-w-none leading-relaxed">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+              <MarkdownRenderer>
                 {question.statement}
-              </ReactMarkdown>
+              </MarkdownRenderer>
             </div>
 
             {question.image_url && (
@@ -258,9 +255,9 @@ export function QuestionCard({
                     {OPTION_LABELS[i]}
                   </span>
                   <span className="flex-1 mt-[2px] font-serif text-[15px] break-words prose dark:prose-invert">
-                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                    <MarkdownRenderer>
                       {String(question[key])}
-                    </ReactMarkdown>
+                    </MarkdownRenderer>
                   </span>
                 </div>
               ))}

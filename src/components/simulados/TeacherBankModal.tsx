@@ -9,10 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Database, BookOpen } from "lucide-react";
 import { useQuestions } from "@/hooks/useQuestions";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 
 interface TeacherBankModalProps {
   open: boolean;
@@ -79,9 +76,9 @@ export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) 
 
                 {/* Enunciado */}
                 <div className="px-4 pt-3 pb-2 prose prose-sm dark:prose-invert max-w-none text-sm">
-                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  <MarkdownRenderer>
                     {q.statement}
-                  </ReactMarkdown>
+                  </MarkdownRenderer>
                 </div>
 
                 {/* Alternativas com gabarito destacado */}
@@ -107,9 +104,9 @@ export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) 
                           {OPTION_LABELS[idx]}
                         </span>
                         <span className={`flex-1 prose prose-sm dark:prose-invert max-w-none ${isCorrect ? "font-medium text-green-800 dark:text-green-200" : ""}`}>
-                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                          <MarkdownRenderer>
                             {String(q[key])}
-                          </ReactMarkdown>
+                          </MarkdownRenderer>
                         </span>
                         {isCorrect && (
                           <span className="text-xs text-green-600 dark:text-green-400 font-semibold shrink-0 mt-0.5">
