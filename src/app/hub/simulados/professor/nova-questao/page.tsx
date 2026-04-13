@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useLayoutEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { QuestionForm } from "@/components/simulados/QuestionForm";
 import { TeacherBankModal } from "@/components/simulados/TeacherBankModal";
@@ -10,6 +11,16 @@ import Link from "next/link";
 
 export default function NovaQuestaoPage() {
   const [bankOpen, setBankOpen] = useState(false);
+  const router = useRouter();
+
+  useLayoutEffect(() => {
+    // Fallback: se o middleware falhar, o client-side também bloqueia
+    const isLoggedIn = document.cookie.includes("teacher_logged_in=true");
+    const hasSupabase = document.cookie.includes("sb_access_token");
+    if (!isLoggedIn && !hasSupabase) {
+      router.replace("/hub/simulados/professor");
+    }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">

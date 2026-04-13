@@ -22,55 +22,50 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2) Evita reescrever novamente se já estamos num prefixo conhecido
-  if (PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return NextResponse.next();
-  }
-
-  // 3) Hostname sem porta
+  // 3) Hostname sem porta e subdomínio
   const hostHeader = req.headers.get('host') ?? '';
   const hostname = hostHeader.split(':')[0].toLowerCase();
-
-  // 4) Descobre subdomínio
+  
   let sub = '';
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
-    // Dev helper: permite forçar subdomínio com ?sub=hub
     if (url.searchParams.has('sub')) sub = url.searchParams.get('sub') ?? '';
   } else if (hostname.endsWith('.nip.io') || hostname.endsWith('.sslip.io')) {
-    // Ex.: hub.127.0.0.1.nip.io -> 'hub'
     sub = hostname.split('.')[0];
   } else {
-    // Produção: dominio.com (sem sub) ou hub.dominio.com (com sub)
     const parts = hostname.split('.');
     sub = parts[0] === 'www' ? '' : (parts.length > 2 ? parts[0] : '');
   }
 
-  // 5) Mapeia subdomínio -> prefixo
-  const prefix =
-    sub === 'hub' ? '/hub' :
-    sub === 'vqdt' ? '/vqdt' :
-    '/main'; // raiz (dominio.com) cai aqui
+  // 4) Proteção das rotas do professor (hub)
+  const isHubRoute = sub === 'hub' || pathname === '/hub' || pathname.startsWith('/hub/');
+  const cleanPath = pathname.startsWith('/hub/') ? pathname.replace('/hub', '') : pathname;
+  const isTeacherProtected = TEACHER_PROTECTED_PATHS.some((p) => cleanPath === p || cleanPath.startsWith(`${p}/`));
 
-  // Se você QUER 404 para subdomínios desconhecidos, use este bloco em vez do default acima:
-  // if (!['', 'hub', 'vqdt'].includes(sub)) {
-  //   return new NextResponse('Not Found', { status: 404 });
-  // }
-
-  // 6) Proteção das rotas do professor (hub) com cookie teacher_session
-  if (sub === 'hub' && TEACHER_PROTECTED_PATHS.some((p) => pathname.startsWith(p))) {
+  if (isTeacherProtected) {
     const token = req.cookies.get('teacher_session')?.value;
     const valid = await validateTeacherSession(token);
-    
-    // Também libera se houver um token do Supabase (Coordenador)
     const hasSupabase = req.cookies.has('sb_access_token');
     
     if (!valid && !hasSupabase) {
-      // Redireciona para a página de login do professor, guardando a origem
-      const redirectUrl = new URL(`${prefix}/simulados/professor${search}`, req.url);
-      redirectUrl.searchParams.set('redirect', pathname);
+      // Se for subdomínio, redireciona para /simulados/professor na raiz do subdomínio
+      // Se for subpasta, redireciona para /hub/simulados/professor
+      const redirectBase = sub === 'hub' ? '' : '/hub';
+      const redirectUrl = new URL(`${redirectBase}/simulados/professor${search}`, req.url);
+      redirectUrl.searchParams.set('redirect', cleanPath);
       return NextResponse.redirect(redirectUrl);
     }
   }
+
+  // 5) Evita reescrever novamente se já estamos num prefixo conhecido
+  if (PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return NextResponse.next();
+  }
+
+  // 6) Mapeia subdomínio -> prefixo para o rewrite
+  const prefix =
+    sub === 'hub' ? '/hub' :
+    sub === 'vqdt' ? '/vqdt' :
+    '/main';
 
   // 7) Reescreve preservando caminho e querystring
   return NextResponse.rewrite(new URL(`${prefix}${pathname}${search}`, req.url));

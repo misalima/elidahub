@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, 
@@ -25,6 +25,16 @@ import { DisciplineQuestionsModal } from "@/components/simulados/DisciplineQuest
 
 export default function ResumoQuestoesPage() {
   const router = useRouter();
+
+  useLayoutEffect(() => {
+    // Fallback: se o middleware falhar, o client-side também bloqueia
+    const isLoggedIn = document.cookie.includes("teacher_logged_in=true");
+    const hasSupabase = document.cookie.includes("sb_access_token");
+    if (!isLoggedIn && !hasSupabase) {
+      router.replace("/hub/simulados/professor");
+    }
+  }, [router]);
+
   const [filterArea, setFilterArea] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showEJA, setShowEJA] = useState(false);
