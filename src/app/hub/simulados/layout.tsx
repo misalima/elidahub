@@ -39,7 +39,7 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
         router.replace("/hub/login");
       }
     }
-  }, [user, loading, router, isProfessorRoute, isResumoRoute]);
+  }, [user, loading, router, isProfessorRoute, isResumoRoute, pathname]);
 
   // Professor ou Resumo: sem sidebar, sem auth guard — só renderiza os filhos
   if (isProfessorRoute || isResumoRoute) {

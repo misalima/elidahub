@@ -37,7 +37,6 @@ export async function middleware(req: NextRequest) {
   }
 
   // 4) Proteção das rotas do professor (hub)
-  const isHubRoute = sub === 'hub' || pathname === '/hub' || pathname.startsWith('/hub/');
   const cleanPath = pathname.startsWith('/hub/') ? pathname.replace('/hub', '') : pathname;
   const isTeacherProtected = TEACHER_PROTECTED_PATHS.some((p) => cleanPath === p || cleanPath.startsWith(`${p}/`));
 
