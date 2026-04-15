@@ -22,6 +22,7 @@ import { KNOWLEDGE_AREAS, LEVELS, formatAreaSelect } from "@/types/simulados";
 import { Badge } from "@/components/ui/badge";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useDebounce } from "@/hooks/useDebounce";
+import { QuestionEditModal } from "@/components/simulados/QuestionEditModal";
 
 interface ExamBuilderProps {
   exam: Exam;
@@ -43,6 +44,7 @@ export function ExamBuilder({
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   // Exam meta editing
   const [meta, setMeta] = useState({
@@ -418,11 +420,26 @@ export function ExamBuilder({
                   selectable
                   selected={selectedIds.has(q.id)}
                   onSelect={isReady ? undefined : addQuestion}
+                  onEdit={(q) => setEditingQuestion(q)}
                 />
               ))}
             </div>
           )}
         </div>
+      )}
+
+      {/* Modal de edição de questão inline */}
+      {editingQuestion && (
+        <QuestionEditModal
+          question={editingQuestion}
+          open={!!editingQuestion}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingQuestion(null);
+              refetch();
+            }
+          }}
+        />
       )}
     </div>
   );

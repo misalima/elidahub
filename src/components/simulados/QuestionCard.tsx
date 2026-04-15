@@ -28,6 +28,7 @@ import { QuestionEditModal } from "@/components/simulados/QuestionEditModal";
 interface QuestionCardProps {
   question: Question;
   onDelete?: (id: string) => void;
+  onEdit?: (q: Question) => void;
   selectable?: boolean;
   selected?: boolean;
   onSelect?: (q: Question) => void;
@@ -53,6 +54,7 @@ const OPTION_LABELS = ["A", "B", "C", "D", "E"];
 export function QuestionCard({
   question,
   onDelete,
+  onEdit,
   selectable = false,
   selected = false,
   onSelect,
@@ -268,12 +270,20 @@ export function QuestionCard({
                 Gabarito: <strong className="text-foreground">{question.answer}</strong>
                 {question.teacher_name && ` · Prof. ${question.teacher_name}`}
               </span>
-              {onDelete && (
+              {(onDelete || onEdit) && (
                 <Button
                   size="sm"
                   variant="outline"
                   className="gap-1.5"
-                  onClick={(e) => { e.stopPropagation(); setViewOpen(false); setEditOpen(true); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setViewOpen(false);
+                    if (onEdit) {
+                      onEdit(question);
+                    } else {
+                      setEditOpen(true);
+                    }
+                  }}
                 >
                   <Pencil className="w-3.5 h-3.5" />
                   Editar Questão
