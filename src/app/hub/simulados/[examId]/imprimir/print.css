@@ -15,14 +15,14 @@
 /* ---- Configuração da página A4 ---- */
 @page {
   size: A4 portrait;
-  margin: 10mm;
+  margin: 8mm; /* reduzido de 10mm */
 }
 
 html,
 body {
   font-family: "Times New Roman", Times, serif;
-  font-size: 11pt;
-  line-height: 1.45;
+  font-size: 9.5pt;   /* reduzido de 11pt */
+  line-height: 1.3;   /* reduzido de 1.45 */
   color: #000;
   background: #fff;
   -webkit-print-color-adjust: exact;
@@ -50,12 +50,13 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8mm;
-    align-items: start;
+    align-items: start; /* ambas as colunas partem do topo, sem esticar */
   }
 
   .questions-col {
     display: flex;
     flex-direction: column;
+    min-width: 0;       /* impede overflow em conteúdo largo */
   }
 
   .no-print {
@@ -76,7 +77,8 @@ body {
   .print-page {
     padding: 0;
     column-count: 2;
-    column-gap: 8mm;
+    column-gap: 12mm;  /* reduzido de 16mm */
+    column-rule: 0.5pt solid #ccc;
   }
 
   /* Cabeçalho vaza por cima das duas colunas */
@@ -119,7 +121,7 @@ body {
 
 /* ---- Cabeçalho da escola ---- */
 .exam-header {
-  margin-bottom: 14pt;
+  margin-bottom: 5pt; /* reduzido de 8pt */
 }
 
 /* Caixa principal com borda */
@@ -134,8 +136,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10pt;
-  padding: 8pt 12pt;
+  gap: 6pt;
+  padding: 3pt 8pt; /* reduzido de 5pt 10pt */
   border-bottom: 1pt solid #000;
   background: #f5f5f5;
   text-align: center;
@@ -146,17 +148,17 @@ body {
 }
 
 .exam-logo {
-  width: 48pt;
-  height: 48pt;
+  width: 26pt; /* reduzido de 38pt */
+  height: 26pt;
   object-fit: contain;
 }
 
 .exam-school-info {
-  flex: 1;
+  /* sem flex: 1 — deixa o bloco logo+nome ficar junto e centrado */
 }
 
 .exam-school-name {
-  font-size: 11.5pt;
+  font-size: 9pt;    /* reduzido de 10pt */
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -164,9 +166,9 @@ body {
 }
 
 .exam-school-year {
-  font-size: 8.5pt;
+  font-size: 6.5pt; /* reduzido de 7.5pt */
   color: #444;
-  margin-top: 2pt;
+  margin-top: 1pt;
 }
 
 /* Divisor interno leve */
@@ -187,9 +189,9 @@ body {
 .exam-info-cell {
   display: flex;
   flex-direction: column;
-  padding: 4pt 8pt;
+  padding: 2pt 5pt; /* reduzido de 3pt 6pt */
   border-right: 1pt solid #000;
-  min-width: 60pt;
+  min-width: 44pt;
 }
 
 .exam-info-cell:last-child {
@@ -206,17 +208,17 @@ body {
 }
 
 .exam-info-label {
-  font-size: 7.5pt;
+  font-size: 6.5pt;  /* reduzido de 7.5pt */
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #555;
   line-height: 1;
-  margin-bottom: 2pt;
+  margin-bottom: 1pt;
 }
 
 .exam-info-value {
-  font-size: 10pt;
+  font-size: 8pt; /* reduzido de 9pt */
   line-height: 1.2;
 }
 
@@ -230,12 +232,12 @@ body {
 
 /* Instruções */
 .exam-instructions {
-  font-size: 8.5pt;
+  font-size: 7.5pt;  /* reduzido de 8.5pt */
   color: #333;
-  padding: 7pt 12pt;
+  padding: 4pt 10pt; /* reduzido de 7pt 12pt */
   border-top: 1pt solid #000;
   background: #fafafa;
-  line-height: 1.35;
+  line-height: 1.25;
   text-align: center;
 }
 
@@ -244,9 +246,12 @@ body {
 .question-block {
   break-inside: avoid;
   page-break-inside: avoid;
-  margin-bottom: 12pt;
-  padding-bottom: 10pt;
+  margin-bottom: 7pt;  /* reduzido de 12pt */
+  padding-bottom: 6pt; /* reduzido de 10pt */
   border-bottom: 0.5pt solid #ddd;
+  min-width: 0;
+  word-break: break-word;
+  overflow: hidden;
 }
 
 .question-block:last-child {
@@ -255,12 +260,11 @@ body {
 
 /* Disciplina / Assunto (linha acima do enunciado) */
 .question-discipline {
-  font-size: 9pt;
+  font-size: 8pt;    /* reduzido de 9pt */
   font-style: italic;
   font-weight: 600;
   color: #555;
-  margin-bottom: 3pt;
-  /* break-after: avoid definido em @media print */
+  margin-bottom: 2pt; /* reduzido de 3pt */
 }
 
 .question-topic {
@@ -283,14 +287,14 @@ body {
 
 /* Enunciado */
 .statement {
-  font-size: 11pt;
-  line-height: 1.25;
+  font-size: 9.5pt;  /* acompanha font-size do body */
+  line-height: 1.3;
   text-align: justify;
-  margin-bottom: 6pt;
+  margin-bottom: 4pt; /* reduzido de 6pt */
 }
 
 .statement p {
-  margin-bottom: 3pt;
+  margin-bottom: 2pt; /* reduzido de 3pt */
 }
 
 .statement ul,
@@ -327,8 +331,8 @@ body {
 .options-grid {
   display: flex;
   flex-direction: column;
-  gap: 3pt;
-  margin-top: 4pt;
+  gap: 2pt;      /* reduzido de 3pt */
+  margin-top: 3pt; /* reduzido de 4pt */
   break-inside: avoid;
   page-break-inside: avoid;
 }
@@ -343,8 +347,8 @@ body {
 .option-item {
   display: flex;
   align-items: baseline;
-  gap: 4pt;
-  font-size: 10.5pt;
+  gap: 3pt;
+  font-size: 9.5pt; /* reduzido de 10.5pt */
 }
 
 .option-label {

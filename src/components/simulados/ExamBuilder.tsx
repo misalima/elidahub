@@ -16,13 +16,42 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { QuestionCard } from "@/components/simulados/QuestionCard";
 import { toast } from "sonner";
-import { ChevronUp, ChevronDown, X, Loader2, Search, ClipboardCheck, Pencil } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  X,
+  Loader2,
+  Search,
+  ClipboardCheck,
+  Pencil,
+  Trash2,
+  ListOrdered,
+  PlusCircle,
+  Eye,
+  BarChart3,
+  GraduationCap,
+} from "lucide-react";
 import type { Exam, Question, ExamWithQuestions } from "@/types/simulados";
-import { KNOWLEDGE_AREAS, LEVELS, formatAreaSelect } from "@/types/simulados";
+import {
+  KNOWLEDGE_AREAS,
+  LEVELS,
+  DISCIPLINES_BY_AREA,
+  formatAreaSelect,
+  formatAreaBadge,
+  type KnowledgeArea,
+} from "@/types/simulados";
 import { Badge } from "@/components/ui/badge";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useDebounce } from "@/hooks/useDebounce";
 import { QuestionEditModal } from "@/components/simulados/QuestionEditModal";
+import Image from "next/image";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ExamBuilderProps {
   exam: Exam;
@@ -31,20 +60,23 @@ interface ExamBuilderProps {
   isUpdatingStatus?: boolean;
 }
 
-export function ExamBuilder({ 
-  exam, 
-  initialQuestions, 
-  onStatusChange, 
-  isUpdatingStatus 
+export function ExamBuilder({
+  exam,
+  initialQuestions,
+  onStatusChange,
+  isUpdatingStatus,
 }: ExamBuilderProps) {
   const [examQuestions, setExamQuestions] = useState(
     [...initialQuestions].sort((a, b) => a.position - b.position)
   );
   const [filterArea, setFilterArea] = useState("all");
+  const [filterSubject, setFilterSubject] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
   const [saving, setSaving] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [viewingQuestion, setViewingQuestion] = useState<Question | null>(null);
 
   // Exam meta editing
   const [meta, setMeta] = useState({
@@ -55,16 +87,31 @@ export function ExamBuilder({
     school_year: exam.school_year ?? "",
     instructions: exam.instructions ?? "",
   });
-  
+
   const debouncedSearch = useDebounce(filterSearch, 300);
+
+  // Subjects available for the selected area filter
+  const availableSubjects =
+    filterArea !== "all"
+      ? (DISCIPLINES_BY_AREA[filterArea as KnowledgeArea] ?? [])
+      : [];
+
+  // Reset subject when area changes
+  function handleAreaChange(area: string) {
+    setFilterArea(area);
+    setFilterSubject("all");
+  }
 
   const { data: bankQuestions = [], isLoading: loadingBank, isError, refetch } = useQuestions({
     area: filterArea !== "all" ? filterArea : null,
+    subject: filterSubject !== "all" ? filterSubject : null,
     level: filterLevel !== "all" ? filterLevel : null,
     search: debouncedSearch || null,
   });
 
   const selectedIds = new Set(examQuestions.map((eq) => eq.question_id));
+
+  // ── Individual add / remove ──────────────────────────────────────────────
 
   async function addQuestion(question: Question) {
     if (selectedIds.has(question.id)) {
@@ -80,10 +127,7 @@ export function ExamBuilder({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setExamQuestions((prev) => [
-        ...prev,
-        { ...data, question },
-      ]);
+      setExamQuestions((prev) => [...prev, { ...data, question }]);
       toast.success(`Questão adicionada.`);
     } catch {
       toast.error("Erro ao adicionar questão.");
@@ -110,6 +154,94 @@ export function ExamBuilder({
     }
   }
 
+  // ── Bulk: Adicionar todas ────────────────────────────────────────────────
+
+  async function addAllVisible() {
+    const toAdd = bankQuestions.filter((q) => !selectedIds.has(q.id));
+    if (toAdd.length === 0) {
+      toast.info("Todas as questões visíveis já estão no simulado.");
+      return;
+    }
+    setBulkLoading(true);
+    let added = 0;
+    let failed = 0;
+    const newEntries: typeof examQuestions = [];
+    for (const q of toAdd) {
+      try {
+        const res = await fetch(`/api/exams/${exam.id}/questions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question_id: q.id }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        newEntries.push({ ...data, question: q });
+        added++;
+      } catch {
+        failed++;
+      }
+    }
+    setExamQuestions((prev) => [...prev, ...newEntries]);
+    if (added > 0) toast.success(`${added} questão(ões) adicionada(s).`);
+    if (failed > 0) toast.error(`${failed} questão(ões) não puderam ser adicionadas.`);
+    setBulkLoading(false);
+  }
+
+  // ── Bulk: Remover todas ──────────────────────────────────────────────────
+
+  async function removeAll() {
+    if (examQuestions.length === 0) return;
+    setBulkLoading(true);
+    let removed = 0;
+    let failed = 0;
+    for (const eq of examQuestions) {
+      try {
+        const res = await fetch(`/api/exams/${exam.id}/questions`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question_id: eq.question_id }),
+        });
+        if (!res.ok) throw new Error();
+        removed++;
+      } catch {
+        failed++;
+      }
+    }
+    if (removed > 0) {
+      setExamQuestions([]);
+      toast.success(`${removed} questão(ões) removida(s).`);
+    }
+    if (failed > 0) toast.error(`${failed} questão(ões) não puderam ser removidas.`);
+    setBulkLoading(false);
+  }
+
+  // ── Ordenar por área ─────────────────────────────────────────────────────
+
+  async function sortByArea() {
+    const sorted = [...examQuestions].sort((a, b) => {
+      const areaA = KNOWLEDGE_AREAS.indexOf(a.question.knowledge_area as KnowledgeArea);
+      const areaB = KNOWLEDGE_AREAS.indexOf(b.question.knowledge_area as KnowledgeArea);
+      if (areaA !== areaB) return areaA - areaB;
+      return (a.question.subject ?? "").localeCompare(b.question.subject ?? "");
+    });
+    const reordered = sorted.map((item, i) => ({ ...item, position: i }));
+    setExamQuestions(reordered);
+    try {
+      await fetch(`/api/exams/${exam.id}/questions`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          positions: reordered.map(({ id, position }) => ({ id, position })),
+        }),
+      });
+      toast.success("Questões ordenadas por área.");
+    } catch {
+      toast.error("Erro ao salvar ordem.");
+    }
+  }
+
+  // ── Move individual ──────────────────────────────────────────────────────
+
   async function move(index: number, direction: "up" | "down") {
     const newList = [...examQuestions];
     const target = direction === "up" ? index - 1 : index + 1;
@@ -117,7 +249,6 @@ export function ExamBuilder({
     [newList[index], newList[target]] = [newList[target], newList[index]];
     const reordered = newList.map((item, i) => ({ ...item, position: i }));
     setExamQuestions(reordered);
-    // Persist positions
     try {
       await fetch(`/api/exams/${exam.id}/questions`, {
         method: "PATCH",
@@ -130,6 +261,8 @@ export function ExamBuilder({
       toast.error("Erro ao salvar ordem.");
     }
   }
+
+  // ── Meta ─────────────────────────────────────────────────────────────────
 
   async function saveMeta() {
     setSaving(true);
@@ -156,6 +289,8 @@ export function ExamBuilder({
     }
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
     <div className={cn("grid grid-cols-1 gap-8", isReady ? "max-w-4xl mx-auto" : "xl:grid-cols-2")}>
       {/* ── COLUNA ESQUERDA: Meta + Questões do simulado ── */}
@@ -165,9 +300,9 @@ export function ExamBuilder({
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Dados do Simulado</h3>
             {isReady && (
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="h-8 gap-1.5"
                 onClick={() => handleStatusChange("editing")}
                 disabled={isUpdatingStatus}
@@ -243,37 +378,74 @@ export function ExamBuilder({
 
         {/* Questões selecionadas */}
         <div className="rounded-xl border bg-card p-5 space-y-3">
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">
-              Questões do Simulado
-            </h3>
+            <h3 className="font-semibold text-foreground">Questões do Simulado</h3>
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{examQuestions.length} questões</Badge>
               {isReady ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="h-8 gap-1.5 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
                   onClick={() => handleStatusChange("editing")}
                   disabled={isUpdatingStatus}
                 >
-                  {isUpdatingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Pencil className="w-3.5 h-3.5" />}
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Pencil className="w-3.5 h-3.5" />
+                  )}
                   Editar Questões
                 </Button>
               ) : (
-                <Button 
-                  variant="default" 
-                  size="sm" 
+                <Button
+                  variant="default"
+                  size="sm"
                   className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => handleStatusChange("ready")}
                   disabled={isUpdatingStatus || examQuestions.length === 0}
                 >
-                  {isUpdatingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ClipboardCheck className="w-3.5 h-3.5" />}
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <ClipboardCheck className="w-3.5 h-3.5" />
+                  )}
                   Concluir Simulado
                 </Button>
               )}
             </div>
           </div>
+
+          {/* Ações em massa — lado esquerdo */}
+          {!isReady && examQuestions.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 text-xs"
+                onClick={sortByArea}
+                disabled={bulkLoading}
+              >
+                <ListOrdered className="w-3.5 h-3.5" />
+                Ordenar por área
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                onClick={removeAll}
+                disabled={bulkLoading}
+              >
+                {bulkLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                Remover todas
+              </Button>
+            </div>
+          )}
 
           {examQuestions.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">
@@ -284,7 +456,8 @@ export function ExamBuilder({
               {examQuestions.map((eq, index) => (
                 <div
                   key={eq.id}
-                  className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30 group"
+                  className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30 group cursor-pointer hover:bg-muted/60 transition-colors"
+                  onClick={() => setViewingQuestion(eq.question)}
                 >
                   <span className="text-sm font-mono text-muted-foreground w-6 shrink-0">
                     {index + 1}.
@@ -293,8 +466,8 @@ export function ExamBuilder({
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium truncate">{eq.question.subject}</p>
                       {eq.question.deleted_at && (
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className="h-4 text-[9px] px-1.5 uppercase font-bold tracking-tighter border-red-200 bg-red-50 text-red-600 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
                         >
                           Excluída do Banco
@@ -309,8 +482,16 @@ export function ExamBuilder({
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100"
+                      onClick={(e) => { e.stopPropagation(); setViewingQuestion(eq.question); }}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-7 w-7"
-                      onClick={() => move(index, "up")}
+                      onClick={(e) => { e.stopPropagation(); move(index, "up"); }}
                       disabled={isReady || index === 0}
                     >
                       <ChevronUp className="w-3.5 h-3.5" />
@@ -319,7 +500,7 @@ export function ExamBuilder({
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => move(index, "down")}
+                      onClick={(e) => { e.stopPropagation(); move(index, "down"); }}
                       disabled={isReady || index === examQuestions.length - 1}
                     >
                       <ChevronDown className="w-3.5 h-3.5" />
@@ -328,7 +509,7 @@ export function ExamBuilder({
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => removeQuestion(eq.question_id)}
+                      onClick={(e) => { e.stopPropagation(); removeQuestion(eq.question_id); }}
                       disabled={isReady}
                     >
                       <X className="w-3.5 h-3.5" />
@@ -355,7 +536,9 @@ export function ExamBuilder({
       {/* ── COLUNA DIREITA: Banco de questões ── */}
       {!isReady && (
         <div className="space-y-4">
+          {/* Filtros */}
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Busca */}
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -365,9 +548,11 @@ export function ExamBuilder({
                 onChange={(e) => setFilterSearch(e.target.value)}
               />
             </div>
-            <Select value={filterArea} onValueChange={setFilterArea}>
-              <SelectTrigger className="w-[170px]">
-                <SelectValue placeholder="Filtrar por área" />
+
+            {/* Área */}
+            <Select value={filterArea} onValueChange={handleAreaChange}>
+              <SelectTrigger className="w-[155px]">
+                <SelectValue placeholder="Área" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as áreas</SelectItem>
@@ -378,8 +563,27 @@ export function ExamBuilder({
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Disciplina — só aparece quando uma área está selecionada */}
+            {filterArea !== "all" && availableSubjects.length > 0 && (
+              <Select value={filterSubject} onValueChange={setFilterSubject}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Disciplina" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as disciplinas</SelectItem>
+                  {availableSubjects.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Nível */}
             <Select value={filterLevel} onValueChange={setFilterLevel}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="Nível" />
               </SelectTrigger>
               <SelectContent>
@@ -401,7 +605,9 @@ export function ExamBuilder({
             </div>
           ) : isError ? (
             <div className="flex flex-col items-center justify-center text-center py-8">
-              <p className="text-sm text-destructive font-medium mb-3">Erro ao carregar o banco de questões.</p>
+              <p className="text-sm text-destructive font-medium mb-3">
+                Erro ao carregar o banco de questões.
+              </p>
               <Button variant="outline" size="sm" onClick={() => refetch?.()}>
                 Tentar novamente
               </Button>
@@ -411,19 +617,42 @@ export function ExamBuilder({
               Nenhuma questão encontrada.
             </p>
           ) : (
-            <div className="grid gap-3 max-h-[700px] overflow-y-auto pr-1">
-              {bankQuestions.map((q, i) => (
-                <QuestionCard
-                  key={q.id}
-                  question={q}
-                  questionNumber={i + 1}
-                  selectable
-                  selected={selectedIds.has(q.id)}
-                  onSelect={isReady ? undefined : addQuestion}
-                  onEdit={(q) => setEditingQuestion(q)}
-                />
-              ))}
-            </div>
+            <>
+              {/* Barra de ação em massa — lado direito */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {bankQuestions.length} {bankQuestions.length === 1 ? "questão encontrada" : "questões encontradas"}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={addAllVisible}
+                  disabled={bulkLoading}
+                >
+                  {bulkLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <PlusCircle className="w-3.5 h-3.5" />
+                  )}
+                  Adicionar todas
+                </Button>
+              </div>
+
+              <div className="grid gap-3 max-h-[700px] overflow-y-auto pr-1">
+                {bankQuestions.map((q, i) => (
+                  <QuestionCard
+                    key={q.id}
+                    question={q}
+                    questionNumber={i + 1}
+                    selectable
+                    selected={selectedIds.has(q.id)}
+                    onSelect={isReady ? undefined : addQuestion}
+                    onEdit={(q) => setEditingQuestion(q)}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -441,12 +670,76 @@ export function ExamBuilder({
           }}
         />
       )}
+
+      {/* Modal de visualização — questões do lado esquerdo */}
+      <Dialog open={!!viewingQuestion} onOpenChange={(open) => { if (!open) setViewingQuestion(null); }}>
+        {viewingQuestion && (
+          <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                  {formatAreaBadge(viewingQuestion.knowledge_area)}
+                </span>
+                <Badge variant="outline">{viewingQuestion.subject}</Badge>
+                {viewingQuestion.difficulty && (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    <BarChart3 className="w-3 h-3 inline mr-0.5" />
+                    {viewingQuestion.difficulty}
+                  </span>
+                )}
+                {viewingQuestion.level && (
+                  <Badge variant="secondary" className="text-xs">
+                    <GraduationCap className="w-3 h-3 mr-0.5" />
+                    {viewingQuestion.level}
+                  </Badge>
+                )}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div className="prose font-serif text-[15px] dark:prose-invert max-w-none leading-relaxed">
+                <MarkdownRenderer>{viewingQuestion.statement}</MarkdownRenderer>
+              </div>
+              {viewingQuestion.image_url && (
+                <Image
+                  src={viewingQuestion.image_url}
+                  alt="Imagem da questão"
+                  width={500}
+                  height={300}
+                  unoptimized
+                  className="max-h-56 object-contain rounded border"
+                />
+              )}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                {(["option_a", "option_b", "option_c", "option_d", "option_e"] as const).map((key, i) => {
+                  const label = ["A", "B", "C", "D", "E"][i];
+                  return (
+                    <div key={key} className="flex items-start gap-2 text-sm">
+                      <span
+                        className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          viewingQuestion.answer === label
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {label}
+                      </span>
+                      <span className="flex-1 mt-[2px] font-serif text-[15px] break-words prose dark:prose-invert">
+                        <MarkdownRenderer>{String(viewingQuestion[key])}</MarkdownRenderer>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-muted-foreground border-t pt-2 flex items-center justify-between">
+                <span>
+                  Gabarito: <strong className="text-foreground">{viewingQuestion.answer}</strong>
+                  {viewingQuestion.teacher_name && ` · Prof. ${viewingQuestion.teacher_name}`}
+                </span>
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }
-
-// Small icon for add action
-function ClipboardCheckIcon() {
-  return <ClipboardCheck className="w-4 h-4" />;
-}
-void ClipboardCheckIcon;
