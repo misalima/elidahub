@@ -30,6 +30,7 @@ import {
   Eye,
   BarChart3,
   GraduationCap,
+  Shuffle,
 } from "lucide-react";
 import type { Exam, Question, ExamWithQuestions } from "@/types/simulados";
 import {
@@ -81,6 +82,7 @@ export function ExamBuilder({
   // Exam meta editing
   const [meta, setMeta] = useState({
     title: exam.title,
+    description: exam.description ?? "",
     grade: exam.grade ?? "",
     date_label: exam.date_label ?? "",
     duration: exam.duration ?? "",
@@ -218,11 +220,16 @@ export function ExamBuilder({
   // ── Ordenar por área ─────────────────────────────────────────────────────
 
   async function sortByArea() {
+    // Stable sort: preserves the current relative order within each subject group,
+    // so that after a shuffle, re-sorting by area keeps the shuffled intra-group order.
     const sorted = [...examQuestions].sort((a, b) => {
       const areaA = KNOWLEDGE_AREAS.indexOf(a.question.knowledge_area as KnowledgeArea);
       const areaB = KNOWLEDGE_AREAS.indexOf(b.question.knowledge_area as KnowledgeArea);
       if (areaA !== areaB) return areaA - areaB;
-      return (a.question.subject ?? "").localeCompare(b.question.subject ?? "");
+      const subjectCmp = (a.question.subject ?? "").localeCompare(b.question.subject ?? "");
+      if (subjectCmp !== 0) return subjectCmp;
+      // Preserve current relative order within the same group
+      return a.position - b.position;
     });
     const reordered = sorted.map((item, i) => ({ ...item, position: i }));
     setExamQuestions(reordered);
@@ -257,6 +264,31 @@ export function ExamBuilder({
           positions: reordered.map(({ id, position }) => ({ id, position })),
         }),
       });
+    } catch {
+      toast.error("Erro ao salvar ordem.");
+    }
+  }
+
+  // ── Embaralhar questões ────────────────────────────────────────
+
+  async function shuffleQuestions() {
+    // Fisher-Yates shuffle
+    const shuffled = [...examQuestions];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const reordered = shuffled.map((item, i) => ({ ...item, position: i }));
+    setExamQuestions(reordered);
+    try {
+      await fetch(`/api/exams/${exam.id}/questions`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          positions: reordered.map(({ id, position }) => ({ id, position })),
+        }),
+      });
+      toast.success("Questões embaralhadas.");
     } catch {
       toast.error("Erro ao salvar ordem.");
     }
@@ -318,6 +350,18 @@ export function ExamBuilder({
               <Input
                 value={meta.title}
                 onChange={(e) => setMeta((m) => ({ ...m, title: e.target.value }))}
+                disabled={isReady}
+              />
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label>
+                Descrição{" "}
+                <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                placeholder="Ex: Prova bimestral de Ciências da Natureza"
+                value={meta.description}
+                onChange={(e) => setMeta((m) => ({ ...m, description: e.target.value }))}
                 disabled={isReady}
               />
             </div>
@@ -429,6 +473,16 @@ export function ExamBuilder({
               >
                 <ListOrdered className="w-3.5 h-3.5" />
                 Ordenar por área
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 text-xs"
+                onClick={shuffleQuestions}
+                disabled={bulkLoading}
+              >
+                <Shuffle className="w-3.5 h-3.5" />
+                Embaralhar questões
               </Button>
               <Button
                 variant="outline"

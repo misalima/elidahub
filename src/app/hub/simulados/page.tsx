@@ -38,6 +38,7 @@ export default function SimuladosPage() {
   const [titleError, setTitleError] = useState(false);
   const [newExam, setNewExam] = useState({
     title: "",
+    description: "",
     grade: "",
     date_label: "",
     duration: "",
@@ -116,6 +117,14 @@ export default function SimuladosPage() {
                 {titleError && (
                   <p className="text-xs text-destructive">O título é obrigatório.</p>
                 )}
+              </div>
+              <div className="space-y-1">
+                <Label>Descrição <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                <Input
+                  placeholder="Ex: Prova bimestral de Ciências da Natureza"
+                  value={newExam.description}
+                  onChange={(e) => setNewExam((m) => ({ ...m, description: e.target.value }))}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -201,6 +210,9 @@ export default function SimuladosPage() {
                     {EXAM_STATUS_LABELS[exam.status]}
                   </Badge>
                 </div>
+                {exam.description && (
+                  <p className="text-sm text-muted-foreground mt-0.5 truncate">{exam.description}</p>
+                )}
                 <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
                   <span>{exam.questions_count ?? 0} questões</span>
                   {exam.questions_count && <span className="text-muted-foreground/30">•</span>}
