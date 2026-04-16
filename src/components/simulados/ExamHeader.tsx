@@ -45,7 +45,6 @@ export function ExamHeader({ exam, customInstructions }: ExamHeaderProps) {
           <div className="metadata-item">
             <span className="metadata-label">Série/Turma:</span>
             {exam.grade && <span className="metadata-value">{exam.grade}</span>}
-            <span className="metadata-line metadata-line--code"></span>
           </div>
           {exam.date_label && (
             <div className="metadata-item">
