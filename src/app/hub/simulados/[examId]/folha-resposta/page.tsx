@@ -56,12 +56,14 @@ function getFullChunks(questionCount: number): ColumnsResult {
 function CompactHeader({
   schoolName,
   title,
+  description,
   grade,
   schoolYear,
   date,
 }: {
   schoolName: string;
   title: string;
+  description?: string | null;
   grade?: string | null;
   schoolYear?: string | null;
   date?: string | null;
@@ -77,6 +79,7 @@ function CompactHeader({
       </div>
       <div className="compact-title-row">
         <span className="compact-exam-title">{title}</span>
+        {description && <span className="compact-exam-description">{description}</span>}
       </div>
       <div className="compact-meta-row">
         <span className="compact-label">Série/Turma:</span>
@@ -210,6 +213,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
             <CompactHeader
               schoolName={exam.school_name}
               title={exam.title}
+              description={exam.description}
               grade={exam.grade}
               schoolYear={exam.school_year}
               date={exam.date_label}
@@ -224,6 +228,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
             <CompactHeader
               schoolName={exam.school_name}
               title={exam.title}
+              description={exam.description}
               grade={exam.grade}
               schoolYear={exam.school_year}
               date={exam.date_label}
@@ -245,6 +250,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
             </div>
             <div className="full-header-title">
               <p className="full-exam-title">{exam.title}</p>
+              {exam.description && <p className="full-exam-description">{exam.description}</p>}
             </div>
             <div className="full-header-meta">
               <div className="full-meta-item">
@@ -299,6 +305,9 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
         }
         .full-exam-title {
           font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .full-exam-description {
+          font-size: 9pt; font-style: italic; color: #444; margin-top: 2pt;
         }
         .full-header-meta {
           display: flex; border-bottom: 1px solid #000;
@@ -473,10 +482,11 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
         .compact-school-name { font-size: 7pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
         .compact-school-year { font-size: 5.5pt; color: #666; }
         .compact-title-row {
-          display: flex; align-items: center; justify-content: center;
-          gap: 6pt; padding: 1.5pt 5pt; border-bottom: 0.5pt solid #000;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          gap: 1pt; padding: 2pt 5pt; border-bottom: 0.5pt solid #000;
         }
         .compact-exam-title { font-size: 7pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.03em; text-align: center; }
+        .compact-exam-description { font-size: 5.5pt; font-style: italic; color: #555; text-align: center; }
         .compact-grade { font-size: 6pt; color: #444; white-space: nowrap; }
         .compact-student-row {
           display: flex; align-items: center; gap: 4pt; padding: 2.5pt 10pt; border-bottom: 0.5pt solid #000;
