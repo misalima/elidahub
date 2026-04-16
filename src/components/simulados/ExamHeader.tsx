@@ -10,77 +10,75 @@ export function ExamHeader({ exam, customInstructions }: ExamHeaderProps) {
   const instructions = customInstructions || exam.instructions;
   return (
     <div className="exam-header">
-      {/* Caixa principal do cabeçalho */}
-      <div className="exam-header-box">
-
-        {/* Topo: Logo + Nome da escola */}
-        <div className="exam-header-top">
-          <div className="exam-logo-wrapper">
-            <Image
-              src="/logo_escola.png"
-              alt="Logo da Escola"
-              width={70}
-              height={70}
-              className="exam-logo"
-              unoptimized
-            />
-          </div>
-          <div className="exam-school-info">
-            <p className="exam-school-name">{exam.school_name}</p>
-            {exam.school_year && (
-              <p className="exam-school-year">Ano Letivo: {exam.school_year}</p>
-            )}
-          </div>
+      {/* 1. Barra de Identidade (Escola e Logo) */}
+      <div className="exam-header-identity">
+        <div className="exam-identity-logo">
+          <Image
+            src="/logo_escola.png"
+            alt="Logo da Escola"
+            width={60}
+            height={60}
+            className="exam-logo"
+            unoptimized
+          />
         </div>
+        <div className="exam-identity-info">
+          <p className="exam-school-name">{exam.school_name}</p>
+          {exam.school_year && (
+            <p className="exam-school-year">Ano Letivo {exam.school_year}</p>
+          )}
+        </div>
+      </div>
 
-        {/* Divisor interno */}
-        <div className="exam-header-inner-divider" />
+      {/* 2. Seção do Título (Protagonista e Centralizado) */}
+      <div className="exam-header-main">
+        <h1 className="exam-main-title">{exam.title}</h1>
+        {exam.description && (
+          <p className="exam-main-description">{exam.description}</p>
+        )}
+      </div>
 
-        {/* Linha de dados do simulado */}
-        <div className="exam-info-row">
-          <div className="exam-info-cell exam-info-cell--grow">
-            <span className="exam-info-label">Simulado</span>
-            <span className="exam-info-value">{exam.title}</span>
-          </div>
+      {/* 3. Metadados e Aluno (Grid Limpo) */}
+      <div className="exam-header-metadata">
+        <div className="metadata-row">
+          {exam.grade && (
+            <div className="metadata-item">
+              <span className="metadata-label">Turma:</span>
+              <span className="metadata-value">{exam.grade}</span>
+            </div>
+          )}
           {exam.date_label && (
-            <div className="exam-info-cell">
-              <span className="exam-info-label">Data</span>
-              <span className="exam-info-value">{exam.date_label}</span>
+            <div className="metadata-item">
+              <span className="metadata-label">Data:</span>
+              <span className="metadata-value">{exam.date_label}</span>
             </div>
           )}
           {exam.duration && (
-            <div className="exam-info-cell">
-              <span className="exam-info-label">Duração</span>
-              <span className="exam-info-value">{exam.duration}</span>
+            <div className="metadata-item">
+              <span className="metadata-label">Duração:</span>
+              <span className="metadata-value">{exam.duration}</span>
             </div>
           )}
         </div>
 
-        {/* Linha: Turma + Aluno */}
-        <div className="exam-info-row">
-          {exam.grade && (
-            <div className="exam-info-cell exam-info-cell--fixed">
-              <span className="exam-info-label">Turma</span>
-              <span className="exam-info-value">{exam.grade}</span>
-            </div>
-          )}
-          <div className="exam-info-cell exam-info-cell--grow">
-            <span className="exam-info-label">Aluno(a)</span>
-            <span className="exam-info-value exam-info-underline">&nbsp;</span>
+        <div className="metadata-row student-row">
+          <div className="metadata-item metadata-item--grow">
+            <span className="metadata-label">Aluno(a):</span>
+            <span className="metadata-line"></span>
           </div>
-          <div className="exam-info-cell exam-info-cell--fixed">
-            <span className="exam-info-label">Nota</span>
-            <span className="exam-info-value exam-info-underline">&nbsp;</span>
+          <div className="metadata-item metadata-item--nota">
+            <span className="metadata-label">Nota:</span>
+            <span className="metadata-line metadata-line--short"></span>
           </div>
         </div>
-
-        {/* Instruções */}
-        {instructions && (
-          <div className="exam-instructions">
-            <strong>Instruções:</strong> {instructions}
-          </div>
-        )}
       </div>
+
+      {/* 4. Instruções (Opcional, discreto) */}
+      {instructions && (
+        <div className="exam-header-instructions">
+          <strong>Instruções:</strong> {instructions}
+        </div>
+      )}
     </div>
   );
 }
