@@ -99,9 +99,18 @@ body {
     page-break-inside: auto !important;
   }
 
-  /* Alternativas e número de questão nunca quebram no meio */
-  /* Imagens fluem livremente — Chrome decide se encaixa na coluna atual */
-  .options-grid,
+  /* options-grid pode quebrar entre colunas — mas cada option-item individual
+     nunca quebra no meio. Isso aproveita o espaço restante na coluna atual. */
+  .options-grid {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .option-item {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
   .question-meta {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
@@ -347,8 +356,6 @@ body {
   flex-direction: column;
   gap: 2pt;      /* reduzido de 3pt */
   margin-top: 3pt; /* reduzido de 4pt */
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 /* Alternativas curtas (≤ 40 chars): lado a lado em 2 colunas */
@@ -363,6 +370,8 @@ body {
   align-items: baseline;
   gap: 3pt;
   font-size: 9.5pt; /* reduzido de 10.5pt */
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .option-label {
