@@ -214,7 +214,7 @@ body {
 .metadata-item {
   flex: 1;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 4pt;
   padding: 4pt 8pt;
   border-right: 1px solid #000;
@@ -239,8 +239,7 @@ body {
 .metadata-line {
   flex: 1;
   border-bottom: 0.5pt solid #000;
-  min-height: 16pt;
-  margin-bottom: 2pt;
+  min-height: 14pt;
 }
 
 .metadata-item--grow {
@@ -267,7 +266,6 @@ body {
   min-width: 40pt;
   border-bottom: 0.5pt solid #000;
   min-height: 14pt;
-  margin-bottom: 2pt;
   margin-right: 4pt;
 }
 

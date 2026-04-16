@@ -58,11 +58,13 @@ function CompactHeader({
   title,
   grade,
   schoolYear,
+  date,
 }: {
   schoolName: string;
   title: string;
   grade?: string | null;
   schoolYear?: string | null;
+  date?: string | null;
 }) {
   return (
     <div className="compact-header">
@@ -79,7 +81,8 @@ function CompactHeader({
       <div className="compact-meta-row">
         <span className="compact-label">Série/Turma:</span>
         {grade && <span className="compact-grade-value">{grade}</span>}
-        <span className="compact-line compact-line--code"></span>
+        <span className="compact-label compact-label--date">Data:</span>
+        {date && <span className="compact-grade-value">{date}</span>}
       </div>
       <div className="compact-student-row">
         <span className="compact-label">Aluno(a):</span>
@@ -209,6 +212,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
               title={exam.title}
               grade={exam.grade}
               schoolYear={exam.school_year}
+              date={exam.date_label}
             />
             <div className="a5-sheet-title">FOLHA DE RESPOSTAS</div>
             <BubbleGrid questionCount={questionCount} compact answers={answersToPass} />
@@ -222,6 +226,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
               title={exam.title}
               grade={exam.grade}
               schoolYear={exam.school_year}
+              date={exam.date_label}
             />
             <div className="a5-sheet-title">FOLHA DE RESPOSTAS</div>
             <BubbleGrid questionCount={questionCount} compact answers={answersToPass} />
@@ -245,7 +250,6 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
               <div className="full-meta-item">
                 <span className="metadata-label">Série/Turma:</span>
                 {exam.grade && <span className="full-meta-value">{exam.grade}</span>}
-                <span className="metadata-line metadata-line--code" style={{ flex: 1, marginRight: "4pt" }}></span>
               </div>
               {exam.date_label && <div className="full-meta-item"><span className="full-meta-label">Data:</span><span className="full-meta-value">{exam.date_label}</span></div>}
               {exam.duration && <div className="full-meta-item"><span className="full-meta-label">Duração:</span><span className="full-meta-value">{exam.duration}</span></div>}
@@ -300,7 +304,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
           display: flex; border-bottom: 1px solid #000;
         }
         .full-meta-item {
-          flex: 1; display: flex; align-items: baseline; gap: 4pt;
+          flex: 1; display: flex; align-items: center; gap: 4pt;
           padding: 3pt 8pt; border-right: 1px solid #000; font-family: system-ui, sans-serif;
         }
         .full-meta-item:last-child { border-right: none; }
@@ -312,13 +316,13 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
           display: flex; border-bottom: 1px solid #000;
         }
         .full-student-field {
-          display: flex; align-items: baseline; gap: 4pt;
+          display: flex; align-items: center; gap: 4pt;
           padding: 3pt 8pt; border-right: 1px solid #000;
         }
         .full-student-field:last-child { border-right: none; }
         .full-student-field--grow { flex: 3; }
         .full-student-line {
-          flex: 1; border-bottom: 0.5pt solid #000; min-height: 16pt; margin-bottom: 1pt;
+          flex: 1; border-bottom: 0.5pt solid #000; min-height: 14pt;
         }
         .full-student-line--nota { flex: 0; min-width: 50pt; }
         .full-header-instructions {
@@ -475,18 +479,23 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
         .compact-exam-title { font-size: 7pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.03em; text-align: center; }
         .compact-grade { font-size: 6pt; color: #444; white-space: nowrap; }
         .compact-student-row {
-          display: flex; align-items: center; gap: 4pt; padding: 1.5pt 5pt; border-bottom: 0.5pt solid #000;
+          display: flex; align-items: center; gap: 4pt; padding: 2.5pt 10pt; border-bottom: 0.5pt solid #000;
         }
-        .compact-label { font-size: 6pt; font-weight: bold; text-transform: uppercase; color: #333; white-space: nowrap; }
+        .compact-meta-row {
+          display: flex; align-items: center; gap: 5pt; padding: 2.5pt 10pt; border-bottom: 0.5pt solid #000;
+        }
+        .compact-label { font-size: 6.5pt; font-weight: bold; text-transform: uppercase; color: #333; white-space: nowrap; }
+        .compact-label--date { margin-left: 6pt; }
+        .compact-grade-value { font-size: 8pt; color: #000; font-weight: 500; margin-left: 2pt; margin-right: 4pt; }
         .compact-label--nota { margin-left: 6pt; }
-        .compact-line { flex: 1; border-bottom: 0.5pt solid #000; min-height: 13pt; margin-bottom: 1pt; }
+        .compact-line { flex: 1; border-bottom: 0.5pt solid #000; min-height: 13pt; }
         .compact-line--code {
           flex: 1;
           margin-right: 4pt;
-          border-bottom: 0.5pt solid #000; min-height: 13pt; margin-bottom: 1pt;
+          border-bottom: 0.5pt solid #000; min-height: 13pt;
         }
         .compact-line--nota { flex: 0; min-width: 28pt; }
-        .compact-instructions { font-size: 5pt; color: #444; padding: 1.5pt 5pt; background: #f0f7ff; line-height: 1.3; text-align: center; }
+        .compact-instructions { font-size: 5pt; color: #444; padding: 2.5pt 10pt; background: #f0f7ff; line-height: 1.3; text-align: center; }
 
         /* ── Impressão ── */
         @media print {
