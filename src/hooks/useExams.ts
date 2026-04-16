@@ -119,3 +119,23 @@ export function useUpdateExamStatus() {
   });
 }
 
+export function useDuplicateExam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/exams/${id}/duplicate`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Erro ao duplicar simulado');
+      }
+      return res.json() as Promise<Exam>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+    },
+  });
+}
+

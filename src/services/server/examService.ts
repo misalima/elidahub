@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import type { Exam } from '@/types/simulados';
+import type { Exam, ExamWithQuestions } from '@/types/simulados';
 import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
 export async function getExams() {
@@ -30,7 +30,7 @@ export async function getExamById(id: string) {
     .single();
 
   if (error) throw new Error(error.message);
-  return data as Exam;
+  return data as unknown as ExamWithQuestions;
 }
 
 export async function createExam(payload: TablesInsert<'exams'>) {
@@ -84,4 +84,46 @@ export async function deleteExam(id: string) {
   const { error } = await supabaseAdmin.from('exams').delete().eq('id', id);
   if (error) throw new Error(error.message);
   return true;
+}
+
+export async function duplicateExam(id: string) {
+  const originalExam = await getExamById(id);
+  
+  if (!originalExam) {
+    throw new Error('Simulado original não encontrado.');
+  }
+
+  // 1. Create a copy of the exam
+  const newExamData: TablesInsert<'exams'> = {
+    title: `${originalExam.title} (Cópia)`,
+    description: originalExam.description,
+    school_name: originalExam.school_name,
+    school_year: originalExam.school_year,
+    grade: originalExam.grade,
+    date_label: originalExam.date_label,
+    duration: originalExam.duration,
+    instructions: originalExam.instructions,
+    status: 'draft',
+  };
+
+  const newExam = await createExam(newExamData);
+
+  // 2. Duplicate associations
+  if (originalExam.exam_questions && originalExam.exam_questions.length > 0) {
+    const associations = originalExam.exam_questions.map((eq) => ({
+      exam_id: newExam.id,
+      question_id: eq.question_id,
+      position: eq.position,
+    }));
+
+    const { error: insertError } = await supabaseAdmin
+      .from('exam_questions')
+      .insert(associations);
+
+    if (insertError) {
+      throw new Error(`Erro ao duplicar questões: ${insertError.message}`);
+    }
+  }
+
+  return newExam;
 }

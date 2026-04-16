@@ -26,10 +26,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Printer, Pencil, Trash2, Loader2, FileText, BookOpen, FileCheck2 } from "lucide-react";
-import { useExams, useCreateExam, useDeleteExam } from "@/hooks/useExams";
+import { Plus, Printer, Pencil, Trash2, Loader2, FileText, BookOpen, FileCheck2, Copy } from "lucide-react";
+import { useExams, useCreateExam, useDeleteExam, useDuplicateExam } from "@/hooks/useExams";
 import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT } from "@/types/simulados";
 
 export default function SimuladosPage() {
@@ -49,6 +55,8 @@ export default function SimuladosPage() {
   const { data: exams = [], isLoading: loading } = useExams();
   const { mutateAsync: createExamMutation, isPending: creating } = useCreateExam();
   const { mutateAsync: deleteExamMutation } = useDeleteExam();
+  const { mutateAsync: duplicateExamMutation } = useDuplicateExam();
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
   async function createExam() {
     if (!newExam.title.trim()) {
@@ -77,8 +85,21 @@ export default function SimuladosPage() {
     }
   }
 
+  async function duplicateExam(id: string) {
+    try {
+      setDuplicatingId(id);
+      await duplicateExamMutation(id);
+      toast.success("Simulado duplicado com sucesso.");
+    } catch {
+      toast.error("Erro ao duplicar o simulado.");
+    } finally {
+      setDuplicatingId(null);
+    }
+  }
+
   return (
-    <div className="p-6 max-w-6xl mx-auto min-h-[100dvh]">
+    <TooltipProvider delayDuration={300}>
+      <div className="p-6 max-w-6xl mx-auto min-h-[100dvh]">
       {/* Header */}
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div>
@@ -226,53 +247,98 @@ export default function SimuladosPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(`/hub/simulados/${exam.id}/imprimir`, "_blank");
-                  }}
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  Imprimir
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 flex-1 sm:flex-none border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:bg-violet-950/20 dark:border-violet-900/50 dark:text-violet-400 active:scale-95 transition-transform"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(`/hub/simulados/${exam.id}/folha-resposta`, "_blank");
-                  }}
-                >
-                  <FileCheck2 className="w-3.5 h-3.5" />
-                  Folha de Respostas
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform" 
-                  onClick={(e) => e.stopPropagation()} 
-                  asChild
-                >
-                  <Link href={`/hub/simulados/${exam.id}`}>
-                    <Pencil className="w-3.5 h-3.5" />
-                    Editar
-                  </Link>
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`/hub/simulados/${exam.id}/imprimir`, "_blank");
+                      }}
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      Imprimir
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Imprimir caderno de questões</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 flex-1 sm:flex-none border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:bg-violet-950/20 dark:border-violet-900/50 dark:text-violet-400 active:scale-95 transition-transform"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`/hub/simulados/${exam.id}/folha-resposta`, "_blank");
+                      }}
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5" />
+                      Folha de Respostas
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Imprimir folha de respostas</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform" 
+                      onClick={(e) => e.stopPropagation()} 
+                      asChild
+                    >
+                      <Link href={`/hub/simulados/${exam.id}`}>
+                        <Pencil className="w-3.5 h-3.5" />
+                        Editar
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Editar informações do simulado</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-transform"
-                      onClick={(e) => e.stopPropagation()}
+                      className="text-muted-foreground hover:text-foreground active:scale-95 transition-transform"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        duplicateExam(exam.id);
+                      }}
+                      disabled={duplicatingId === exam.id}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {duplicatingId === exam.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </Button>
-                  </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>Duplicar simulado</TooltipContent>
+                </Tooltip>
+
+                <AlertDialog>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-transform"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>Excluir simulado</TooltipContent>
+                  </Tooltip>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir simulado?</AlertDialogTitle>
@@ -297,5 +363,6 @@ export default function SimuladosPage() {
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }
