@@ -252,6 +252,25 @@ body {
   min-width: 50pt;
 }
 
+/* Label secundário menor (ex: "Cód.:") */
+.metadata-label--secondary {
+  font-size: 6.5pt;
+  color: #555;
+  font-weight: bold;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Linha curta para código de turma -> agora flex: 1 para crescer até o fim */
+.metadata-line--code {
+  flex: 1;
+  min-width: 40pt;
+  border-bottom: 0.5pt solid #000;
+  min-height: 14pt;
+  margin-bottom: 2pt;
+  margin-right: 4pt;
+}
+
 /* 4. Instructions */
 .exam-header-instructions {
   font-size: 7.5pt;
