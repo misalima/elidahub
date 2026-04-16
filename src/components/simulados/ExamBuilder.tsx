@@ -506,7 +506,7 @@ export function ExamBuilder({
               Nenhuma questão adicionada. Selecione do banco ao lado.
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="max-h-[600px] overflow-y-auto space-y-2 pr-1">
               {examQuestions.map((eq, index) => (
                 <div
                   key={eq.id}

@@ -17,6 +17,7 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
   const isProfessorRoute = pathname.includes("/professor");
   const isPrintRoute = pathname.includes("/imprimir");
   const isGabaritoRoute = pathname.includes("/gabarito");
+  const isFolhaRespostaRoute = pathname.includes("/folha-resposta");
   const isResumoRoute = pathname.includes("/questoes/resumo");
 
   useEffect(() => {
@@ -56,8 +57,8 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
 
   if (!user) return null;
 
-  // Print ou Gabarito: sem sidebar, mas mantém auth guard
-  if (isPrintRoute || isGabaritoRoute) {
+  // Print, Gabarito, ou Folha de Resposta: sem sidebar, mas mantém auth guard
+  if (isPrintRoute || isGabaritoRoute || isFolhaRespostaRoute) {
     return <>{children}</>;
   }
 

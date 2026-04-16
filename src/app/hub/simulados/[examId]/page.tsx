@@ -8,13 +8,7 @@ import { use } from "react";
 import { useExam, useUpdateExamStatus } from "@/hooks/useExams";
 import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT } from "@/types/simulados";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ClipboardCheck } from "lucide-react";
+import { FileCheck2 } from "lucide-react";
 
 
 interface ExamEditPageProps {
@@ -69,32 +63,16 @@ export default function ExamEditPage({ params }: ExamEditPageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <div className="inline-block">
-                  <Button
-                    variant="outline"
-                    className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-900/50 dark:text-emerald-400 dark:hover:bg-emerald-950/20 disabled:opacity-50"
-                    disabled={data.status !== "ready"}
-                    onClick={() =>
-                      window.open(`/hub/simulados/${examId}/gabarito`, "_blank")
-                    }
-                  >
-                    <ClipboardCheck className="w-4 h-4" />
-                    Imprimir Gabarito
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              {data.status !== "ready" && (
-                <TooltipContent side="bottom" className="max-w-xs text-center border-emerald-100 bg-white dark:bg-emerald-950 dark:border-emerald-900">
-                  <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">
-                    O gabarito poderá ser impresso quando a edição do simulado for concluída.
-                  </p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="outline"
+            className="gap-2 border-violet-200 text-violet-700 hover:bg-violet-50 hover:text-violet-800 dark:border-violet-900/50 dark:text-violet-400 dark:hover:bg-violet-950/20"
+            onClick={() =>
+              window.open(`/hub/simulados/${examId}/folha-resposta`, "_blank")
+            }
+          >
+            <FileCheck2 className="w-4 h-4" />
+            Folha de Respostas
+          </Button>
 
           <Button
             variant="outline"
