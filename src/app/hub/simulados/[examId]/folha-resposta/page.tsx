@@ -58,6 +58,7 @@ function CompactHeader({
   title,
   description,
   grade,
+  schoolClass,
   schoolYear,
   date,
 }: {
@@ -65,6 +66,7 @@ function CompactHeader({
   title: string;
   description?: string | null;
   grade?: string | null;
+  schoolClass?: string | null;
   schoolYear?: string | null;
   date?: string | null;
 }) {
@@ -82,10 +84,18 @@ function CompactHeader({
         {description && <span className="compact-exam-description">{description}</span>}
       </div>
       <div className="compact-meta-row">
-        <span className="compact-label">Série/Turma:</span>
-        {grade && <span className="compact-grade-value">{grade}</span>}
+        <span className="compact-label">Série:</span>
+        <span className="compact-grade-value flex-1 px-2">
+          {grade || <span className="inline-block border-b border-black w-full h-[10pt] mt-1" />}
+        </span>
+        <span className="compact-label">Turma:</span>
+        <span className="compact-grade-value flex-1 px-2">
+          {schoolClass || <span className="inline-block border-b border-black w-full h-[10pt] mt-1" />}
+        </span>
         <span className="compact-label compact-label--date">Data:</span>
-        {date && <span className="compact-grade-value">{date}</span>}
+        <span className="compact-grade-value px-2 min-w-[50pt]">
+          {date || <span className="inline-block border-b border-black w-full h-[10pt] mt-1" />}
+        </span>
       </div>
       <div className="compact-student-row">
         <span className="compact-label">Aluno(a):</span>
@@ -215,6 +225,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
               title={exam.title}
               description={exam.description}
               grade={exam.grade}
+              schoolClass={exam.school_class}
               schoolYear={exam.school_year}
               date={exam.date_label}
             />
@@ -230,6 +241,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
               title={exam.title}
               description={exam.description}
               grade={exam.grade}
+              schoolClass={exam.school_class}
               schoolYear={exam.school_year}
               date={exam.date_label}
             />
@@ -254,8 +266,16 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
             </div>
             <div className="full-header-meta">
               <div className="full-meta-item">
-                <span className="metadata-label">Série/Turma:</span>
-                {exam.grade && <span className="full-meta-value">{exam.grade}</span>}
+                <span className="full-meta-label">Série:</span>
+                <span className="full-meta-value flex-1 px-4">
+                  {exam.grade || <div className="border-b border-black w-full h-[14pt]" />}
+                </span>
+              </div>
+              <div className="full-meta-item">
+                <span className="full-meta-label">Turma:</span>
+                <span className="full-meta-value flex-1 px-4">
+                  {exam.school_class || <div className="border-b border-black w-full h-[14pt]" />}
+                </span>
               </div>
               {exam.date_label && <div className="full-meta-item"><span className="full-meta-label">Data:</span><span className="full-meta-value">{exam.date_label}</span></div>}
               {exam.duration && <div className="full-meta-item"><span className="full-meta-label">Duração:</span><span className="full-meta-value">{exam.duration}</span></div>}
@@ -495,8 +515,9 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
           display: flex; align-items: center; gap: 5pt; padding: 2.5pt 10pt; border-bottom: 0.5pt solid #000;
         }
         .compact-label { font-size: 6.5pt; font-weight: bold; text-transform: uppercase; color: #333; white-space: nowrap; }
-        .compact-label--date { margin-left: 6pt; }
-        .compact-grade-value { font-size: 8pt; color: #000; font-weight: 500; margin-left: 2pt; margin-right: 4pt; }
+        .compact-label--date { margin-left: 2pt; }
+        .compact-grade-value { display: flex; flex: 1; font-size: 8pt; color: #000; font-weight: 500; margin-left: 2pt; margin-right: 2pt; min-width: 30pt; }
+        .compact-grade-value span { width: 100%; }
         .compact-label--nota { margin-left: 6pt; }
         .compact-line { flex: 1; border-bottom: 0.5pt solid #000; min-height: 13pt; }
         .compact-line--code {

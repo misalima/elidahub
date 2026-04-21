@@ -41,10 +41,17 @@ export function ExamHeader({ exam, customInstructions }: ExamHeaderProps) {
       {/* 3. Metadados e Aluno (Grid Limpo) */}
       <div className="exam-header-metadata">
         <div className="metadata-row">
-          {/* Série/Turma sempre visível — mostra o valor configurado + linha para código de turma */}
           <div className="metadata-item">
-            <span className="metadata-label">Série/Turma:</span>
-            {exam.grade && <span className="metadata-value">{exam.grade}</span>}
+            <span className="metadata-label">Série:</span>
+            <span className="metadata-value flex-1 px-4">
+              {exam.grade || <div className="border-b border-black w-full h-[14pt]" />}
+            </span>
+          </div>
+          <div className="metadata-item">
+            <span className="metadata-label">Turma:</span>
+            <span className="metadata-value flex-1 px-4">
+              {exam.school_class || <div className="border-b border-black w-full h-[14pt]" />}
+            </span>
           </div>
           {exam.date_label && (
             <div className="metadata-item">

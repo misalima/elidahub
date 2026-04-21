@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getExams, createExam } from '@/services/server/examService';
 import { verifyApiAuth } from '@/lib/authServer';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const data = await getExams();
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search');
+    const grade = searchParams.get('grade');
+    const school_class = searchParams.get('school_class');
+    const area = searchParams.get('area');
+
+    const data = await getExams({ search, grade, school_class, area });
     return NextResponse.json(data);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Desconhecido";

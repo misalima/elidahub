@@ -112,7 +112,8 @@ export type Database = {
           date_label: string | null
           description: string | null
           duration: string | null
-          grade: string | null
+          grade: "1ª Série" | "2ª Série" | "3ª Série" | "EJA" | null
+          school_class: string | null
           id: string
           instructions: string | null
           school_name: string
@@ -127,7 +128,8 @@ export type Database = {
           date_label?: string | null
           description?: string | null
           duration?: string | null
-          grade?: string | null
+          grade?: "1ª Série" | "2ª Série" | "3ª Série" | "EJA" | null
+          school_class?: string | null
           id?: string
           instructions?: string | null
           school_name?: string
@@ -142,7 +144,8 @@ export type Database = {
           date_label?: string | null
           description?: string | null
           duration?: string | null
-          grade?: string | null
+          grade?: "1ª Série" | "2ª Série" | "3ª Série" | "EJA" | null
+          school_class?: string | null
           id?: string
           instructions?: string | null
           school_name?: string

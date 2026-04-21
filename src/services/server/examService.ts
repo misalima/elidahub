@@ -2,11 +2,39 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import type { Exam, ExamWithQuestions } from '@/types/simulados';
 import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
-export async function getExams() {
-  const { data, error } = await supabaseAdmin
+export async function getExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null }) {
+  let query = supabaseAdmin
     .from('exams')
     .select('*, exam_questions(count)')
     .order('created_at', { ascending: false });
+
+  if (filters?.search) {
+    query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+  }
+
+  if (filters?.grade) {
+    query = query.eq('grade', filters.grade);
+  }
+
+  if (filters?.school_class) {
+    query = query.eq('school_class', filters.school_class);
+  }
+
+  if (filters?.area) {
+    // Se filtrado por área, buscamos os IDs dos simulados que contém questões daquela área
+    const { data: matchedExams, error: areaError } = await supabaseAdmin
+      .from('exam_questions')
+      .select('exam_id, questions!inner(knowledge_area)')
+      .eq('questions.knowledge_area', filters.area);
+
+    if (areaError) throw new Error(areaError.message);
+    
+    const examIds = matchedExams?.map(me => me.exam_id) || [];
+    if (examIds.length === 0) return [];
+    query = query.in('id', examIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
 
@@ -19,6 +47,21 @@ export async function getExams() {
     void _eq;
     return { ...rest, questions_count } as Exam;
   });
+}
+
+export async function getExamFilters() {
+  const { data, error } = await supabaseAdmin
+    .from('exams')
+    .select('school_class')
+    .not('school_class', 'is', null);
+
+  if (error) throw new Error(error.message);
+
+  const uniqueClasses = Array.from(new Set(data.map((item) => item.school_class)))
+    .filter(Boolean)
+    .sort() as string[];
+
+  return { school_classes: uniqueClasses };
 }
 
 export async function getExamById(id: string) {
@@ -57,6 +100,7 @@ export async function createExam(payload: TablesInsert<'exams'>) {
       school_name: school_name || 'ESCOLA ESTADUAL PROFESSOR JOSÉ FÉLIX DE CARVALHO ALVES',
       school_year: school_year || null,
       grade: grade || null,
+      school_class: payload.school_class || null,
       date_label: date_label || null,
       duration: duration || null,
       instructions: instructions || null,
@@ -100,6 +144,7 @@ export async function duplicateExam(id: string) {
     school_name: originalExam.school_name,
     school_year: originalExam.school_year,
     grade: originalExam.grade,
+    school_class: originalExam.school_class,
     date_label: originalExam.date_label,
     duration: originalExam.duration,
     instructions: originalExam.instructions,
