@@ -42,7 +42,7 @@ import {
   useDuplicateExam,
   useExamFilters 
 } from "@/hooks/useExams";
-import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT, KNOWLEDGE_AREAS, formatAreaSelect, LEVELS } from "@/types/simulados";
+import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT, KNOWLEDGE_AREAS, formatAreaSelect, LEVELS, CreateExamPayload, Level } from "@/types/simulados";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Select,
@@ -96,9 +96,9 @@ export default function SimuladosPage() {
     }
     
     try {
-      const payload: any = {
+      const payload: CreateExamPayload = {
         ...newExam,
-        grade: newExam.grade || null,
+        grade: (newExam.grade as Level) || null,
       };
       const data = await createExamMutation(payload);
       setDialogOpen(false);
