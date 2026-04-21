@@ -121,7 +121,8 @@ export interface Exam {
   description: string | null;
   school_name: string;
   school_year: string | null;
-  grade: string | null;
+  grade: Level | null;
+  school_class: string | null;
   date_label: string | null;
   duration: string | null;
   instructions: string | null;
@@ -162,7 +163,8 @@ export interface CreateExamPayload {
   description?: string;
   school_name?: string;
   school_year?: string;
-  grade?: string;
+  grade?: Level | null;
+  school_class?: string | null;
   date_label?: string;
   duration?: string;
   instructions?: string;

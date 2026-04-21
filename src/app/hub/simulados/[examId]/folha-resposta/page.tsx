@@ -58,6 +58,7 @@ function CompactHeader({
   title,
   description,
   grade,
+  schoolClass,
   schoolYear,
   date,
 }: {
@@ -65,6 +66,7 @@ function CompactHeader({
   title: string;
   description?: string | null;
   grade?: string | null;
+  schoolClass?: string | null;
   schoolYear?: string | null;
   date?: string | null;
 }) {
@@ -83,7 +85,11 @@ function CompactHeader({
       </div>
       <div className="compact-meta-row">
         <span className="compact-label">Série/Turma:</span>
-        {grade && <span className="compact-grade-value">{grade}</span>}
+        <span className="compact-grade-value">
+          {grade && <span>{grade}</span>}
+          {grade && schoolClass && <span> - </span>}
+          {schoolClass && <span>{schoolClass}</span>}
+        </span>
         <span className="compact-label compact-label--date">Data:</span>
         {date && <span className="compact-grade-value">{date}</span>}
       </div>
@@ -215,6 +221,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
               title={exam.title}
               description={exam.description}
               grade={exam.grade}
+              schoolClass={exam.school_class}
               schoolYear={exam.school_year}
               date={exam.date_label}
             />
@@ -230,6 +237,7 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
               title={exam.title}
               description={exam.description}
               grade={exam.grade}
+              schoolClass={exam.school_class}
               schoolYear={exam.school_year}
               date={exam.date_label}
             />
@@ -254,8 +262,12 @@ export default function FolhaRespostaPage({ params }: FolhaRespostaPageProps) {
             </div>
             <div className="full-header-meta">
               <div className="full-meta-item">
-                <span className="metadata-label">Série/Turma:</span>
-                {exam.grade && <span className="full-meta-value">{exam.grade}</span>}
+                <span className="full-meta-label">Série/Turma:</span>
+                <span className="full-meta-value">
+                  {exam.grade && <span>{exam.grade}</span>}
+                  {exam.grade && exam.school_class && <span> - </span>}
+                  {exam.school_class && <span>{exam.school_class}</span>}
+                </span>
               </div>
               {exam.date_label && <div className="full-meta-item"><span className="full-meta-label">Data:</span><span className="full-meta-value">{exam.date_label}</span></div>}
               {exam.duration && <div className="full-meta-item"><span className="full-meta-label">Duração:</span><span className="full-meta-value">{exam.duration}</span></div>}

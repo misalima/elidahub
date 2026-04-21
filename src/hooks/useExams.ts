@@ -2,16 +2,36 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Exam, ExamWithQuestions } from '@/types/simulados';
 import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
-export function useExams() {
+export function useExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null }) {
   return useQuery({
-    queryKey: ['exams'],
+    queryKey: ['exams', filters],
     queryFn: async () => {
-      const res = await fetch('/api/exams');
+      const params = new URLSearchParams();
+      if (filters?.search) params.append('search', filters.search);
+      if (filters?.grade) params.append('grade', filters.grade);
+      if (filters?.school_class) params.append('school_class', filters.school_class);
+      if (filters?.area) params.append('area', filters.area);
+
+      const queryString = params.toString();
+      const res = await fetch(`/api/exams${queryString ? `?${queryString}` : ''}`);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error || 'Erro ao carregar simulados');
       }
       return res.json() as Promise<Exam[]>;
+    }
+  });
+}
+
+export function useExamFilters() {
+  return useQuery({
+    queryKey: ['exams', 'filters'],
+    queryFn: async () => {
+      const res = await fetch('/api/exams/filters');
+      if (!res.ok) {
+        throw new Error('Erro ao carregar filtros');
+      }
+      return res.json() as Promise<{ school_classes: string[] }>;
     }
   });
 }

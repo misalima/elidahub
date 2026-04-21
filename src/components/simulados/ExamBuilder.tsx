@@ -84,6 +84,7 @@ export function ExamBuilder({
     title: exam.title,
     description: exam.description ?? "",
     grade: exam.grade ?? "",
+    school_class: exam.school_class ?? "",
     date_label: exam.date_label ?? "",
     duration: exam.duration ?? "",
     school_year: exam.school_year ?? "",
@@ -366,11 +367,26 @@ export function ExamBuilder({
               />
             </div>
             <div className="space-y-1">
-              <Label>Turma / Série</Label>
+              <Label>Série</Label>
+              <Select value={meta.grade} onValueChange={(val) => setMeta((m) => ({ ...m, grade: val }))} disabled={isReady}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecione a série" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEVELS.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Turma</Label>
               <Input
                 placeholder="Ex: 9º Ano B"
-                value={meta.grade}
-                onChange={(e) => setMeta((m) => ({ ...m, grade: e.target.value }))}
+                value={meta.school_class}
+                onChange={(e) => setMeta((m) => ({ ...m, school_class: e.target.value }))}
                 disabled={isReady}
               />
             </div>

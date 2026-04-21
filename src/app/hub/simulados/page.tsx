@@ -34,25 +34,55 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Printer, Pencil, Trash2, Loader2, FileText, BookOpen, FileCheck2, Copy } from "lucide-react";
-import { useExams, useCreateExam, useDeleteExam, useDuplicateExam } from "@/hooks/useExams";
-import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT } from "@/types/simulados";
+import { Search, Plus, Printer, Pencil, Trash2, Loader2, BookOpen, FileCheck2, Copy, Filter, FileText, Users } from "lucide-react";
+import { 
+  useExams, 
+  useCreateExam, 
+  useDeleteExam, 
+  useDuplicateExam,
+  useExamFilters 
+} from "@/hooks/useExams";
+import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT, KNOWLEDGE_AREAS, formatAreaSelect, LEVELS } from "@/types/simulados";
+import { useDebounce } from "@/hooks/useDebounce";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SimuladosPage() {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [titleError, setTitleError] = useState(false);
+  
+  // Filter state
+  const [filterSearch, setFilterSearch] = useState("");
+  const [filterArea, setFilterArea] = useState("all");
+  const [filterGrade, setFilterGrade] = useState("all");
+  const [filterClass, setFilterClass] = useState("all");
+  const debouncedSearch = useDebounce(filterSearch, 300);
+
   const [newExam, setNewExam] = useState({
     title: "",
     description: "",
     grade: "",
+    school_class: "",
     date_label: "",
     duration: "",
     school_year: "",
     instructions: "Leia atentamente cada questão. Assinale apenas uma alternativa. Não é permitido o uso de corretivo.",
   });
 
-  const { data: exams = [], isLoading: loading } = useExams();
+  const { data: exams = [], isLoading: loading } = useExams({
+    search: debouncedSearch || null,
+    area: filterArea !== "all" ? filterArea : null,
+    grade: filterGrade !== "all" ? filterGrade : null,
+    school_class: filterClass !== "all" ? filterClass : null,
+  });
+  
+  const { data: filterOptions } = useExamFilters();
   const { mutateAsync: createExamMutation, isPending: creating } = useCreateExam();
   const { mutateAsync: deleteExamMutation } = useDeleteExam();
   const { mutateAsync: duplicateExamMutation } = useDuplicateExam();
@@ -66,7 +96,11 @@ export default function SimuladosPage() {
     }
     
     try {
-      const data = await createExamMutation(newExam);
+      const payload: any = {
+        ...newExam,
+        grade: newExam.grade || null,
+      };
+      const data = await createExamMutation(payload);
       setDialogOpen(false);
       toast.success("Simulado criado!");
       router.push(`/hub/simulados/${data.id}`);
@@ -149,11 +183,26 @@ export default function SimuladosPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
+                  <Label>Série</Label>
+                  <Select value={newExam.grade} onValueChange={(val) => setNewExam((m) => ({ ...m, grade: val }))}>
+                    <SelectTrigger className="h-10 bg-white dark:bg-card">
+                      <SelectValue placeholder="Selecione a série" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEVELS.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
                   <Label>Turma</Label>
                   <Input
                     placeholder="9º Ano B"
-                    value={newExam.grade}
-                    onChange={(e) => setNewExam((m) => ({ ...m, grade: e.target.value }))}
+                    value={newExam.school_class}
+                    onChange={(e) => setNewExam((m) => ({ ...m, school_class: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-1">
@@ -203,6 +252,85 @@ export default function SimuladosPage() {
         </Dialog>
       </div>
 
+      {/* Filtros */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-8">
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          <div className="relative w-full md:w-auto md:flex-1 md:max-w-[320px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              className="pl-9 h-10 rounded-xl bg-white dark:bg-card border-border/40 focus-visible:ring-primary/20"
+              placeholder="Buscar por título ou descrição..."
+              value={filterSearch}
+              onChange={(e) => setFilterSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="w-full md:w-auto md:min-w-[180px]">
+            <Select value={filterArea} onValueChange={setFilterArea}>
+              <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-card border-border/40 w-full">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                  <SelectValue placeholder="Filtrar por Área" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Áreas</SelectItem>
+                {KNOWLEDGE_AREAS.map((area) => (
+                  <SelectItem key={area} value={area}>
+                    {formatAreaSelect(area)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full md:w-auto md:min-w-[150px]">
+            <Select value={filterGrade} onValueChange={setFilterGrade}>
+              <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-card border-border/40 w-full">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                  <SelectValue placeholder="Filtrar por Série" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Séries</SelectItem>
+                {LEVELS.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full md:w-auto md:min-w-[150px]">
+            <Select value={filterClass} onValueChange={setFilterClass}>
+              <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-card border-border/40 w-full">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                  <SelectValue placeholder="Filtrar por Turma" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Turmas</SelectItem>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {(filterOptions as any)?.school_classes?.map((c: string) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end md:ml-auto">
+          <Badge variant="secondary" className="px-3 py-1.5 h-10 min-w-[40px] justify-center rounded-xl bg-muted/50 text-muted-foreground font-medium border-none shrink-0">
+            {loading ? "…" : exams.length}
+          </Badge>
+        </div>
+      </div>
+
       {/* Lista de simulados */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -222,47 +350,69 @@ export default function SimuladosPage() {
             <div
               key={exam.id}
               onClick={() => router.push(`/hub/simulados/${exam.id}`)}
-              className="flex flex-col cursor-pointer sm:flex-row sm:items-center items-start gap-4 p-4 rounded-xl border border-border/40 bg-white dark:bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+              className="group flex flex-col cursor-pointer rounded-2xl border border-border/40 bg-white dark:bg-card transition-all duration-300 hover:shadow-xl hover:border-primary/20 overflow-hidden"
             >
-              <div className="flex-1 min-w-0 w-full">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-foreground truncate">{exam.title}</h3>
-                  <Badge variant={EXAM_STATUS_BADGE_VARIANT[exam.status]} className="text-xs">
+              <div className="p-5 flex-1 space-y-4">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex flex-col gap-2">
+                      {exam.grade && (
+                        <span className="text-[11px] font-black uppercase tracking-[0.15em] text-primary/80 bg-primary/5 w-fit px-2 py-0.5 rounded">
+                          {exam.grade}
+                        </span>
+                      )}
+                      <h3 className="text-xl font-extrabold text-foreground leading-tight group-hover:text-primary transition-colors">
+                        {exam.title}
+                      </h3>
+                    </div>
+                    {exam.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {exam.description}
+                      </p>
+                    )}
+                  </div>
+                  <Badge variant={EXAM_STATUS_BADGE_VARIANT[exam.status]} className="shrink-0 shadow-sm px-2.5 py-0.5 border-none">
                     {EXAM_STATUS_LABELS[exam.status]}
                   </Badge>
                 </div>
-                {exam.description && (
-                  <p className="text-sm text-muted-foreground mt-0.5 truncate">{exam.description}</p>
-                )}
-                <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                  <span>{exam.questions_count ?? 0} questões</span>
-                  {exam.questions_count && <span className="text-muted-foreground/30">•</span>}
-                  {exam.grade && <span>Turma: {exam.grade}</span>}
-                  {exam.date_label && <span>Data: {exam.date_label}</span>}
-                  {exam.duration && <span>Duração: {exam.duration}</span>}
-                  <span>
-                    Criado em: {new Date(exam.created_at).toLocaleDateString("pt-BR")}
-                  </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-4 pt-1">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <BookOpen className="w-3.5 h-3.5 text-primary/60" />
+                    <span className="font-medium text-foreground/80">{exam.questions_count ?? 0}</span> questões
+                  </div>
+                  {exam.school_class && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Users className="w-3.5 h-3.5 text-primary/60" />
+                      <span className="truncate">
+                        Turma: <span className="font-semibold text-foreground/80">{exam.school_class}</span>
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <FileCheck2 className="w-3.5 h-3.5 text-primary/60" />
+                    <span>Criado em {new Date(exam.created_at).toLocaleDateString("pt-BR")}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+              <div className="px-5 py-3 bg-muted/20 border-t border-border/40 flex flex-wrap items-center gap-2 justify-end">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform"
+                      className="h-9 gap-2 px-4 rounded-lg bg-white dark:bg-background hover:bg-primary/5 active:scale-95 transition-all text-xs font-medium"
                       onClick={(e) => {
                         e.stopPropagation();
                         window.open(`/hub/simulados/${exam.id}/imprimir`, "_blank");
                       }}
                     >
-                      <Printer className="w-3.5 h-3.5" />
-                      Imprimir
+                      <Printer className="w-4 h-4" />
+                      <span>Imprimir Caderno</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Imprimir caderno de questões</TooltipContent>
+                  <TooltipContent>Visualizar para impressão</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -270,93 +420,95 @@ export default function SimuladosPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 flex-1 sm:flex-none border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:bg-violet-950/20 dark:border-violet-900/50 dark:text-violet-400 active:scale-95 transition-transform"
+                      className="h-9 gap-2 px-4 rounded-lg border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:bg-violet-950/20 dark:border-violet-900/50 dark:text-violet-400 active:scale-95 transition-all text-xs font-medium"
                       onClick={(e) => {
                         e.stopPropagation();
                         window.open(`/hub/simulados/${exam.id}/folha-resposta`, "_blank");
                       }}
                     >
-                      <FileCheck2 className="w-3.5 h-3.5" />
-                      Folha de Respostas
+                      <FileCheck2 className="w-4 h-4" />
+                      <span>Gabarito/Respostas</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Imprimir folha de respostas</TooltipContent>
+                  <TooltipContent>Gerar folha de respostas</TooltipContent>
                 </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-1.5 flex-1 sm:flex-none active:scale-95 transition-transform" 
-                      onClick={(e) => e.stopPropagation()} 
-                      asChild
-                    >
-                      <Link href={`/hub/simulados/${exam.id}`}>
-                        <Pencil className="w-3.5 h-3.5" />
-                        Editar
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Editar informações do simulado</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-foreground active:scale-95 transition-transform"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        duplicateExam(exam.id);
-                      }}
-                      disabled={duplicatingId === exam.id}
-                    >
-                      {duplicatingId === exam.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Duplicar simulado</TooltipContent>
-                </Tooltip>
-
-                <AlertDialog>
+                <div className="flex items-center gap-1.5 ml-auto sm:ml-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-transform"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>Excluir simulado</TooltipContent>
-                  </Tooltip>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir simulado?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                         O simulado &quot;{exam.title}&quot; será excluído permanentemente, incluindo todas as questões vinculadas.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-destructive hover:bg-destructive/90"
-                        onClick={(e) => { e.stopPropagation(); deleteExam(exam.id); }}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-9 gap-2 px-3 hover:bg-primary/5 active:scale-95 transition-all" 
+                        onClick={(e) => e.stopPropagation()} 
+                        asChild
                       >
-                        Excluir
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <Link href={`/hub/simulados/${exam.id}`}>
+                          <Pencil className="w-4 h-4" />
+                          <span className="hidden sm:inline text-xs font-medium">Editar</span>
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Editar configurações</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          duplicateExam(exam.id);
+                        }}
+                        disabled={duplicatingId === exam.id}
+                      >
+                        {duplicatingId === exam.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Duplicar</TooltipContent>
+                  </Tooltip>
+
+                  <AlertDialog>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>Excluir permanentemente</TooltipContent>
+                    </Tooltip>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir simulado?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           O simulado &quot;{exam.title}&quot; será removido. Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive hover:bg-destructive/90"
+                          onClick={(e) => { e.stopPropagation(); deleteExam(exam.id); }}
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
             </div>
           ))}
