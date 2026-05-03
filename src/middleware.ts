@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 
 const PUBLIC_FILE = /\.(.*)$/;
 const PREFIXES = ['/main', '/hub', '/vqdt'];
+const PUBLIC_HUB_PATHS = ['/hub/professor-mentor/gerar-folha-de-frequencia'];
 
 // Rotas do professor que exigem cookie teacher_session válido
 const TEACHER_PROTECTED_PATHS = [
@@ -19,6 +20,10 @@ export async function middleware(req: NextRequest) {
 
   // 1) Ignora assets e internos do Next
   if (PUBLIC_FILE.test(pathname) || pathname.startsWith('/_next')) {
+    return NextResponse.next();
+  }
+
+  if (PUBLIC_HUB_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
     return NextResponse.next();
   }
 
