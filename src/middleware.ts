@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PUBLIC_FILE = /\.(.*)$/;
-const PREFIXES = ['/main', '/hub', '/vqdt'];
+const PREFIXES = ['/main', '/hub'];
 const PUBLIC_HUB_PATHS = ['/hub/professor-mentor/gerar-folha-de-frequencia'];
 
 // Rotas do professor que exigem cookie teacher_session válido
@@ -68,7 +68,6 @@ export async function middleware(req: NextRequest) {
   // 6) Mapeia subdomínio -> prefixo para o rewrite
   const prefix =
     sub === 'hub' ? '/hub' :
-    sub === 'vqdt' ? '/vqdt' :
     '/main';
 
   // 7) Reescreve preservando caminho e querystring
