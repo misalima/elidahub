@@ -5,7 +5,7 @@ export async function GET(_req: Request) {
   // eslint-disable-next-line no-console
   console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   // eslint-disable-next-line no-console
-  console.log("Key exists:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+  console.log("Key exists:", !!process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY);
   
   const { error } = await supabaseAdmin.from('profiles').select('id').limit(1);
 
