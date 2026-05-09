@@ -8,10 +8,11 @@ export async function getQuestions(filters: {
   search?: string | null;
   difficulty?: string | null;
   level?: string | null;
+  hideUsed?: boolean | null;
 }) {
   let query = supabaseAdmin
     .from('questions')
-    .select('*')
+    .select('*, exam_questions(exams(id, title, status))')
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
@@ -23,7 +24,14 @@ export async function getQuestions(filters: {
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return data as Question[];
+
+  let results = data as unknown as Question[];
+
+  if (filters.hideUsed) {
+    results = results.filter(q => !q.exam_questions || q.exam_questions.length === 0);
+  }
+
+  return results;
 }
 
 export async function getQuestionById(id: string) {

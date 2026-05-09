@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Database, BookOpen } from "lucide-react";
 import { useQuestions } from "@/hooks/useQuestions";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
 
 interface TeacherBankModalProps {
   open: boolean;
@@ -20,7 +22,8 @@ const OPTION_KEYS = ["option_a", "option_b", "option_c", "option_d", "option_e"]
 const OPTION_LABELS = ["A", "B", "C", "D", "E"] as const;
 
 export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) {
-  const { data: questions = [], isLoading } = useQuestions({});
+  const [hideUsed, setHideUsed] = useState(false);
+  const { data: questions = [], isLoading } = useQuestions({ hideUsed });
 
   const sorted = [...questions].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -40,6 +43,20 @@ export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) 
             )}
           </DialogTitle>
         </DialogHeader>
+
+        <div className="flex items-center space-x-2 py-2 px-1">
+          <Checkbox 
+            id="hide-used-bank" 
+            checked={hideUsed} 
+            onCheckedChange={(checked) => setHideUsed(!!checked)} 
+          />
+          <label
+            htmlFor="hide-used-bank"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          >
+            Ocultar questões já utilizadas em simulados
+          </label>
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">

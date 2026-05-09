@@ -8,6 +8,7 @@ interface FetchQuestionsParams {
   search?: string | null;
   difficulty?: string | null;
   level?: string | null;
+  hideUsed?: boolean;
 }
 
 export function useQuestions(filters: FetchQuestionsParams) {
@@ -20,6 +21,7 @@ export function useQuestions(filters: FetchQuestionsParams) {
       if (filters.search) params.set('search', filters.search);
       if (filters.difficulty) params.set('difficulty', filters.difficulty);
       if (filters.level) params.set('level', filters.level);
+      if (filters.hideUsed) params.set('hideUsed', 'true');
 
       const res = await fetch(`/api/questions?${params.toString()}`);
       if (!res.ok) {

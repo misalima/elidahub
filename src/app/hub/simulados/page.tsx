@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,12 +35,13 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Search, Plus, Printer, Pencil, Trash2, Loader2, BookOpen, FileCheck2, Copy, Filter, FileText, Users } from "lucide-react";
+import { Search, Plus, Printer, Pencil, Trash2, Loader2, BookOpen, FileCheck2, Copy, Filter, FileText, Users, CheckCircle2, RotateCcw } from "lucide-react";
 import { 
   useExams, 
   useCreateExam, 
   useDeleteExam, 
   useDuplicateExam,
+  useUpdateExamStatus,
   useExamFilters 
 } from "@/hooks/useExams";
 import { EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT, KNOWLEDGE_AREAS, formatAreaSelect, LEVELS, CreateExamPayload, Level } from "@/types/simulados";
@@ -62,6 +64,7 @@ export default function SimuladosPage() {
   const [filterArea, setFilterArea] = useState("all");
   const [filterGrade, setFilterGrade] = useState("all");
   const [filterClass, setFilterClass] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const debouncedSearch = useDebounce(filterSearch, 300);
 
   const [newExam, setNewExam] = useState({
@@ -80,13 +83,16 @@ export default function SimuladosPage() {
     area: filterArea !== "all" ? filterArea : null,
     grade: filterGrade !== "all" ? filterGrade : null,
     school_class: filterClass !== "all" ? filterClass : null,
+    status: filterStatus,
   });
   
   const { data: filterOptions } = useExamFilters();
   const { mutateAsync: createExamMutation, isPending: creating } = useCreateExam();
   const { mutateAsync: deleteExamMutation } = useDeleteExam();
   const { mutateAsync: duplicateExamMutation } = useDuplicateExam();
+  const { mutateAsync: updateStatusMutation } = useUpdateExamStatus();
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   async function createExam() {
     if (!newExam.title.trim()) {
@@ -128,6 +134,19 @@ export default function SimuladosPage() {
       toast.error("Erro ao duplicar o simulado.");
     } finally {
       setDuplicatingId(null);
+    }
+  }
+
+  async function toggleApplied(id: string, currentStatus: string) {
+    try {
+      setStatusUpdatingId(id);
+      const newStatus = currentStatus === 'applied' ? 'ready' : 'applied';
+      await updateStatusMutation({ id, status: newStatus });
+      toast.success(newStatus === 'applied' ? "Simulado marcado como aplicado!" : "Simulado revertido para pronto.");
+    } catch {
+      toast.error("Erro ao atualizar status do simulado.");
+    } finally {
+      setStatusUpdatingId(null);
     }
   }
 
@@ -322,6 +341,25 @@ export default function SimuladosPage() {
               </SelectContent>
             </Select>
           </div>
+          
+          <div className="w-full md:w-auto md:min-w-[180px]">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-card border-border/40 w-full">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                  <SelectValue placeholder="Status" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_applied">Não Aplicados</SelectItem>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="applied">Aplicados</SelectItem>
+                <SelectItem value="ready">Prontos</SelectItem>
+                <SelectItem value="editing">Em Edição</SelectItem>
+                <SelectItem value="draft">Rascunho</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex items-center justify-end md:ml-auto">
@@ -337,12 +375,21 @@ export default function SimuladosPage() {
           <Loader2 className="w-7 h-7 animate-spin text-muted-foreground" />
         </div>
       ) : exams.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed rounded-2xl">
-          <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground font-medium">Nenhum simulado criado ainda.</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Clique em &quot;Novo Simulado&quot; para começar.
+        <div className="text-center py-24 border-2 border-dashed rounded-3xl bg-muted/5 border-muted-foreground/20 animate-in fade-in zoom-in duration-500">
+          <div className="bg-white dark:bg-card w-16 h-16 rounded-2xl shadow-sm border border-border/40 flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8 text-muted-foreground/60" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground">Nenhum simulado por aqui</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-[320px] mx-auto">
+            {filterSearch || filterStatus !== 'all' || filterArea !== 'all' || filterGrade !== 'all' || filterClass !== 'all'
+              ? "Não encontramos resultados para os filtros aplicados. Tente ajustar sua busca ou limpar os filtros."
+              : "Sua lista de simulados está vazia. Que tal criar um novo simulado para começar?"}
           </p>
+          {!(filterSearch || filterStatus !== 'all' || filterArea !== 'all' || filterGrade !== 'all' || filterClass !== 'all') && (
+             <Button className="mt-6 gap-2 h-11 px-6 rounded-xl active:scale-95 transition-all" onClick={() => setDialogOpen(true)}>
+               <Plus className="w-4 h-4" /> Criar Primeiro Simulado
+             </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -376,20 +423,20 @@ export default function SimuladosPage() {
                   </Badge>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-4 pt-1">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                     <BookOpen className="w-3.5 h-3.5 text-primary/60" />
                     <span className="font-medium text-foreground/80">{exam.questions_count ?? 0}</span> questões
                   </div>
                   {exam.school_class && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                       <Users className="w-3.5 h-3.5 text-primary/60" />
                       <span className="truncate">
                         Turma: <span className="font-semibold text-foreground/80">{exam.school_class}</span>
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                     <FileCheck2 className="w-3.5 h-3.5 text-primary/60" />
                     <span>Criado em {new Date(exam.created_at).toLocaleDateString("pt-BR")}</span>
                   </div>
@@ -473,6 +520,39 @@ export default function SimuladosPage() {
                     </TooltipTrigger>
                     <TooltipContent>Duplicar</TooltipContent>
                   </Tooltip>
+
+                  {(exam.status === 'ready' || exam.status === 'applied') && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-9 w-9 active:scale-95 transition-all",
+                            exam.status === 'applied' 
+                              ? "text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20" 
+                              : "text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleApplied(exam.id, exam.status);
+                          }}
+                          disabled={statusUpdatingId === exam.id}
+                        >
+                          {statusUpdatingId === exam.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : exam.status === 'applied' ? (
+                            <RotateCcw className="w-4 h-4" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {exam.status === 'applied' ? "Desmarcar como aplicado" : "Marcar como aplicado"}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
 
                   <AlertDialog>
                     <Tooltip>

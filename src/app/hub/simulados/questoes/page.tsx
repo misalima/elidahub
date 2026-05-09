@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Search, Database, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ export default function QuestoesPage() {
   const [filterDifficulty, setFilterDifficulty] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
+  const [filterHideUsed, setFilterHideUsed] = useState(false);
   const debouncedSearch = useDebounce(filterSearch, 300);
 
   const { data: questions = [], isLoading: loading, isError } = useQuestions({
@@ -33,6 +35,7 @@ export default function QuestoesPage() {
     difficulty: filterDifficulty !== "all" ? filterDifficulty : null,
     level: filterLevel !== "all" ? filterLevel : null,
     search: debouncedSearch || null,
+    hideUsed: filterHideUsed,
   });
 
   useEffect(() => {
@@ -155,6 +158,21 @@ export default function QuestoesPage() {
               {loading ? "…" : questions.length} quest{questions.length !== 1 ? "ões" : "ão"}
             </Badge>
           </div>
+        </div>
+
+        {/* Linha 3: Ocultar usadas */}
+        <div className="flex items-center space-x-2 bg-white dark:bg-card h-10 px-3 rounded-xl border border-border/40 w-fit mt-1">
+          <Checkbox 
+            id="hide-used-questions" 
+            checked={filterHideUsed} 
+            onCheckedChange={(checked) => setFilterHideUsed(!!checked)} 
+          />
+          <label
+            htmlFor="hide-used-questions"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          >
+            Ocultar questões já utilizadas em simulados
+          </label>
         </div>
       </div>
 

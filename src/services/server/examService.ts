@@ -2,11 +2,19 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import type { Exam, ExamWithQuestions } from '@/types/simulados';
 import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
-export async function getExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null }) {
+export async function getExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null; status?: string | null }) {
   let query = supabaseAdmin
     .from('exams')
     .select('*, exam_questions(count)')
     .order('created_at', { ascending: false });
+
+  if (filters?.status && filters.status !== 'all') {
+    if (filters.status === 'not_applied') {
+      query = query.neq('status', 'applied');
+    } else {
+      query = query.eq('status', filters.status);
+    }
+  }
 
   if (filters?.search) {
     query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);

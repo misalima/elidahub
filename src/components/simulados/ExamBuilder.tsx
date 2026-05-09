@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { QuestionCard } from "@/components/simulados/QuestionCard";
 import { toast } from "sonner";
@@ -57,7 +58,7 @@ import {
 interface ExamBuilderProps {
   exam: Exam;
   initialQuestions: ExamWithQuestions["exam_questions"];
-  onStatusChange?: (status: "draft" | "ready" | "editing") => void;
+  onStatusChange?: (status: "draft" | "ready" | "editing" | "applied") => void;
   isUpdatingStatus?: boolean;
 }
 
@@ -74,6 +75,7 @@ export function ExamBuilder({
   const [filterSubject, setFilterSubject] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
+  const [filterHideUsed, setFilterHideUsed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -110,6 +112,7 @@ export function ExamBuilder({
     subject: filterSubject !== "all" ? filterSubject : null,
     level: filterLevel !== "all" ? filterLevel : null,
     search: debouncedSearch || null,
+    hideUsed: filterHideUsed,
   });
 
   const selectedIds = new Set(examQuestions.map((eq) => eq.question_id));
@@ -314,9 +317,9 @@ export function ExamBuilder({
     }
   }
 
-  const isReady = exam.status === "ready";
+  const isReady = exam.status === "ready" || exam.status === "applied";
 
-  async function handleStatusChange(newStatus: "draft" | "ready" | "editing") {
+  async function handleStatusChange(newStatus: "draft" | "ready" | "editing" | "applied") {
     if (onStatusChange) {
       onStatusChange(newStatus);
     }
@@ -472,6 +475,38 @@ export function ExamBuilder({
                     <ClipboardCheck className="w-3.5 h-3.5" />
                   )}
                   Concluir Simulado
+                </Button>
+              )}
+              {exam.status === "ready" && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-8 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={() => handleStatusChange("applied")}
+                  disabled={isUpdatingStatus}
+                >
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <ClipboardCheck className="w-3.5 h-3.5" />
+                  )}
+                  Marcar como Aplicado
+                </Button>
+              )}
+              {exam.status === "applied" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5"
+                  onClick={() => handleStatusChange("ready")}
+                  disabled={isUpdatingStatus}
+                >
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <X className="w-3.5 h-3.5" />
+                  )}
+                  Desmarcar Aplicado
                 </Button>
               )}
             </div>
@@ -665,6 +700,20 @@ export function ExamBuilder({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center space-x-2 pb-2">
+            <Checkbox 
+              id="hide-used-builder" 
+              checked={filterHideUsed} 
+              onCheckedChange={(checked) => setFilterHideUsed(!!checked)} 
+            />
+            <label
+              htmlFor="hide-used-builder"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Ocultar questões já utilizadas em simulados
+            </label>
           </div>
 
           <Separator />

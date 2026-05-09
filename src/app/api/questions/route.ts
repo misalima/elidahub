@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
       search: searchParams.get('search'),
       difficulty: searchParams.get('difficulty'),
       level: searchParams.get('level'),
+      hideUsed: searchParams.get('hideUsed') === 'true',
     });
     return NextResponse.json(data);
   } catch (error: unknown) {

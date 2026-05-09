@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Exam, ExamWithQuestions } from '@/types/simulados';
 import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
-export function useExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null }) {
+export function useExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null; status?: string | null }) {
   return useQuery({
     queryKey: ['exams', filters],
     queryFn: async () => {
@@ -11,6 +11,7 @@ export function useExams(filters?: { search?: string | null; grade?: string | nu
       if (filters?.grade) params.append('grade', filters.grade);
       if (filters?.school_class) params.append('school_class', filters.school_class);
       if (filters?.area) params.append('area', filters.area);
+      if (filters?.status) params.append('status', filters.status);
 
       const queryString = params.toString();
       const res = await fetch(`/api/exams${queryString ? `?${queryString}` : ''}`);
@@ -120,7 +121,7 @@ export function useUpdateExamStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'draft' | 'ready' | 'editing' }) => {
+    mutationFn: async ({ id, status }: { id: string; status: 'draft' | 'ready' | 'editing' | 'applied' }) => {
       const res = await fetch(`/api/exams/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

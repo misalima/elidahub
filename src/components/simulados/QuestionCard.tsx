@@ -17,10 +17,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap, Pencil } from "lucide-react";
+import { Trash2, User, Calendar, Eye, BarChart3, GraduationCap, Pencil, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import type { Question } from "@/types/simulados";
-import { formatAreaBadge } from "@/types/simulados";
+import { formatAreaBadge, EXAM_STATUS_LABELS, EXAM_STATUS_BADGE_VARIANT, type ExamStatus, type Question } from "@/types/simulados";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useDeleteQuestion } from "@/hooks/useQuestions";
 import { QuestionEditModal } from "@/components/simulados/QuestionEditModal";
@@ -64,6 +63,7 @@ export function QuestionCard({
   const [editOpen, setEditOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [examListOpen, setExamListOpen] = useState(false);
 
   async function handleDelete() {
     try {
@@ -127,6 +127,21 @@ export function QuestionCard({
               <span className="text-xs font-mono text-muted-foreground">#{questionNumber}</span>
             )}
           </div>
+
+          {question.exam_questions && question.exam_questions.length > 0 && (
+            <div className="pt-1">
+              <Badge 
+                variant="secondary" 
+                className="bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50 cursor-pointer transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExamListOpen(true);
+                }}
+              >
+                Utilizada em {question.exam_questions.length} simulado{question.exam_questions.length > 1 ? "s" : ""}
+              </Badge>
+            </div>
+          )}
 
           <div className="text-[15px] font-serif text-foreground leading-relaxed line-clamp-3 prose prose-sm dark:prose-invert max-w-none [&_p]:m-0">
               <MarkdownRenderer>
@@ -322,6 +337,38 @@ export function QuestionCard({
         open={editOpen}
         onOpenChange={setEditOpen}
       />
+
+      {/* Modal de simulados vinculados */}
+      <Dialog open={examListOpen} onOpenChange={setExamListOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Simulados Utilizando esta Questão</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2 max-h-[60vh] overflow-y-auto pr-2">
+            {question.exam_questions?.map((eq, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
+                <div className="flex flex-col gap-1 min-w-0 pr-3">
+                  <span className="text-sm font-semibold truncate">{eq.exams.title}</span>
+                  <Badge 
+                    variant={EXAM_STATUS_BADGE_VARIANT[eq.exams.status as ExamStatus]} 
+                    className="w-fit text-[10px] border-none"
+                  >
+                    {EXAM_STATUS_LABELS[eq.exams.status as ExamStatus]}
+                  </Badge>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  className="shrink-0 gap-1.5"
+                  onClick={() => window.open(`/hub/simulados/${eq.exams.id}`, "_blank")}
+                >
+                  Ver simulado <ExternalLink className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
