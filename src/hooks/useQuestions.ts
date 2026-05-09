@@ -8,6 +8,9 @@ interface FetchQuestionsParams {
   search?: string | null;
   difficulty?: string | null;
   level?: string | null;
+  hideUsed?: boolean;
+  page?: number;
+  pageSize?: number;
 }
 
 export function useQuestions(filters: FetchQuestionsParams) {
@@ -20,13 +23,16 @@ export function useQuestions(filters: FetchQuestionsParams) {
       if (filters.search) params.set('search', filters.search);
       if (filters.difficulty) params.set('difficulty', filters.difficulty);
       if (filters.level) params.set('level', filters.level);
+      if (filters.hideUsed) params.set('hideUsed', 'true');
+      if (filters.page) params.set('page', filters.page.toString());
+      if (filters.pageSize) params.set('pageSize', filters.pageSize.toString());
 
       const res = await fetch(`/api/questions?${params.toString()}`);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error || 'Erro ao carregar questões');
       }
-      return res.json() as Promise<Question[]>;
+      return res.json() as Promise<{ data: Question[]; total: number }>;
     },
   });
 }

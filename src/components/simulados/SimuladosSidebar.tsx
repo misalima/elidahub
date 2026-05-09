@@ -49,7 +49,7 @@ export function SimuladosSidebarContent() {
         </Link>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           Sair
