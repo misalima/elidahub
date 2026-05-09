@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { MONTH_OPTIONS, createMentorTeacher, type FormState } from "@/types/professor-mentor";
 import { ImagePlus, Plus, Trash2, X, Check, ChevronDown, FileText } from "lucide-react";
 import { useId, useState, useRef, useEffect } from "react";
+import Image from "next/image";
 
 interface AttendanceFormProps {
   value: FormState;
@@ -289,10 +290,13 @@ export function AttendanceForm({ value, onChange, onGenerate, validationError }:
 
                 {value.schoolLogo ? (
                   <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
-                    <img
+                    <Image
                       src={value.schoolLogo}
                       alt="Preview da logo"
+                      width={48}
+                      height={48}
                       className="h-12 w-12 rounded-md object-contain"
+                      unoptimized
                     />
                     <div className="text-xs text-slate-600">
                       <p className="font-medium text-slate-900">Logo carregada</p>
