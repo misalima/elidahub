@@ -11,7 +11,15 @@ export async function GET(req: NextRequest) {
     const area = searchParams.get('area');
     const status = searchParams.get('status');
 
-    const data = await getExams({ search, grade, school_class, area, status });
+    const data = await getExams({ 
+      search, 
+      grade, 
+      school_class, 
+      area, 
+      status,
+      page: parseInt(searchParams.get('page') || '1'),
+      pageSize: parseInt(searchParams.get('pageSize') || '12'),
+    });
     return NextResponse.json(data);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Desconhecido";

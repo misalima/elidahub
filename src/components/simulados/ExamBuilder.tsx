@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,8 @@ import {
   BarChart3,
   GraduationCap,
   Shuffle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { Exam, Question, ExamWithQuestions } from "@/types/simulados";
 import {
@@ -76,6 +78,7 @@ export function ExamBuilder({
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
   const [filterHideUsed, setFilterHideUsed] = useState(false);
+  const [bankPage, setBankPage] = useState(1);
   const [saving, setSaving] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -107,13 +110,23 @@ export function ExamBuilder({
     setFilterSubject("all");
   }
 
-  const { data: bankQuestions = [], isLoading: loadingBank, isError, refetch } = useQuestions({
+  const { data: response, isLoading: loadingBank, isError, refetch } = useQuestions({
     area: filterArea !== "all" ? filterArea : null,
     subject: filterSubject !== "all" ? filterSubject : null,
     level: filterLevel !== "all" ? filterLevel : null,
     search: debouncedSearch || null,
     hideUsed: filterHideUsed,
+    page: bankPage,
+    pageSize: 15,
   });
+
+  const bankQuestions = response?.data || [];
+  const bankTotal = response?.total || 0;
+  const bankTotalPages = Math.ceil(bankTotal / 15);
+
+  useEffect(() => {
+    setBankPage(1);
+  }, [filterArea, filterSubject, filterLevel, debouncedSearch, filterHideUsed]);
 
   const selectedIds = new Set(examQuestions.map((eq) => eq.question_id));
 
@@ -763,7 +776,7 @@ export function ExamBuilder({
                   <QuestionCard
                     key={q.id}
                     question={q}
-                    questionNumber={i + 1}
+                    questionNumber={(bankPage - 1) * 15 + i + 1}
                     selectable
                     selected={selectedIds.has(q.id)}
                     onSelect={isReady ? undefined : addQuestion}
@@ -771,6 +784,35 @@ export function ExamBuilder({
                   />
                 ))}
               </div>
+
+              {/* Pagination controls for sidebar */}
+              {bankTotalPages > 1 && (
+                <div className="flex items-center justify-between gap-2 mt-4 py-2 border-t sticky bottom-0 bg-white dark:bg-card">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1"
+                    onClick={() => setBankPage(prev => Math.max(1, prev - 1))}
+                    disabled={bankPage === 1 || loadingBank}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Anterior
+                  </Button>
+                  <div className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                    Página {bankPage} de {bankTotalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1"
+                    onClick={() => setBankPage(prev => Math.min(bankTotalPages, prev + 1))}
+                    disabled={bankPage === bankTotalPages || loadingBank}
+                  >
+                    Próxima
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>

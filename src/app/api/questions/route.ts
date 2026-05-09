@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
       difficulty: searchParams.get('difficulty'),
       level: searchParams.get('level'),
       hideUsed: searchParams.get('hideUsed') === 'true',
+      page: parseInt(searchParams.get('page') || '1'),
+      pageSize: parseInt(searchParams.get('pageSize') || '20'),
     });
     return NextResponse.json(data);
   } catch (error: unknown) {

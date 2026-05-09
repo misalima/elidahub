@@ -9,10 +9,18 @@ export async function getQuestions(filters: {
   difficulty?: string | null;
   level?: string | null;
   hideUsed?: boolean | null;
+  page?: number;
+  pageSize?: number;
 }) {
+  const page = filters.page || 1;
+  const pageSize = filters.pageSize ?? 20;
+  const isPaginated = pageSize > 0;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   let query = supabaseAdmin
     .from('questions')
-    .select('*, exam_questions(exams(id, title, status))')
+    .select('*, exam_questions(exams(id, title, status))', { count: 'exact' })
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
@@ -22,7 +30,7 @@ export async function getQuestions(filters: {
   if (filters.difficulty) query = query.eq('difficulty', filters.difficulty);
   if (filters.level) query = query.eq('level', filters.level);
 
-  const { data, error } = await query;
+  const { data, count, error } = isPaginated ? await query.range(from, to) : await query;
   if (error) throw new Error(error.message);
 
   let results = data as unknown as Question[];
@@ -31,7 +39,10 @@ export async function getQuestions(filters: {
     results = results.filter(q => !q.exam_questions || q.exam_questions.length === 0);
   }
 
-  return results;
+  return {
+    data: results,
+    total: count || 0,
+  };
 }
 
 export async function getQuestionById(id: string) {

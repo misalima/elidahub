@@ -2,10 +2,23 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import type { Exam, ExamWithQuestions } from '@/types/simulados';
 import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
-export async function getExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null; status?: string | null }) {
+export async function getExams(filters?: { 
+  search?: string | null; 
+  grade?: string | null; 
+  school_class?: string | null; 
+  area?: string | null; 
+  status?: string | null;
+  page?: number;
+  pageSize?: number;
+}) {
+  const page = filters?.page || 1;
+  const pageSize = filters?.pageSize || 12;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   let query = supabaseAdmin
     .from('exams')
-    .select('*, exam_questions(count)')
+    .select('*, exam_questions(count)', { count: 'exact' })
     .order('created_at', { ascending: false });
 
   if (filters?.status && filters.status !== 'all') {
@@ -37,16 +50,16 @@ export async function getExams(filters?: { search?: string | null; grade?: strin
 
     if (areaError) throw new Error(areaError.message);
     
-    const examIds = matchedExams?.map(me => me.exam_id) || [];
-    if (examIds.length === 0) return [];
+    const examIds = Array.from(new Set(matchedExams?.map(me => me.exam_id) || []));
+    if (examIds.length === 0) return { data: [], total: 0 };
     query = query.in('id', examIds);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query.range(from, to);
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((exam) => {
+  const exams = (data ?? []).map((exam) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const countArr = (exam as any).exam_questions as { count: number }[] | undefined;
     const questions_count = countArr?.[0]?.count ?? 0;
@@ -55,6 +68,8 @@ export async function getExams(filters?: { search?: string | null; grade?: strin
     void _eq;
     return { ...rest, questions_count } as Exam;
   });
+
+  return { data: exams, total: count || 0 };
 }
 
 export async function getExamFilters() {

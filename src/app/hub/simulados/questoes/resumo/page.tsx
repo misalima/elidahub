@@ -46,7 +46,8 @@ export default function ResumoQuestoesPage() {
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
   
   // Custom fetch to get all questions without filters
-  const { data: questions = [], isLoading } = useQuestions({});
+  const { data: response, isLoading } = useQuestions({ pageSize: 0 });
+  const questions = useMemo(() => response?.data || [], [response]);
 
   const stats = useMemo(() => {
     // Current questions filtered by Level for the context of Area counts
