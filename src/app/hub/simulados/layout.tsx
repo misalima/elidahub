@@ -63,9 +63,9 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-900">
+    <div className="h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-900 overflow-hidden">
       {/* Mobile Top Header */}
-      <header className="flex md:hidden items-center justify-between p-4 border-b bg-white dark:bg-card">
+      <header className="flex md:hidden items-center justify-between p-4 border-b bg-white dark:bg-card shrink-0">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5" />
           <span className="font-bold text-sm">Simulados</span>
@@ -83,12 +83,12 @@ export default function SimuladosLayout({ children }: { children: React.ReactNod
       </header>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 shrink-0 border-r bg-white dark:bg-card flex-col">
+      <aside className="hidden md:flex w-64 shrink-0 border-r bg-white dark:bg-card flex-col h-full overflow-y-auto">
         <SimuladosSidebarContent />
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto h-full">
         {children}
       </main>
     </div>
