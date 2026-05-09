@@ -1,18 +1,21 @@
-"use client";
+import { Hero } from "@/components/main/sections/Hero";
+import { Sobre } from "@/components/main/sections/Sobre";
+import { Numeros } from "@/components/main/sections/Numeros";
+import { Estrutura } from "@/components/main/sections/Estrutura";
+import { Projetos } from "@/components/main/sections/Projetos";
+import { Equipe } from "@/components/main/sections/Equipe";
+import { Contato } from "@/components/main/sections/Contato";
 
-export default function Main() {
+export default function MainPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 text-center text-gray-800">
-      <div className="max-w-2xl">
-        <h1 className="text-4xl font-bold">
-          O site da Escola Estadual Professor José Félix de Carvalho Alves está em
-          construção!
-        </h1>
-        <p className="text-lg mt-4">
-          Estamos trabalhando para trazer o melhor para você. Volte em breve e
-          confira as novidades!
-        </p>
-      </div>
-    </div>
+    <>
+      <Hero />
+      <Sobre />
+      <Numeros />
+      <Estrutura />
+      <Projetos />
+      <Equipe />
+      <Contato />
+    </>
   );
 }
