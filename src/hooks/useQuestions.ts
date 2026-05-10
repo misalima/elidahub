@@ -24,8 +24,8 @@ export function useQuestions(filters: FetchQuestionsParams) {
       if (filters.difficulty) params.set('difficulty', filters.difficulty);
       if (filters.level) params.set('level', filters.level);
       if (filters.hideUsed) params.set('hideUsed', 'true');
-      if (filters.page) params.set('page', filters.page.toString());
-      if (filters.pageSize) params.set('pageSize', filters.pageSize.toString());
+      if (filters.page !== undefined && filters.page !== null) params.set('page', filters.page.toString());
+      if (filters.pageSize !== undefined && filters.pageSize !== null) params.set('pageSize', filters.pageSize.toString());
 
       const res = await fetch(`/api/questions?${params.toString()}`);
       if (!res.ok) {

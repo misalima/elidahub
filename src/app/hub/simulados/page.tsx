@@ -68,7 +68,7 @@ export default function SimuladosPage() {
   const filterGrade = searchParams.get("grade") || "all";
   const filterClass = searchParams.get("class") || "all";
   const filterStatus = searchParams.get("status") || "all";
-  const currentPage = parseInt(searchParams.get("page") || "1");
+  const currentPage = Math.max(1, Number(searchParams.get("page")) || 1);
 
   // Memory for totals to avoid layout jumps
   const [lastTotal, setLastTotal] = useState<number | null>(null);

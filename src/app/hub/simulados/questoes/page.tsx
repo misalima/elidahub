@@ -32,7 +32,7 @@ export default function QuestoesPage() {
   const filterLevel = searchParams.get("level") || "all";
   const filterSearch = searchParams.get("q") || "";
   const filterHideUsed = searchParams.get("hideUsed") === "true";
-  const currentPage = parseInt(searchParams.get("page") || "1");
+  const currentPage = Math.max(1, Number(searchParams.get("page")) || 1);
   
   // Keep track of total questions even when loading to avoid layout jumps
   const [lastTotal, setLastTotal] = useState<number | null>(null);

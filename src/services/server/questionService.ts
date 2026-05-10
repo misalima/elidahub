@@ -12,8 +12,10 @@ export async function getQuestions(filters: {
   page?: number;
   pageSize?: number;
 }) {
-  const page = filters.page || 1;
-  const pageSize = filters.pageSize ?? 20;
+  const page = Math.max(1, Math.floor(Number(filters.page)) || 1);
+  const pageSize = typeof filters.pageSize === 'number' && filters.pageSize >= 0 
+    ? Math.floor(filters.pageSize) 
+    : (filters.pageSize === undefined ? 20 : 20);
   const isPaginated = pageSize > 0;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -30,17 +32,15 @@ export async function getQuestions(filters: {
   if (filters.difficulty) query = query.eq('difficulty', filters.difficulty);
   if (filters.level) query = query.eq('level', filters.level);
 
+  if (filters.hideUsed) {
+    query = query.is('exam_questions', null);
+  }
+
   const { data, count, error } = isPaginated ? await query.range(from, to) : await query;
   if (error) throw new Error(error.message);
 
-  let results = data as unknown as Question[];
-
-  if (filters.hideUsed) {
-    results = results.filter(q => !q.exam_questions || q.exam_questions.length === 0);
-  }
-
   return {
-    data: results,
+    data: data as unknown as Question[],
     total: count || 0,
   };
 }

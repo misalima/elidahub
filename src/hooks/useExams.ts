@@ -20,8 +20,8 @@ export function useExams(filters?: {
       if (filters?.school_class) params.append('school_class', filters.school_class);
       if (filters?.area) params.append('area', filters.area);
       if (filters?.status) params.append('status', filters.status);
-      if (filters?.page) params.append('page', filters.page.toString());
-      if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
+      if (filters?.page !== undefined && filters?.page !== null) params.append('page', filters.page.toString());
+      if (filters?.pageSize !== undefined && filters?.pageSize !== null) params.append('pageSize', filters.pageSize.toString());
 
       const queryString = params.toString();
       const res = await fetch(`/api/exams${queryString ? `?${queryString}` : ''}`);
