@@ -162,15 +162,8 @@ export function Contato() {
 
         {/* Google Maps Embed */}
         <div className="rounded-2xl overflow-hidden border border-white/20 shadow-xl h-64 sm:h-80">
-          {/*
-            TODO: Substituir pelo embed do Google Maps real da escola.
-            Para obter o embed:
-            1. Acesse maps.google.com e pesquise pelo endereço da escola.
-            2. Clique em "Compartilhar" > "Incorporar um mapa".
-            3. Copie o atributo src do iframe e cole abaixo.
-          */}
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3942.8577871685434!2d-36.9028!3d-9.8983!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x7068cb7d36b4801%3A0x0!2zU8OjbyBTZWJhc3Rpw6NvLCBBTCwgQnJhemls!5e0!3m2!1spt-BR!2sbr!4v1716000000000!5m2!1spt-BR!2sbr"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3929.9843317737927!2d-36.5566281246011!3d-9.93526129016687!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x70433f935734353%3A0x1f2bda4db52c7c41!2sE.%20E.%20Prof.%20Jos%C3%A9%20F%C3%A9lix%20de%20Carvalho%20Alves!5e0!3m2!1spt-BR!2sbr!4v1778374242244!5m2!1spt-BR!2sbr"
             width="100%"
             height="100%"
             style={{ border: 0 }}

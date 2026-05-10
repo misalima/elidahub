@@ -57,56 +57,66 @@ export const SCHOOL_PROJECTS = [
   },
 ] as const;
 
-// ── Equipe ───────────────────────────────────────────────────
-// TODO: Substituir pelos nomes, cargos e fotos reais da equipe
-export const SCHOOL_TEAM = [
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  avatarInitials: string;
+  avatarSrc: string;
+}
+
+export const SCHOOL_TEAM: readonly TeamMember[] = [
   {
     id: "gestor-1",
-    name: "Nome do Gestor",
-    role: "Gestor(a) Escolar",
-    avatarInitials: "GE",
+    name: "Geyvison Soares",
+    role: "Gestor Geral",
+    avatarInitials: "GS",
+    avatarSrc: "/team/gestor-geral.png",
   },
   {
     id: "gestor-2",
-    name: "Nome do Gestor",
-    role: "Gestor(a) Adjunto(a)",
-    avatarInitials: "GA",
+    name: "Luiz Almeida",
+    role: "Gestor Adjunto",
+    avatarInitials: "LA",
+    avatarSrc: "/team/gestor-adjunto.png",
   },
   {
     id: "coord-1",
-    name: "Nome do Coordenador",
-    role: "Coordenador(a) Pedagógico(a)",
-    avatarInitials: "CP",
+    name: "Misael Lima",
+    role: "Coordenador Pedagógico",
+    avatarInitials: "ML",
+    avatarSrc: "/team/coordenador-1.png",
   },
   {
     id: "coord-2",
-    name: "Nome do Coordenador",
-    role: "Coordenador(a) Pedagógico(a)",
-    avatarInitials: "CP",
+    name: "Valdir Salgueiro",
+    role: "Coordenador Pedagógico",
+    avatarInitials: "VS",
+    avatarSrc: "/team/coordenador-2.png",
   },
   {
     id: "articuladora",
-    name: "Nome da Articuladora",
+    name: "Lívia Oliveira",
     role: "Articuladora de Ensino",
-    avatarInitials: "AE",
+    avatarInitials: "LO",
+    avatarSrc: "/team/articuladora.png",
   },
   {
     id: "secretaria",
-    name: "Nome da Secretária",
-    role: "Secretária Escolar",
-    avatarInitials: "SE",
+    name: "Eliana Ferreira",
+    role: "Secretaria Escolar",
+    avatarInitials: "EF",
+    avatarSrc: "/team/secretary.png",
   },
 ] as const;
 
 // ── Contato ───────────────────────────────────────────────────
 export const SCHOOL_CONTACT = {
   address: "Rua Pedro Vieira de Barros, S/N, Centro — Próximo à Prefeitura Municipal, São Sebastião – AL",
-  // TODO: Inserir telefone real
-  phone: "(82) 0000-0000",
+  phone: "(82) 99913-7086",
   email: "ee.josefelix@educ.al.gov.br",
   instagramUrl: "https://instagram.com/eeprofjosefelix",
-  // TODO: Inserir número real do WhatsApp (formato: 5582900000000)
-  whatsappUrl: "https://wa.me/5582900000000",
+  whatsappUrl: "https://wa.me/5582999137086",
 } as const;
 
 // ── Navegação ─────────────────────────────────────────────────

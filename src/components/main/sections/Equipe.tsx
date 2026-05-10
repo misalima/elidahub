@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SCHOOL_TEAM } from "@/constants/main/school";
@@ -34,26 +35,36 @@ export function Equipe() {
               className="border-slate-200 hover:border-blue-200 hover:shadow-md hover:-translate-y-1 transition-all duration-200 group text-center"
             >
               <CardContent className="pt-6 pb-5 px-3">
-                {/* Avatar */}
-                {/* TODO: Substituir pelo src de uma foto real do membro */}
-                {/* <Image src={member.avatarSrc} alt={`Foto de ${member.name}`} width={80} height={80} className="rounded-full mx-auto mb-3 object-cover" /> */}
-                <div
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-[#1a3a6b] to-blue-500 flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform"
-                  aria-hidden="true"
-                >
-                  <span className="text-white font-bold text-lg select-none">
-                    {member.avatarInitials}
-                  </span>
+                {/* Avatar with Image component */}
+                <div className="relative w-24 h-24 mx-auto mb-4">
+                  <div
+                    className="w-full h-full rounded-full bg-gradient-to-br from-[#1a3a6b] to-blue-500 flex items-center justify-center overflow-hidden group-hover:scale-110 transition-all duration-300 border-4 border-white shadow-md"
+                  >
+                    {member.avatarSrc ? (
+                      <Image
+                        src={member.avatarSrc}
+                        alt={`Foto de ${member.name}`}
+                        fill
+                        sizes="96px"
+                        className="object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-white font-bold text-2xl select-none">
+                        {member.avatarInitials}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Name */}
-                {/* TODO: Substituir pelo nome real do membro */}
-                <p className="text-[#1a3a6b] font-semibold text-xs leading-snug mb-1">
+                <p className="text-[#1a3a6b] font-bold text-sm leading-tight mb-1">
                   {member.name}
                 </p>
 
                 {/* Role */}
-                <p className="text-gray-500 text-xs leading-snug">{member.role}</p>
+                <p className="text-gray-500 text-[10px] uppercase font-semibold tracking-wider leading-snug">
+                  {member.role}
+                </p>
               </CardContent>
             </Card>
           ))}
