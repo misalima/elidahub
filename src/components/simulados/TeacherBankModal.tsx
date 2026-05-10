@@ -7,9 +7,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Database, BookOpen } from "lucide-react";
+import { Loader2, Database, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuestions } from "@/hooks/useQuestions";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 interface TeacherBankModalProps {
   open: boolean;
@@ -20,7 +23,23 @@ const OPTION_KEYS = ["option_a", "option_b", "option_c", "option_d", "option_e"]
 const OPTION_LABELS = ["A", "B", "C", "D", "E"] as const;
 
 export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) {
-  const { data: questions = [], isLoading } = useQuestions({});
+  const [hideUsed, setHideUsed] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+
+  const { data: response, isLoading } = useQuestions({ 
+    hideUsed, 
+    page, 
+    pageSize 
+  });
+
+  const questions = response?.data || [];
+  const total = response?.total || 0;
+  const totalPages = Math.ceil(total / pageSize);
+
+  useEffect(() => {
+    if (open) setPage(1);
+  }, [open, hideUsed]);
 
   const sorted = [...questions].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -35,11 +54,25 @@ export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) 
             Banco de Questões
             {!isLoading && (
               <Badge variant="secondary" className="ml-1 text-xs font-normal">
-                {sorted.length} {sorted.length === 1 ? "questão" : "questões"}
+                {total} {total === 1 ? "questão" : "questões"}
               </Badge>
             )}
           </DialogTitle>
         </DialogHeader>
+
+        <div className="flex items-center space-x-2 py-2 px-1">
+          <Checkbox 
+            id="hide-used-bank" 
+            checked={hideUsed} 
+            onCheckedChange={(checked) => setHideUsed(!!checked)} 
+          />
+          <label
+            htmlFor="hide-used-bank"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          >
+            Ocultar questões já utilizadas em simulados
+          </label>
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -57,7 +90,7 @@ export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) 
                 {/* Cabeçalho da questão */}
                 <div className="flex items-center gap-2 px-4 py-2 bg-muted/40 border-b flex-wrap">
                   <span className="w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                    {i + 1}
+                    {(page - 1) * pageSize + i + 1}
                   </span>
                   <span className="text-xs font-semibold text-foreground">{q.subject}</span>
                   {q.difficulty && (
@@ -120,6 +153,33 @@ export function TeacherBankModal({ open, onOpenChange }: TeacherBankModalProps) 
               </li>
             ))}
           </ol>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 py-4 border-t mt-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setPage(prev => Math.max(1, prev - 1))}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <div className="text-xs font-medium px-2">
+              Página {page} de {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={page === totalPages}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         )}
       </DialogContent>
     </Dialog>

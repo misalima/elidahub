@@ -2,7 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Exam, ExamWithQuestions } from '@/types/simulados';
 import type { TablesInsert, TablesUpdate } from '@/types/database.types';
 
-export function useExams(filters?: { search?: string | null; grade?: string | null; school_class?: string | null; area?: string | null }) {
+export function useExams(filters?: { 
+  search?: string | null; 
+  grade?: string | null; 
+  school_class?: string | null; 
+  area?: string | null; 
+  status?: string | null;
+  page?: number;
+  pageSize?: number;
+}) {
   return useQuery({
     queryKey: ['exams', filters],
     queryFn: async () => {
@@ -11,6 +19,9 @@ export function useExams(filters?: { search?: string | null; grade?: string | nu
       if (filters?.grade) params.append('grade', filters.grade);
       if (filters?.school_class) params.append('school_class', filters.school_class);
       if (filters?.area) params.append('area', filters.area);
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.page !== undefined && filters?.page !== null) params.append('page', filters.page.toString());
+      if (filters?.pageSize !== undefined && filters?.pageSize !== null) params.append('pageSize', filters.pageSize.toString());
 
       const queryString = params.toString();
       const res = await fetch(`/api/exams${queryString ? `?${queryString}` : ''}`);
@@ -18,7 +29,7 @@ export function useExams(filters?: { search?: string | null; grade?: string | nu
         const error = await res.json();
         throw new Error(error.error || 'Erro ao carregar simulados');
       }
-      return res.json() as Promise<Exam[]>;
+      return res.json() as Promise<{ data: Exam[]; total: number }>;
     }
   });
 }
@@ -120,7 +131,7 @@ export function useUpdateExamStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'draft' | 'ready' | 'editing' }) => {
+    mutationFn: async ({ id, status }: { id: string; status: 'draft' | 'ready' | 'editing' | 'applied' }) => {
       const res = await fetch(`/api/exams/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

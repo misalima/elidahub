@@ -50,7 +50,7 @@ export default function HubHomePage() {
           </p>
           <button
             onClick={logout}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             Sair

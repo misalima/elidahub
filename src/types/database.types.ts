@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       alunos_boletins: {
@@ -112,10 +87,10 @@ export type Database = {
           date_label: string | null
           description: string | null
           duration: string | null
-          grade: "1ª Série" | "2ª Série" | "3ª Série" | "EJA" | null
-          school_class: string | null
+          grade: Database["public"]["Enums"]["grade_enum"] | null
           id: string
           instructions: string | null
+          school_class: string | null
           school_name: string
           school_year: string | null
           status: string
@@ -128,10 +103,10 @@ export type Database = {
           date_label?: string | null
           description?: string | null
           duration?: string | null
-          grade?: "1ª Série" | "2ª Série" | "3ª Série" | "EJA" | null
-          school_class?: string | null
+          grade?: Database["public"]["Enums"]["grade_enum"] | null
           id?: string
           instructions?: string | null
+          school_class?: string | null
           school_name?: string
           school_year?: string | null
           status?: string
@@ -144,10 +119,10 @@ export type Database = {
           date_label?: string | null
           description?: string | null
           duration?: string | null
-          grade?: "1ª Série" | "2ª Série" | "3ª Série" | "EJA" | null
-          school_class?: string | null
+          grade?: Database["public"]["Enums"]["grade_enum"] | null
           id?: string
           instructions?: string | null
+          school_class?: string | null
           school_name?: string
           school_year?: string | null
           status?: string
@@ -211,68 +186,6 @@ export type Database = {
           },
         ]
       }
-      messages: {
-        Row: {
-          channel: string
-          citizen_id: string | null
-          created_at: string
-          delivery_status: string | null
-          direction: string
-          external_id: string | null
-          id: string
-          is_automated: boolean
-          message_body: string
-          message_template: string | null
-          message_type: string
-          phone_number: string | null
-          related_entity_id: string | null
-          related_module: string | null
-          sent_by: string | null
-        }
-        Insert: {
-          channel?: string
-          citizen_id?: string | null
-          created_at?: string
-          delivery_status?: string | null
-          direction: string
-          external_id?: string | null
-          id?: string
-          is_automated?: boolean
-          message_body: string
-          message_template?: string | null
-          message_type?: string
-          phone_number?: string | null
-          related_entity_id?: string | null
-          related_module?: string | null
-          sent_by?: string | null
-        }
-        Update: {
-          channel?: string
-          citizen_id?: string | null
-          created_at?: string
-          delivery_status?: string | null
-          direction?: string
-          external_id?: string | null
-          id?: string
-          is_automated?: boolean
-          message_body?: string
-          message_template?: string | null
-          message_type?: string
-          phone_number?: string | null
-          related_entity_id?: string | null
-          related_module?: string | null
-          sent_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_sent_by_fkey"
-            columns: ["sent_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -307,6 +220,7 @@ export type Database = {
         Row: {
           answer: string
           created_at: string
+          deleted_at: string | null
           difficulty: string | null
           id: string
           image_url: string | null
@@ -326,6 +240,7 @@ export type Database = {
         Insert: {
           answer: string
           created_at?: string
+          deleted_at?: string | null
           difficulty?: string | null
           id?: string
           image_url?: string | null
@@ -345,6 +260,7 @@ export type Database = {
         Update: {
           answer?: string
           created_at?: string
+          deleted_at?: string | null
           difficulty?: string | null
           id?: string
           image_url?: string | null
@@ -371,276 +287,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  vqdt: {
-    Tables: {
-      bulk_message_batches: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          error_details: string | null
-          failed_count: number
-          filters: Json | null
-          id: string
-          message_template: string
-          sent_count: number
-          started_at: string | null
-          started_by: string
-          status: string
-          title: string
-          total_recipients: number
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          error_details?: string | null
-          failed_count?: number
-          filters?: Json | null
-          id?: string
-          message_template: string
-          sent_count?: number
-          started_at?: string | null
-          started_by: string
-          status?: string
-          title: string
-          total_recipients?: number
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          error_details?: string | null
-          failed_count?: number
-          filters?: Json | null
-          id?: string
-          message_template?: string
-          sent_count?: number
-          started_at?: string | null
-          started_by?: string
-          status?: string
-          title?: string
-          total_recipients?: number
-        }
-        Relationships: []
-      }
-      citizen_schedules: {
-        Row: {
-          approval_date: string | null
-          approved: boolean | null
-          attendance_status: string | null
-          citizen_id: string
-          confirmation_sent_at: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          notes: string | null
-          reagendamento_count: number | null
-          response_received_at: string | null
-          schedule_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          approval_date?: string | null
-          approved?: boolean | null
-          attendance_status?: string | null
-          citizen_id: string
-          confirmation_sent_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          reagendamento_count?: number | null
-          response_received_at?: string | null
-          schedule_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          approval_date?: string | null
-          approved?: boolean | null
-          attendance_status?: string | null
-          citizen_id?: string
-          confirmation_sent_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          reagendamento_count?: number | null
-          response_received_at?: string | null
-          schedule_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "citizen_schedules_citizen_id_fkey"
-            columns: ["citizen_id"]
-            isOneToOne: false
-            referencedRelation: "citizens"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "citizen_schedules_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "schedules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "citizen_schedules_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "v_schedule_stats"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      citizens: {
-        Row: {
-          consent_whatsapp: boolean
-          created_at: string
-          created_by: string | null
-          email: string | null
-          full_name: string
-          id: string
-          is_active: boolean
-          observations: string | null
-          phone: string
-          updated_at: string
-        }
-        Insert: {
-          consent_whatsapp?: boolean
-          created_at?: string
-          created_by?: string | null
-          email?: string | null
-          full_name: string
-          id?: string
-          is_active?: boolean
-          observations?: string | null
-          phone: string
-          updated_at?: string
-        }
-        Update: {
-          consent_whatsapp?: boolean
-          created_at?: string
-          created_by?: string | null
-          email?: string | null
-          full_name?: string
-          id?: string
-          is_active?: boolean
-          observations?: string | null
-          phone?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      monthly_targets: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          id: string
-          month: number
-          target_approved: number
-          year: number
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          month: number
-          target_approved?: number
-          year: number
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          month?: number
-          target_approved?: number
-          year?: number
-        }
-        Relationships: []
-      }
-      schedules: {
-        Row: {
-          capacity: number | null
-          created_at: string
-          created_by: string | null
-          id: string
-          is_active: boolean
-          observations: string | null
-          scheduled_date: string
-          scheduled_time: string
-          title: string
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          capacity?: number | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_active?: boolean
-          observations?: string | null
-          scheduled_date: string
-          scheduled_time: string
-          title: string
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          capacity?: number | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_active?: boolean
-          observations?: string | null
-          scheduled_date?: string
-          scheduled_time?: string
-          title?: string
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-    }
-    Views: {
-      v_monthly_progress: {
-        Row: {
-          actual_approved: number | null
-          month: number | null
-          progress_percentage: number | null
-          target_approved: number | null
-          year: number | null
-        }
-        Relationships: []
-      }
-      v_schedule_stats: {
-        Row: {
-          ausentes: number | null
-          confirmados: number | null
-          id: string | null
-          pendentes: number | null
-          reagendados: number | null
-          scheduled_date: string | null
-          scheduled_time: string | null
-          title: string | null
-          total_inscricoes: number | null
-          type: string | null
-        }
-        Relationships: []
-      }
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
+      grade_enum: "1ª Série" | "2ª Série" | "3ª Série" | "EJA"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -766,13 +413,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
-    Enums: {},
-  },
-  vqdt: {
-    Enums: {},
+    Enums: {
+      grade_enum: ["1ª Série", "2ª Série", "3ª Série", "EJA"],
+    },
   },
 } as const

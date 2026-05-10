@@ -96,20 +96,23 @@ export interface Question {
   difficulty: Difficulty | null;
   level: Level | null;
   deleted_at: string | null;
+  exam_questions?: { exams: { id: string; title: string; status: string } }[];
 }
 
-export type ExamStatus = 'draft' | 'ready' | 'editing';
+export type ExamStatus = 'draft' | 'ready' | 'editing' | 'applied';
 
 export const EXAM_STATUS_LABELS: Record<ExamStatus, string> = {
   draft: 'Rascunho',
   editing: 'Em Edição',
-  ready: 'Concluído',
+  ready: 'Pronto',
+  applied: 'Aplicado',
 };
 
-export const EXAM_STATUS_BADGE_VARIANT: Record<ExamStatus, 'secondary' | 'warning' | 'success'> = {
+export const EXAM_STATUS_BADGE_VARIANT: Record<ExamStatus, 'secondary' | 'warning' | 'success' | 'default'> = {
   draft: 'secondary',
   editing: 'warning',
   ready: 'success',
+  applied: 'default',
 };
 
 export interface Exam {

@@ -12,6 +12,9 @@ export async function GET(req: NextRequest) {
       search: searchParams.get('search'),
       difficulty: searchParams.get('difficulty'),
       level: searchParams.get('level'),
+      hideUsed: searchParams.get('hideUsed') === 'true',
+      page: Number(searchParams.get('page')) || 1,
+      pageSize: searchParams.get('pageSize') === '0' ? 0 : (Number(searchParams.get('pageSize')) || 20),
     });
     return NextResponse.json(data);
   } catch (error: unknown) {
