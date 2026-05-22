@@ -4,7 +4,10 @@ import type { NextRequest } from 'next/server'
 
 const PUBLIC_FILE = /\.(.*)$/;
 const PREFIXES = ['/main', '/hub'];
-const PUBLIC_HUB_PATHS = ['/hub/professor-mentor/gerar-folha-de-frequencia'];
+const PUBLIC_HUB_PATHS = [
+  '/hub/professor-mentor/gerar-folha-de-frequencia',
+  '/hub/professor-mentor/recomposicao',
+];
 
 // Rotas do professor que exigem cookie teacher_session válido
 const TEACHER_PROTECTED_PATHS = [
