@@ -687,7 +687,7 @@ export default function RecomposicaoPage() {
                               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.corBadge}`}
                             >
                               <span>{cfg.emoji}</span>
-                              <span>{cfg.turno}</span>
+                              <span>{entrada.turno}</span>
                             </span>
                           </td>
                           <td className="px-6 py-4">
