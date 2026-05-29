@@ -66,8 +66,8 @@ export default function GuiaMatematicaPage() {
               <div className="flex flex-col space-y-1.5 p-6 border-b bg-muted/20">
                 <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
                   <div className="flex -space-x-2">
-                    <Plus className="w-5 h-5 text-blue-500" />
-                    <Minus className="w-4 h-4 text-blue-500 relative top-1" />
+                    <Plus className="w-5 h-5 text-primary" />
+                    <Minus className="w-4 h-4 text-primary relative top-1" />
                   </div> Operações Básicas
                 </h3>
               </div>
@@ -216,9 +216,9 @@ export default function GuiaMatematicaPage() {
 
           {/* Sidebar Area */}
           <div className="space-y-6">
-            <div className="rounded-xl border bg-blue-50/50 dark:bg-blue-950/20 text-card-foreground shadow-sm overflow-hidden sticky top-6">
-              <div className="p-6 bg-blue-100/50 dark:bg-blue-900/40 border-b border-blue-200 dark:border-blue-800">
-                <h3 className="font-semibold text-blue-900 dark:text-blue-100 text-lg">💡 Como usar na questão?</h3>
+            <div className="rounded-xl border bg-secondary/5 dark:bg-secondary/15 text-card-foreground shadow-sm overflow-hidden sticky top-6">
+              <div className="p-6 bg-secondary/10 dark:bg-secondary/30 border-b border-secondary/20 dark:border-secondary/40">
+                <h3 className="font-semibold text-secondary dark:text-blue-100 text-lg">💡 Como usar na questão?</h3>
               </div>
               <div className="p-6 space-y-6 text-sm">
                 <div>

@@ -121,7 +121,7 @@ export default function PaginaBoletim() {
             Portal do Aluno
           </h1>
           <p className="text-blue-200 text-sm mt-2 font-medium">
-            E. E. Prof. José Félix de Carvalho Alves
+            E. E. Professora Maria Élida Dias Carvalho Pereira
           </p>
         </div>
 
@@ -284,7 +284,7 @@ export default function PaginaBoletim() {
       </div>
 
       <p className="mt-8 text-gray-400 text-[10px] font-medium uppercase tracking-widest">
-        © 2025 - Escola José Félix - Todos os direitos reservados
+        © 2025 - Escola Professora Maria Élida Dias Carvalho Pereira - Todos os direitos reservados
       </p>
     </div>
   );

@@ -6,7 +6,7 @@ export function Footer() {
 
   return (
     <footer
-      className="bg-[#1a3a6b] text-white"
+      className="bg-secondary text-white"
       role="contentinfo"
       aria-label="Rodapé do site"
     >
@@ -17,7 +17,7 @@ export function Footer() {
             <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex-shrink-0">
               <Image
                 src="/logo_escola.png"
-                alt="Logo da Escola Estadual Professor José Félix de Carvalho Alves"
+                alt="Logo da Escola Estadual Profª. Maria Élida Dias Carvalho Pereira"
                 width={40}
                 height={40}
                 className="w-full h-full object-cover"
@@ -25,22 +25,22 @@ export function Footer() {
             </div>
             <div>
               <p className="font-bold text-sm leading-tight">{SCHOOL_NAME}</p>
-              <p className="text-blue-200 text-xs leading-tight mt-0.5">
+              <p className="text-white/70 text-xs leading-tight mt-0.5">
                 São Sebastião – AL
               </p>
             </div>
           </div>
 
           {/* Copyright */}
-          <div className="text-center md:text-right text-sm text-blue-200">
+          <div className="text-center md:text-right text-sm text-white/70">
             <p>© {year} {SCHOOL_NAME}</p>
-            <p className="mt-1 text-blue-300 text-xs">
+            <p className="mt-1 text-white/60 text-xs">
               Desenvolvido por{" "}
               <a
                 href="https://github.com/misalima"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-yellow-400 hover:text-yellow-300 transition-colors font-medium underline underline-offset-2"
+                className="text-gold hover:text-gold/80 transition-colors font-medium underline underline-offset-2"
                 aria-label="Link para o perfil de Misael Lima no GitHub (abre em nova aba)"
               >
                 Misael Lima
@@ -50,7 +50,7 @@ export function Footer() {
         </div>
 
         <div
-          className="mt-8 pt-6 border-t border-blue-700/50 text-center text-xs text-blue-400"
+          className="mt-8 pt-6 border-t border-white/10 text-center text-xs text-white/50"
           aria-hidden="true"
         >
           Vinculada à SEDUC/AL · 5ª GEE – Arapiraca

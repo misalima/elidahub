@@ -36,31 +36,31 @@ export function Contato() {
     <section
       id="contato"
       aria-labelledby="contato-heading"
-      className="py-20 lg:py-28 bg-[#1a3a6b] relative overflow-hidden"
+      className="py-20 lg:py-28 bg-secondary relative overflow-hidden"
     >
       {/* Decorative blobs */}
       <div
-        className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full translate-x-1/3 -translate-y-1/2 blur-3xl"
+        className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full translate-x-1/3 -translate-y-1/2 blur-3xl"
         aria-hidden="true"
       />
       <div
-        className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-400/10 rounded-full -translate-x-1/3 translate-y-1/3 blur-3xl"
+        className="absolute bottom-0 left-0 w-80 h-80 bg-gold/10 rounded-full -translate-x-1/3 translate-y-1/3 blur-3xl"
         aria-hidden="true"
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <Badge className="bg-yellow-400/20 text-yellow-300 border-yellow-400/30 text-xs font-semibold uppercase tracking-wider px-3 py-1 mb-4">
+          <Badge className="bg-gold/20 text-gold border-gold/30 text-xs font-semibold uppercase tracking-wider px-3 py-1 mb-4">
             Contato
           </Badge>
           <h2
             id="contato-heading"
             className="text-3xl sm:text-4xl font-extrabold text-white mb-4"
           >
-            Fale <span className="text-yellow-400">conosco</span>
+            Fale <span className="text-gold">conosco</span>
           </h2>
-          <p className="text-blue-200 text-lg max-w-xl mx-auto">
+          <p className="text-white/80 text-lg max-w-xl mx-auto">
             Entre em contato para saber mais sobre a escola, matrícula ou parceria.
           </p>
         </div>
@@ -68,34 +68,34 @@ export function Contato() {
         {/* Contact columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {/* Endereço */}
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/15 transition-colors">
+          <div className="bg-white/10 border border-white/10 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/15 transition-colors">
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-xl bg-yellow-400/20 mb-4"
+              className="flex items-center justify-center w-12 h-12 rounded-xl bg-gold/20 mb-4"
               aria-hidden="true"
             >
-              <MapPin className="w-6 h-6 text-yellow-400" aria-hidden="true" />
+              <MapPin className="w-6 h-6 text-gold" aria-hidden="true" />
             </div>
             <h3 className="text-white font-bold text-base mb-2">Endereço</h3>
             {/* TODO: Substituir pelo endereço real da escola */}
-            <address className="text-blue-200 text-sm not-italic leading-relaxed">
+            <address className="text-white/80 text-sm not-italic leading-relaxed">
               {SCHOOL_CONTACT.address}
             </address>
           </div>
 
           {/* Telefone / Email */}
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/15 transition-colors">
+          <div className="bg-white/10 border border-white/10 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/15 transition-colors">
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-xl bg-yellow-400/20 mb-4"
+              className="flex items-center justify-center w-12 h-12 rounded-xl bg-gold/20 mb-4"
               aria-hidden="true"
             >
-              <Phone className="w-6 h-6 text-yellow-400" aria-hidden="true" />
+              <Phone className="w-6 h-6 text-gold" aria-hidden="true" />
             </div>
             <h3 className="text-white font-bold text-base mb-2">Telefone &amp; E-mail</h3>
             <div className="space-y-2">
               {/* TODO: Substituir pelo telefone real */}
               <a
                 href={`tel:${SCHOOL_CONTACT.phone.replace(/\D/g, "")}`}
-                className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
+                className="flex items-center gap-2 text-white/80 hover:text-white text-sm transition-colors"
                 aria-label={`Ligar para ${SCHOOL_CONTACT.phone}`}
               >
                 <Phone className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
@@ -104,7 +104,7 @@ export function Contato() {
               {/* TODO: Substituir pelo e-mail real */}
               <a
                 href={`mailto:${SCHOOL_CONTACT.email}`}
-                className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors break-all"
+                className="flex items-center gap-2 text-white/80 hover:text-white text-sm transition-colors break-all"
                 aria-label={`Enviar e-mail para ${SCHOOL_CONTACT.email}`}
               >
                 <Mail className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
@@ -114,13 +114,13 @@ export function Contato() {
           </div>
 
           {/* Redes Sociais */}
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/15 transition-colors">
+          <div className="bg-white/10 border border-white/10 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/15 transition-colors">
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-xl bg-yellow-400/20 mb-4"
+              className="flex items-center justify-center w-12 h-12 rounded-xl bg-gold/20 mb-4"
               aria-hidden="true"
             >
               <svg
-                className="w-6 h-6 text-yellow-400"
+                className="w-6 h-6 text-gold"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -161,7 +161,7 @@ export function Contato() {
         </div>
 
         {/* Google Maps Embed */}
-        <div className="rounded-2xl overflow-hidden border border-white/20 shadow-xl h-64 sm:h-80">
+        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-xl h-64 sm:h-80">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3929.9843317737927!2d-36.5566281246011!3d-9.93526129016687!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x70433f935734353%3A0x1f2bda4db52c7c41!2sE.%20E.%20Prof.%20Jos%C3%A9%20F%C3%A9lix%20de%20Carvalho%20Alves!5e0!3m2!1spt-BR!2sbr!4v1778374242244!5m2!1spt-BR!2sbr"
             width="100%"
@@ -170,7 +170,7 @@ export function Contato() {
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Localização da Escola Estadual Professor José Félix de Carvalho Alves no Google Maps"
+            title="Localização da Escola Estadual Profª. Maria Élida Dias Carvalho Pereira no Google Maps"
           />
         </div>
       </div>

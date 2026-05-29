@@ -120,7 +120,7 @@ export async function createExam(payload: TablesInsert<'exams'>) {
     .insert({
       title,
       description: description || null,
-      school_name: school_name || 'ESCOLA ESTADUAL PROFESSOR JOSÉ FÉLIX DE CARVALHO ALVES',
+      school_name: school_name || 'ESCOLA ESTADUAL PROFª. MARIA ÉLIDA DIAS CARVALHO PEREIRA',
       school_year: school_year || null,
       grade: grade || null,
       school_class: payload.school_class || null,

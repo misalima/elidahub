@@ -28,14 +28,14 @@ export function Estrutura() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <Badge className="bg-blue-100 text-[#1a3a6b] hover:bg-blue-100 text-xs font-semibold uppercase tracking-wider px-3 py-1 mb-4">
+          <Badge className="bg-primary/10 text-primary hover:bg-primary/10 text-xs font-semibold uppercase tracking-wider px-3 py-1 mb-4">
             Infraestrutura
           </Badge>
           <h2
             id="estrutura-heading"
-            className="text-3xl sm:text-4xl font-extrabold text-[#1a3a6b] mb-4"
+            className="text-3xl sm:text-4xl font-extrabold text-secondary mb-4"
           >
-            Nossa <span className="text-blue-500">estrutura</span>
+            Nossa <span className="text-primary">estrutura</span>
           </h2>
           <p className="text-gray-500 text-lg max-w-xl mx-auto">
             Espaços pensados para o aprendizado, o convívio e o desenvolvimento
@@ -52,14 +52,14 @@ export function Estrutura() {
               return (
                 <div
                   key={facility.id}
-                  className="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-200 group"
+                  className="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 group"
                 >
                   <div
-                    className="flex items-center justify-center w-11 h-11 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors flex-shrink-0"
+                    className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors flex-shrink-0"
                     aria-hidden="true"
                   >
                     {Icon && (
-                      <Icon className="w-5 h-5 text-[#1a3a6b]" aria-hidden="true" />
+                      <Icon className="w-5 h-5 text-primary" aria-hidden="true" />
                     )}
                   </div>
                   <span className="text-gray-700 font-medium text-sm leading-snug">
@@ -77,14 +77,14 @@ export function Estrutura() {
               return (
                 <div
                   key={facility.id}
-                  className="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-200 group sm:w-[calc(33.333%-10px)]"
+                  className="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 group sm:w-[calc(33.333%-10px)]"
                 >
                   <div
-                    className="flex items-center justify-center w-11 h-11 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors flex-shrink-0"
+                    className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors flex-shrink-0"
                     aria-hidden="true"
                   >
                     {Icon && (
-                      <Icon className="w-5 h-5 text-[#1a3a6b]" aria-hidden="true" />
+                      <Icon className="w-5 h-5 text-primary" aria-hidden="true" />
                     )}
                   </div>
                   <span className="text-gray-700 font-medium text-sm leading-snug">

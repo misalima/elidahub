@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: `Site oficial da ${SCHOOL_NAME}, localizada em ${SCHOOL_LOCATION}. "${SCHOOL_MOTTO}" — Ensino Médio Regular e EJA nos turnos matutino, vespertino e noturno.`,
   keywords: [
     "Escola Estadual",
-    "Professor José Félix",
+    "Professora Maria Élida",
     "São Sebastião",
     "Alagoas",
     "Ensino Médio",

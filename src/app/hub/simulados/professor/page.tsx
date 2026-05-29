@@ -45,7 +45,7 @@ function TeacherLoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-primary/5 dark:from-slate-900 dark:to-slate-900/20 p-4">
       <div className="w-full max-w-sm">
         {/* Logo e nome da escola */}
         <div className="flex flex-col items-center mb-8 text-center gap-3">
@@ -61,7 +61,7 @@ function TeacherLoginForm() {
               Banco de Questões
             </p>
             <h1 className="text-lg font-bold text-foreground leading-tight max-w-xs">
-              Escola Estadual Prof. José Félix de Carvalho Alves
+              Escola Estadual Profª. Maria Élida Dias Carvalho Pereira
             </h1>
           </div>
         </div>

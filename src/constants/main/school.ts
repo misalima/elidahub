@@ -1,11 +1,11 @@
 // ============================================================
 // Constantes centralizadas para o site institucional
-// Escola Estadual Professor José Félix de Carvalho Alves
+// Escola Estadual Profª. Maria Élida Dias Carvalho Pereira
 // ============================================================
 
 export const SCHOOL_NAME =
-  "Escola Estadual Professor José Félix de Carvalho Alves";
-export const SCHOOL_SHORT_NAME = "E.E. Prof. José Félix";
+  "Escola Estadual Profª. Maria Élida Dias Carvalho Pereira";
+export const SCHOOL_SHORT_NAME = "E.E. Profª. Maria Élida";
 export const SCHOOL_LOCATION = "São Sebastião – AL";
 export const SCHOOL_MOTTO = "Scientia Potentia Est";
 
@@ -68,45 +68,38 @@ export interface TeamMember {
 export const SCHOOL_TEAM: readonly TeamMember[] = [
   {
     id: "gestor-1",
-    name: "Geyvison Soares",
+    name: "Genilson da Silva",
     role: "Gestor Geral",
     avatarInitials: "GS",
     avatarSrc: "/team/gestor-geral.png",
   },
   {
     id: "gestor-2",
-    name: "Luiz Almeida",
-    role: "Gestor Adjunto",
-    avatarInitials: "LA",
+    name: "Antônia da Silva Santos",
+    role: "Gestora Adjunta",
+    avatarInitials: "AS",
     avatarSrc: "/team/gestor-adjunto.png",
   },
   {
     id: "coord-1",
-    name: "Misael Lima",
-    role: "Coordenador Pedagógico",
-    avatarInitials: "ML",
+    name: "Cryslene Ferreira",
+    role: "Coordenadora Pedagógica",
+    avatarInitials: "CF",
     avatarSrc: "/team/coordenador-1.png",
   },
   {
     id: "coord-2",
-    name: "Valdir Salgueiro",
+    name: "Jhonatan Pinheiro",
     role: "Coordenador Pedagógico",
-    avatarInitials: "VS",
+    avatarInitials: "JP",
     avatarSrc: "/team/coordenador-2.png",
   },
   {
-    id: "articuladora",
-    name: "Lívia Oliveira",
-    role: "Articuladora de Ensino",
-    avatarInitials: "LO",
-    avatarSrc: "/team/articuladora.png",
-  },
-  {
-    id: "secretaria",
-    name: "Eliana Ferreira",
-    role: "Secretaria Escolar",
-    avatarInitials: "EF",
-    avatarSrc: "/team/secretary.png",
+    id: "articulador",
+    name: "Eudes Pereira",
+    role: "Articulador de Ensino",
+    avatarInitials: "EP",
+    avatarSrc: "/team/articulador.png",
   },
 ] as const;
 

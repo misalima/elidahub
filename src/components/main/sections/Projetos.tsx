@@ -26,14 +26,14 @@ export function Projetos() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <Badge className="bg-blue-100 text-[#1a3a6b] hover:bg-blue-100 text-xs font-semibold uppercase tracking-wider px-3 py-1 mb-4">
+          <Badge className="bg-primary/10 text-primary hover:bg-primary/10 text-xs font-semibold uppercase tracking-wider px-3 py-1 mb-4">
             Iniciativas
           </Badge>
           <h2
             id="projetos-heading"
-            className="text-3xl sm:text-4xl font-extrabold text-[#1a3a6b] mb-4"
+            className="text-3xl sm:text-4xl font-extrabold text-secondary mb-4"
           >
-            Nossos <span className="text-blue-500">projetos</span>
+            Nossos <span className="text-primary">projetos</span>
           </h2>
           <p className="text-gray-500 text-lg max-w-xl mx-auto">
             Ações que promovem protagonismo, ciência, inclusão e a valorização
@@ -48,35 +48,35 @@ export function Projetos() {
             return (
               <Card
                 key={project.id}
-                className="group border-slate-200 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-100/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                className="group border-slate-200 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
               >
                 {/* Top accent bar */}
                 <div
-                  className="h-1.5 bg-gradient-to-r from-[#1a3a6b] to-blue-500"
+                  className="h-1.5 bg-gradient-to-r from-secondary to-primary"
                   aria-hidden="true"
                 />
 
                 <CardHeader className="pt-6">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div
-                      className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-blue-100 transition-colors"
+                      className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 group-hover:bg-primary/10 transition-colors"
                       aria-hidden="true"
                     >
                       {Icon && (
-                        <Icon className="w-6 h-6 text-[#1a3a6b]" aria-hidden="true" />
+                        <Icon className="w-6 h-6 text-primary" aria-hidden="true" />
                       )}
                     </div>
                     <Badge
                       variant="secondary"
-                      className="bg-blue-50 text-[#1a3a6b] text-xs font-semibold"
+                      className="bg-secondary/5 text-secondary text-xs font-semibold"
                     >
                       {project.badge}
                     </Badge>
                   </div>
-                  <CardTitle className="text-[#1a3a6b] text-xl font-bold">
+                  <CardTitle className="text-secondary text-xl font-bold">
                     {project.title}
                   </CardTitle>
-                  <CardDescription className="text-blue-500 font-medium text-sm">
+                  <CardDescription className="text-primary font-medium text-sm">
                     {project.subtitle}
                   </CardDescription>
                 </CardHeader>

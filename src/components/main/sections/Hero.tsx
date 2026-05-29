@@ -22,30 +22,30 @@ export function Hero() {
     >
       {/* Background gradient */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-[#0d2340] via-[#1a3a6b] to-[#0a1b33]"
+        className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary to-[#111c3a]"
         aria-hidden="true"
       />
 
       {/* Decorative circles */}
       <div
-        className="absolute top-0 right-0 w-[500px] h-[500px] bg-yellow-500/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"
+        className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"
         aria-hidden="true"
       />
       <div
-        className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-400/10 rounded-full translate-y-1/3 -translate-x-1/3 blur-3xl"
+        className="absolute bottom-0 left-0 w-80 h-80 bg-gold/10 rounded-full translate-y-1/3 -translate-x-1/3 blur-3xl"
         aria-hidden="true"
       />
       <div
-        className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"
+        className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"
         aria-hidden="true"
       />
 
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-32">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/30 text-yellow-300 text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-8 backdrop-blur-sm">
+        <div className="inline-flex items-center gap-2 bg-gold/20 border border-gold/30 text-gold text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-8 backdrop-blur-sm">
           <span
-            className="inline-block w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"
+            className="inline-block w-1.5 h-1.5 bg-gold rounded-full animate-pulse"
             aria-hidden="true"
           />
           Scientia Potentia Est
@@ -54,13 +54,13 @@ export function Hero() {
         {/* Title */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
           Formando cidadãos,{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-primary">
             transformando realidades
           </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-lg sm:text-xl text-blue-200 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
           {SCHOOL_NAME} <br /> {SCHOOL_LOCATION}
         </p>
 
@@ -68,7 +68,7 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button
             size="lg"
-            className="bg-yellow-400 hover:bg-yellow-300 text-[#1a3a6b] font-bold px-8 py-6 text-base shadow-lg shadow-yellow-400/20 hover:shadow-yellow-300/30 transition-all duration-300 hover:scale-105"
+            className="bg-primary hover:bg-primary/90 text-white font-bold px-8 py-6 text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 hover:scale-105"
             onClick={() => handleScroll("#sobre")}
             aria-label="Conhecer a escola – ir para seção Sobre"
           >
@@ -87,7 +87,7 @@ export function Hero() {
 
         {/* Scroll indicator */}
         <div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-blue-300/60 text-xs animate-bounce"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 text-xs animate-bounce"
           aria-hidden="true"
         >
           <span>rolar</span>

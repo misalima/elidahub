@@ -13,16 +13,16 @@ export function Sobre() {
           {/* Text column */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Badge className="bg-blue-100 text-[#1a3a6b] hover:bg-blue-100 text-xs font-semibold uppercase tracking-wider px-3 py-1">
+              <Badge className="bg-primary/10 text-primary hover:bg-primary/10 text-xs font-semibold uppercase tracking-wider px-3 py-1">
                 Sobre nós
               </Badge>
             </div>
             <h2
               id="sobre-heading"
-              className="text-3xl sm:text-4xl font-extrabold text-[#1a3a6b] leading-tight mb-6"
+              className="text-3xl sm:text-4xl font-extrabold text-secondary leading-tight mb-6"
             >
               Uma história de{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1a3a6b] to-blue-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary">
                 mais de 75 anos
               </span>
             </h2>
@@ -37,18 +37,17 @@ export function Sobre() {
               trabalho.
             </p>
 
-            {/* Highlight pills */}
             <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 text-[#1a3a6b] px-4 py-2 rounded-full text-sm font-medium">
-                <BookOpen className="w-4 h-4 text-blue-500" aria-hidden="true" />
+              <div className="flex items-center gap-2 bg-secondary/5 border border-secondary/10 text-secondary px-4 py-2 rounded-full text-sm font-medium">
+                <BookOpen className="w-4 h-4 text-primary" aria-hidden="true" />
                 Ensino Médio Regular
               </div>
-              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 text-[#1a3a6b] px-4 py-2 rounded-full text-sm font-medium">
-                <Award className="w-4 h-4 text-blue-500" aria-hidden="true" />
+              <div className="flex items-center gap-2 bg-secondary/5 border border-secondary/10 text-secondary px-4 py-2 rounded-full text-sm font-medium">
+                <Award className="w-4 h-4 text-primary" aria-hidden="true" />
                 EJA – Educação de Jovens e Adultos
               </div>
-              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 text-[#1a3a6b] px-4 py-2 rounded-full text-sm font-medium">
-                <Building2 className="w-4 h-4 text-blue-500" aria-hidden="true" />
+              <div className="flex items-center gap-2 bg-secondary/5 border border-secondary/10 text-secondary px-4 py-2 rounded-full text-sm font-medium">
+                <Building2 className="w-4 h-4 text-primary" aria-hidden="true" />
                 3 Turnos de atendimento
               </div>
             </div>
@@ -56,9 +55,9 @@ export function Sobre() {
 
           {/* Image column */}
           <div className="relative">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] bg-gradient-to-br from-[#1a3a6b] to-[#0d4d2e]">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] bg-gradient-to-br from-secondary to-secondary/80">
               {/* TODO: Substituir pelo src de uma imagem real da escola */}
-              {/* <Image src="/images/escola.jpg" alt="Fachada da Escola Estadual Professor José Félix de Carvalho Alves" fill className="object-cover" /> */}
+              {/* <Image src="/images/escola.jpg" alt="Fachada da Escola Estadual Profª. Maria Élida Dias Carvalho Pereira" fill className="object-cover" /> */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
                 <Building2
                   className="w-24 h-24 text-white/30 mb-4"
@@ -73,13 +72,13 @@ export function Sobre() {
 
             {/* Floating badge */}
             <div
-              className="absolute -bottom-4 -left-4 bg-yellow-400 rounded-xl shadow-lg px-5 py-3"
+              className="absolute -bottom-4 -left-4 bg-gold rounded-xl shadow-lg px-5 py-3"
               aria-hidden="true"
             >
-              <p className="text-[#1a3a6b] font-extrabold text-2xl leading-none">
+              <p className="text-secondary font-extrabold text-2xl leading-none">
                 75+
               </p>
-              <p className="text-[#1a3a6b] text-xs font-semibold mt-0.5">
+              <p className="text-secondary text-xs font-semibold mt-0.5">
                 Anos de história
               </p>
             </div>
@@ -90,7 +89,7 @@ export function Sobre() {
               aria-hidden="true"
               style={{
                 backgroundImage:
-                  "radial-gradient(circle, #1a3a6b 1.5px, transparent 1.5px)",
+                  "radial-gradient(circle, var(--gold) 1.5px, transparent 1.5px)",
                 backgroundSize: "8px 8px",
               }}
             />

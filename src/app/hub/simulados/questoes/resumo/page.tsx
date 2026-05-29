@@ -157,14 +157,14 @@ export default function ResumoQuestoesPage() {
   };
 
   const getLevelColor = (level: string) => {
-    if (level.includes('1ª')) return 'bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/30';
+    if (level.includes('1ª')) return 'bg-secondary/5 border-secondary/10 dark:bg-secondary/25 dark:border-secondary/35';
     if (level.includes('2ª')) return 'bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/30';
     if (level.includes('3ª')) return 'bg-amber-50/40 border-amber-100/50 dark:bg-amber-950/20 dark:border-amber-900/30';
     return 'bg-purple-50/40 border-purple-100/50 dark:bg-purple-950/20 dark:border-purple-900/30';
   };
 
   const getLevelIconColor = (level: string) => {
-    if (level.includes('1ª')) return 'text-blue-600 dark:text-blue-400';
+    if (level.includes('1ª')) return 'text-secondary dark:text-blue-300';
     if (level.includes('2ª')) return 'text-emerald-600 dark:text-emerald-400';
     if (level.includes('3ª')) return 'text-amber-600 dark:text-amber-400';
     return 'text-purple-600 dark:text-purple-400';

@@ -39,8 +39,8 @@ export function Header() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-[#1a3a6b]/95 backdrop-blur-md shadow-lg"
-          : "bg-[#1a3a6b]"
+          ? "bg-secondary/95 backdrop-blur-md shadow-lg"
+          : "bg-secondary"
       }`}
       role="banner"
     >
@@ -56,10 +56,10 @@ export function Header() {
             className="flex items-center gap-3 group"
             aria-label={`${SCHOOL_NAME} – Página inicial`}
           >
-            <div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden bg-white group-hover:ring-2 group-hover:ring-yellow-400 transition-all">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden bg-white group-hover:ring-2 group-hover:ring-gold transition-all">
               <Image
                 src="/logo_escola.png"
-                alt="Logo da Escola Estadual Professor José Félix de Carvalho Alves"
+                alt="Logo da Escola Estadual Profª. Maria Élida Dias Carvalho Pereira"
                 width={40}
                 height={40}
                 className="w-full h-full object-cover"
@@ -70,7 +70,7 @@ export function Header() {
               <p className="text-white font-bold text-sm leading-tight">
                 {SCHOOL_NAME}
               </p>
-              <p className="text-blue-200 text-xs leading-tight">
+              <p className="text-white/70 text-xs leading-tight">
                 São Sebastião – AL
               </p>
             </div>
@@ -86,7 +86,7 @@ export function Header() {
                   e.preventDefault();
                   handleNavClick(link.href);
                 }}
-                className="px-3 py-2 text-sm font-medium text-blue-100 hover:text-white hover:bg-white/10 rounded-md transition-all duration-200"
+                className="px-3 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-all duration-200"
               >
                 {link.label}
               </a>
@@ -107,7 +107,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="bg-[#1a3a6b] border-blue-700 w-72"
+              className="bg-secondary border-white/10 w-72"
             >
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2 text-white">
@@ -135,7 +135,7 @@ export function Header() {
                       e.preventDefault();
                       handleNavClick(link.href);
                     }}
-                    className="flex items-center px-4 py-3 text-blue-100 hover:text-white hover:bg-white/10 rounded-md transition-all duration-200 text-base font-medium"
+                    className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-all duration-200 text-base font-medium"
                   >
                     {link.label}
                   </a>

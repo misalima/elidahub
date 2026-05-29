@@ -49,14 +49,14 @@ export default function HubLoginPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* ── Painel esquerdo: identidade visual ── */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-primary p-12 text-primary-foreground relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-secondary p-12 text-white relative overflow-hidden">
         {/* Círculos decorativos */}
         <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/5" />
         <div className="absolute -bottom-32 -right-16 w-[500px] h-[500px] rounded-full bg-white/5" />
         <div className="absolute top-1/3 right-0 w-48 h-48 rounded-full bg-white/5" />
 
         <div className="relative z-10 flex flex-col items-center text-center gap-6 max-w-sm">
-          <div className="w-28 h-28 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center shadow-xl">
+          <div className="w-28 h-28 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center shadow-xl border border-gold/30">
             <Image
               src="/logo_escola.png"
               alt="Logo da Escola"
@@ -68,15 +68,15 @@ export default function HubLoginPage() {
 
           <div>
             <h1 className="text-2xl font-bold leading-tight">
-              Escola Estadual Prof. José Félix de Carvalho Alves
+              Escola Estadual Profª. Maria Élida Dias Carvalho Pereira
             </h1>
-            <p className="mt-3 text-primary-foreground/70 text-sm leading-relaxed">
+            <p className="mt-3 text-white/70 text-sm leading-relaxed">
               Plataforma de gestão escolar — acesso restrito à coordenação e gestão.
             </p>
           </div>
 
-          <div className="mt-4 flex items-center gap-2 text-xs text-primary-foreground/60 bg-white/10 px-4 py-2 rounded-full">
-            <ShieldCheck className="w-3.5 h-3.5" />
+          <div className="mt-4 flex items-center gap-2 text-xs text-gold bg-gold/10 px-4 py-2 rounded-full border border-gold/20">
+            <ShieldCheck className="w-3.5 h-3.5 text-gold" />
             Área restrita — somente pessoal autorizado
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function HubLoginPage() {
             className="object-contain"
           />
           <p className="text-sm font-semibold text-center text-foreground max-w-xs">
-            Escola Estadual Prof. José Félix de Carvalho Alves
+            Escola Estadual Profª. Maria Élida Dias Carvalho Pereira
           </p>
         </div>
 

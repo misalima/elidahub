@@ -39,13 +39,13 @@ function StatCard({ value, suffix, label, started }: StatCardProps) {
   const count = useCountUp(value, 1800, started);
 
   return (
-    <Card className="bg-white/10 border-white/20 backdrop-blur-sm hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-900/30">
+    <Card className="bg-white/10 border-white/20 backdrop-blur-sm hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-secondary/30">
       <CardContent className="pt-8 pb-8 text-center">
         <p className="text-5xl sm:text-6xl font-extrabold text-white mb-2 tabular-nums" aria-live="polite">
           {count}
-          <span className="text-yellow-400">{suffix}</span>
+          <span className="text-gold">{suffix}</span>
         </p>
-        <p className="text-blue-200 text-base font-medium tracking-wide">
+        <p className="text-white/80 text-base font-medium tracking-wide">
           {label}
         </p>
       </CardContent>
@@ -80,15 +80,15 @@ export function Numeros() {
       id="numeros"
       ref={sectionRef}
       aria-labelledby="numeros-heading"
-      className="py-20 lg:py-28 bg-[#1a3a6b] relative overflow-hidden"
+      className="py-20 lg:py-28 bg-secondary relative overflow-hidden"
     >
       {/* Decorative background blobs */}
       <div
-        className="absolute top-0 left-0 w-80 h-80 bg-blue-500/20 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"
+        className="absolute top-0 left-0 w-80 h-80 bg-primary/15 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"
         aria-hidden="true"
       />
       <div
-        className="absolute bottom-0 right-0 w-96 h-96 bg-yellow-400/10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"
+        className="absolute bottom-0 right-0 w-96 h-96 bg-gold/10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"
         aria-hidden="true"
       />
 
@@ -100,9 +100,9 @@ export function Numeros() {
             className="text-3xl sm:text-4xl font-extrabold text-white mb-4"
           >
             Nossa escola em{" "}
-            <span className="text-yellow-400">números</span>
+            <span className="text-gold">números</span>
           </h2>
-          <p className="text-blue-200 text-lg max-w-xl mx-auto">
+          <p className="text-white/80 text-lg max-w-xl mx-auto">
             Décadas de dedicação à educação pública de qualidade em São Sebastião – AL.
           </p>
         </div>
