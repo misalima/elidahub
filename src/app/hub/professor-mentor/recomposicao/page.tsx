@@ -725,7 +725,7 @@ export default function RecomposicaoPage() {
       <footer className="border-t border-slate-200 bg-white/70 mt-20 py-8 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-bold text-slate-800">
-            FelixHub · Plataforma de Gestão Integrada
+            ÉlidaHub · Plataforma de Gestão Integrada
           </p>
           <p className="text-[11px] text-slate-400 font-medium">
             Todos os direitos reservados &copy; {new Date().getFullYear()} · Desenvolvido por Misael Lima

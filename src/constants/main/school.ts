@@ -114,9 +114,9 @@ export const SCHOOL_TEAM: readonly TeamMember[] = [
 export const SCHOOL_CONTACT = {
   address: "Rua Pedro Vieira de Barros, S/N, Centro — Próximo à Prefeitura Municipal, São Sebastião – AL",
   phone: "(82) 99913-7086",
-  email: "ee.josefelix@educ.al.gov.br",
-  instagramUrl: "https://instagram.com/eeprofjosefelix",
-  whatsappUrl: "https://wa.me/5582999137086",
+  email: "ee.mariaelida@educ.al.gov.br",
+  instagramUrl: "#",
+  whatsappUrl: "https://wa.me/558281239131",
 } as const;
 
 // ── Navegação ─────────────────────────────────────────────────

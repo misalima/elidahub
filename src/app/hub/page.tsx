@@ -40,7 +40,7 @@ export default function HubHomePage() {
             className="object-contain"
           />
           <div>
-            <h1 className="text-sm font-bold text-foreground">FelixHub</h1>
+            <h1 className="text-sm font-bold text-foreground">ÉlidaHub</h1>
             <p className="text-xs text-muted-foreground">Portal da Coordenação</p>
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function HubHomePage() {
 
       {/* Footer */}
       <footer className="py-6 text-center text-xs text-muted-foreground border-t bg-white dark:bg-card leading-relaxed">
-        FelixHub · Plataforma de gestão escolar<br />
+        ÉlidaHub · Plataforma de gestão escolar<br />
         All rights reserved  &copy; {new Date().getFullYear()} Desenvolvido por Misael Lima
       </footer>
     </div>
