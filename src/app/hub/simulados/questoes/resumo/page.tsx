@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, 
   SelectContent, 
@@ -38,6 +39,7 @@ export default function ResumoQuestoesPage() {
   const [filterArea, setFilterArea] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showEJA, setShowEJA] = useState(false);
+  const [hideUsed, setHideUsed] = useState(false);
   
   // State for question preview modal
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -47,7 +49,12 @@ export default function ResumoQuestoesPage() {
   
   // Custom fetch to get all questions without filters
   const { data: response, isLoading } = useQuestions({ pageSize: 0 });
-  const questions = useMemo(() => response?.data || [], [response]);
+  const allQuestions = useMemo(() => response?.data || [], [response]);
+
+  const questions = useMemo(() => {
+    if (!hideUsed) return allQuestions;
+    return allQuestions.filter(q => !q.exam_questions || q.exam_questions.length === 0);
+  }, [allQuestions, hideUsed]);
 
   const stats = useMemo(() => {
     // Current questions filtered by Level for the context of Area counts
@@ -103,9 +110,9 @@ export default function ResumoQuestoesPage() {
       byArea,
       byLevel,
       totalByLevel,
-      totalCount: questions.length
+      totalCount: allQuestions.length
     };
-  }, [questions, filterArea, filterLevel]);
+  }, [questions, allQuestions, filterArea, filterLevel]);
 
   const getDisciplinePriority = (subject: string) => {
     // Core subjects
@@ -221,6 +228,20 @@ export default function ResumoQuestoesPage() {
           >
             {showEJA ? "Ocultar EJA" : "Incluir EJA"}
           </Button>
+
+          <div className="flex items-center space-x-2 bg-card border rounded-xl h-11 px-4 shadow-sm transition-all hover:border-primary/30">
+            <Checkbox 
+              id="hide-used-questions" 
+              checked={hideUsed} 
+              onCheckedChange={(checked) => setHideUsed(!!checked)} 
+            />
+            <label
+              htmlFor="hide-used-questions"
+              className="text-xs font-semibold leading-none cursor-pointer text-muted-foreground select-none"
+            >
+              Mostrar apenas questões novas
+            </label>
+          </div>
 
           <div className="flex items-center gap-2 bg-card border rounded-xl p-1.5 px-3 shadow-sm h-11">
             <Filter className="w-4 h-4 text-muted-foreground" />
