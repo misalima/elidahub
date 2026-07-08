@@ -124,8 +124,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('felixhub_user', JSON.stringify(newUser));
       }
       return { error: null };
-    } catch (err: any) {
-      return { error: err?.message || 'Erro ao fazer login' };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao fazer login';
+      return { error: msg };
     }
   };
 
