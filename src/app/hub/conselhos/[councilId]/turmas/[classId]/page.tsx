@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { ClassWorkspace, type ClassWorkspaceData } from "@/components/class-council/ClassWorkspace";
+import { ClassWorkspaceSkeleton } from "@/components/class-council/LoadingSkeletons";
 import { councilFetch } from "@/lib/class-council/client";
 
 export default function CouncilClassPage() {
@@ -27,6 +28,6 @@ export default function CouncilClassPage() {
   },[reload]);
   const hasCurrentClassData = data?.class.id === classId;
   if(error&&!hasCurrentClassData)return <main className="mx-auto max-w-4xl p-8"><div className="flex items-center gap-2 text-destructive"><AlertCircle className="h-5 w-5"/>{error}</div></main>;
-  if(!data||!hasCurrentClassData)return <div className="grid min-h-[70vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin"/></div>;
+  if(!data||!hasCurrentClassData)return <ClassWorkspaceSkeleton />;
   return <ClassWorkspace key={classId} initialData={data} councilId={councilId} classId={classId} reload={reload}/>;
 }

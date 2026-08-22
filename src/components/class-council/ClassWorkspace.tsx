@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BarChart3, BookOpen, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Loader2, Pencil, Plus, RotateCcw, Save, Trash2, TrendingDown, UserRound, Users, X } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BarChart3, BookOpen, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Info, Loader2, Pencil, Plus, RotateCcw, Save, Trash2, TrendingDown, UserRound, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,13 +21,14 @@ import { councilFetch } from "@/lib/class-council/client";
 import { compareStudentPriority, compareStudentReportOrder } from "@/lib/class-council/calculateAlerts";
 import { BEHAVIOR_LABELS } from "@/lib/class-council/constants";
 import { classStatusBadgeClass, classStatusLabel } from "@/lib/class-council/presentation";
+import { hasStudentCouncilRecord, shouldAutoMarkAsDiscussed } from "@/lib/class-council/studentRecord";
 import type { ActivitiesStatus, BehaviorCategory, InterventionStatus, StudentAlerts } from "@/types/class-council";
 
 type Result = { subject_id: string; subjectName: string; term: number; grade: number | null; grade_marker: string | null; absences: number | null };
 type Behavior = { category: BehaviorCategory; description: string | null };
 type Intervention = { id: string; description: string; responsible_name: string | null; due_date: string | null; status: InterventionStatus; outcome: string | null; cancellation_reason: string | null; optimistic?: boolean };
 type InterventionPatch = { status?: InterventionStatus; outcome?: string; cancellationReason?: string; responsibleName?: string; dueDate?: string };
-type Student = { enrollmentId: string; studentId: string; enrollmentNumber: string; reportPosition: number | null; name: string; isPcd: boolean; attendanceRate: number | null; enrollmentStatus: string | null; discussed: boolean; activitiesStatus: ActivitiesStatus; pedagogicalObservation: string | null; positiveNotes: string | null; alerts: StudentAlerts; results: Result[]; behaviors: Behavior[]; interventions: Intervention[] };
+type Student = { enrollmentId: string; studentId: string; enrollmentNumber: string; reportPosition: number | null; name: string; isPcd: boolean; raceColor: string | null; attendanceRate: number | null; enrollmentStatus: string | null; discussed: boolean; activitiesStatus: ActivitiesStatus; pedagogicalObservation: string | null; positiveNotes: string | null; alerts: StudentAlerts; results: Result[]; behaviors: Behavior[]; interventions: Intervention[] };
 export type ClassWorkspaceData = {
   council: { id: string; term: number; status: string; school_year: number };
   class: { id: string; display_name: string; official_code: string; status: string; class_strengths: string | null; general_difficulties: string | null; behavior_and_coexistence: string | null; learning_aspects: string | null; collective_strategies: string | null };
@@ -105,11 +107,14 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
   const [pendingOperations, setPendingOperations] = useState<Set<string>>(() => new Set());
   const [actionError, setActionError] = useState("");
   const [completing, setCompleting] = useState(false);
+  const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   const [reopening, setReopening] = useState(false);
+  const [classInterventionCount, setClassInterventionCount] = useState(initialData.classInterventions.length);
   const [startDialogOpen, setStartDialogOpen] = useState(initialData.class.status === "not_started");
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("students");
   useEffect(() => { draftsRef.current = drafts; }, [drafts]);
   useEffect(() => { setStartDialogOpen(initialData.class.status === "not_started"); }, [initialData.class.id, initialData.class.status]);
+  useEffect(() => { setClassInterventionCount(initialData.classInterventions.length); }, [initialData.class.id, initialData.classInterventions.length]);
 
   const setOperationPending = useCallback((operation: string, pending: boolean) => {
     setPendingOperations((current) => {
@@ -132,6 +137,16 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
   const hasPendingSaves = pendingOperations.size > 0
     || Object.values(saveState).some((value) => value === "saving")
     || Object.entries(drafts).some(([id, draft]) => savedRef.current[id] !== JSON.stringify(draft));
+  const discussedStudentCount = Object.values(drafts).filter((draft) => draft.discussed).length;
+  const atRiskStudentCount = initialData.students.filter((student) => student.alerts.atRisk).length;
+  const individualInterventionCount = Object.values(studentInterventions).reduce((total, items) => total + items.length, 0);
+  const totalInterventionCount = individualInterventionCount + classInterventionCount;
+  const atRiskWithoutRecordCount = initialData.students.filter((student) => {
+    if (!student.alerts.atRisk) return false;
+    const draft = drafts[student.enrollmentId];
+    const interventionCount = (studentInterventions[student.enrollmentId] ?? student.interventions).length;
+    return !hasStudentCouncilRecord(draft, interventionCount);
+  }).length;
 
   const updateStudentInterventions = useCallback((enrollmentId: string, update: (current: Intervention[]) => Intervention[]) => {
     setStudentInterventions((current) => ({ ...current, [enrollmentId]: update(current[enrollmentId] ?? []) }));
@@ -173,9 +188,19 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
     if (initialData.nextClass) router.prefetch(`/hub/conselhos/${councilId}/turmas/${initialData.nextClass.id}`);
   }, [councilId, initialData.nextClass, router]);
 
-  function updateDraft(patch: Partial<StudentDraft>) { if (!selected) return; setDrafts((current) => ({ ...current, [selected.enrollmentId]: { ...current[selected.enrollmentId], ...patch } })); }
+  function updateDraft(patch: Partial<StudentDraft>) {
+    if (!selected) return;
+    setDrafts((current) => ({
+      ...current,
+      [selected.enrollmentId]: {
+        ...current[selected.enrollmentId],
+        ...patch,
+        ...(shouldAutoMarkAsDiscussed(patch) ? { discussed: true } : {}),
+      },
+    }));
+  }
   async function chooseStudent(id: string) { if (selectedId) await saveStudent(selectedId); setSelectedId(id); }
-  async function completeClass() { setCompleting(true); setActionError(""); try { const saveResults = await Promise.all(Object.keys(draftsRef.current).map(saveStudent)); if (saveResults.some((saved) => !saved)) throw new Error("Não foi possível salvar todas as alterações. Revise os estudantes com erro e tente concluir novamente."); await councilFetch(`/api/class-councils/${councilId}/classes/${classId}/complete`, { method: "POST", body: "{}" }); await reload(); if (!initialData.nextClass) toast.info("Todas as turmas foram concluídas. Já é possível concluir este Conselho de Classe."); router.refresh(); } catch (err) { setActionError(err instanceof Error ? err.message : "Falha ao concluir."); } finally { setCompleting(false); } }
+  async function completeClass() { setCompleting(true); setActionError(""); try { const saveResults = await Promise.all(Object.keys(draftsRef.current).map(saveStudent)); if (saveResults.some((saved) => !saved)) throw new Error("Não foi possível salvar todas as alterações. Revise os estudantes com erro e tente concluir novamente."); await councilFetch(`/api/class-councils/${councilId}/classes/${classId}/complete`, { method: "POST", body: "{}" }); setCompletionDialogOpen(false); await reload(); toast.success("Turma concluída com sucesso."); if (!initialData.nextClass) toast.info("Todas as turmas foram concluídas. Já é possível concluir este Conselho de Classe."); router.refresh(); } catch (err) { setActionError(err instanceof Error ? err.message : "Falha ao concluir."); } finally { setCompleting(false); } }
   async function reopenClass() { setReopening(true); setActionError(""); try { await councilFetch(`/api/class-councils/${councilId}/classes/${classId}/reopen`, { method: "POST", body: "{}" }); await reload(); router.refresh(); toast.success("Turma reaberta para edição."); } catch (err) { setActionError(err instanceof Error ? err.message : "Falha ao reabrir a turma."); } finally { setReopening(false); } }
   function goToNextClass() {
     if (initialData.nextClass) {
@@ -184,9 +209,34 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
     }
   }
 
-  return <main className="mx-auto max-w-[1500px] p-4 py-6 sm:p-6"><StartClassDialog open={startDialogOpen} onOpenChange={setStartDialogOpen} data={initialData} councilId={councilId} classId={classId} reload={reload} /><div className="mb-5 flex flex-wrap items-start justify-between gap-4"><div><Button variant="ghost" asChild className="mb-2 -ml-3"><Link href={`/hub/conselhos/${councilId}`}><ArrowLeft className="h-4 w-4" />Voltar ao conselho</Link></Button><div className="flex items-center gap-3"><h1 className="text-2xl font-bold">Turma {initialData.class.display_name}</h1><Badge variant="secondary" className={classStatusBadgeClass(initialData.class.status)}>{classStatusLabel(initialData.class.status)}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{initialData.class.official_code} · {initialData.students.length} estudantes</p></div><div className="flex flex-wrap gap-2">{!initialData.readOnly && <Button onClick={completeClass} disabled={completing || hasPendingSaves} title={hasPendingSaves ? "Aguarde o salvamento das alterações antes de concluir." : undefined}>{completing || hasPendingSaves ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{completing ? "Concluindo" : hasPendingSaves ? "Salvando alterações" : "Concluir turma"}</Button>}{initialData.class.status === "completed" && initialData.council.status !== "completed" && <Button variant="outline" onClick={reopenClass} disabled={reopening}><RotateCcw className={`h-4 w-4 ${reopening ? "animate-spin" : ""}`} />{reopening ? "Reabrindo" : "Reabrir turma"}</Button>}{initialData.class.status === "completed" && initialData.nextClass && <Button onClick={goToNextClass}><ArrowRight className="h-4 w-4" />Próxima turma</Button>}</div></div>{actionError && <div className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4" />{actionError}</div>}{initialData.readOnly && <div className="mb-4 flex items-center gap-2 rounded-xl border bg-muted/60 p-3 text-sm"><CheckCircle2 className="h-4 w-4" />Turma concluída: registros pedagógicos em modo somente leitura.{initialData.council.status !== "completed" ? " Reabra a turma para fazer correções." : ""}</div>}
+  return <main className="mx-auto max-w-7xl p-4 py-6 sm:p-6">
+    <StartClassDialog open={startDialogOpen} onOpenChange={setStartDialogOpen} data={initialData} councilId={councilId} classId={classId} reload={reload} />
+    <AlertDialog open={completionDialogOpen} onOpenChange={(open) => { if (!completing) setCompletionDialogOpen(open); }}>
+      <AlertDialogContent className="sm:max-w-xl">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Concluir a turma {initialData.class.display_name}?</AlertDialogTitle>
+          <AlertDialogDescription>Confira o resumo da reunião. Os registros pedagógicos são opcionais e estudantes sem registro não impedem a conclusão.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            ["Estudantes", initialData.students.length],
+            ["Em risco", atRiskStudentCount],
+            ["Discutidos", discussedStudentCount],
+            ["Intervenções", totalInterventionCount],
+          ].map(([label, value]) => <div key={label} className="rounded-xl border bg-muted/30 p-3"><p className="text-xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{label}</p></div>)}
+        </div>
+        {atRiskWithoutRecordCount > 0 && <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="font-semibold">{atRiskWithoutRecordCount} {atRiskWithoutRecordCount === 1 ? "estudante em risco ainda não possui" : "estudantes em risco ainda não possuem"} registro pedagógico.</p><p className="mt-1 text-xs opacity-80">Isso é apenas um aviso e não bloqueia a conclusão.</p></div></div>}
+        {initialData.participants.length < 1 ? <div className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><p>Adicione pelo menos um participante antes de concluir a turma.</p></div> : <p className="text-sm text-muted-foreground">{initialData.participants.length} {initialData.participants.length === 1 ? "participante registrado" : "participantes registrados"} nesta turma.</p>}
+        {actionError && <div className="flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4 shrink-0" />{actionError}</div>}
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={completing}>Cancelar</AlertDialogCancel>
+          {initialData.participants.length < 1 ? <Button type="button" onClick={() => { setCompletionDialogOpen(false); setActiveTab("participants"); }}>Ir para participantes</Button> : <Button type="button" disabled={completing || hasPendingSaves} onClick={() => void completeClass()}>{completing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{completing ? "Concluindo" : "Confirmar conclusão"}</Button>}
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    <div className="mb-5 flex flex-wrap items-start justify-between gap-4"><div><Button variant="ghost" asChild className="mb-2 -ml-3"><Link href={`/hub/conselhos/${councilId}`}><ArrowLeft className="h-4 w-4" />Voltar ao conselho</Link></Button><div className="flex items-center gap-3"><h1 className="text-2xl font-bold">Turma {initialData.class.display_name}</h1><Badge variant="secondary" className={classStatusBadgeClass(initialData.class.status)}>{classStatusLabel(initialData.class.status)}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{initialData.class.official_code} · {initialData.students.length} estudantes</p></div><div className="flex flex-wrap gap-2">{!initialData.readOnly && <Button onClick={() => setCompletionDialogOpen(true)} disabled={completing || hasPendingSaves} title={hasPendingSaves ? "Aguarde o salvamento das alterações antes de concluir." : undefined}>{completing || hasPendingSaves ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{completing ? "Concluindo" : hasPendingSaves ? "Salvando alterações" : "Concluir turma"}</Button>}{initialData.class.status === "completed" && initialData.council.status !== "completed" && <Button variant="outline" onClick={reopenClass} disabled={reopening}><RotateCcw className={`h-4 w-4 ${reopening ? "animate-spin" : ""}`} />{reopening ? "Reabrindo" : "Reabrir turma"}</Button>}{initialData.class.status === "completed" && initialData.nextClass && <Button onClick={goToNextClass}><ArrowRight className="h-4 w-4" />Próxima turma</Button>}</div></div>{actionError && <div className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4" />{actionError}</div>}{initialData.readOnly && <div className="mb-4 flex items-center gap-2 rounded-xl border bg-muted/60 p-3 text-sm"><CheckCircle2 className="h-4 w-4" />Turma concluída: registros pedagógicos em modo somente leitura.{initialData.council.status !== "completed" ? " Reabra a turma para fazer correções." : ""}</div>}
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as WorkspaceTab)}>
-      <TabsList className="mx-auto mb-5 flex h-auto w-full max-w-5xl justify-start gap-1.5 overflow-x-auto rounded-2xl border border-border/60 bg-muted/70 p-2 shadow-inner">
+      <TabsList className="mx-auto mb-5 flex h-auto w-full max-w-5xl justify-start gap-1.5 overflow-x-auto overflow-y-hidden rounded-2xl border border-border/60 bg-muted/70 p-2 shadow-inner">
         {workspaceTabs.map(({ value, label, icon: Icon }) => (
           <TabsTrigger
             key={value}
@@ -206,7 +256,7 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
         ))}
       </TabsList>
       <TabsContent value="students" className="data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-300"><div className="grid min-h-[680px] overflow-visible rounded-2xl border bg-white lg:grid-cols-[360px_minmax(0,1fr)] dark:bg-card"><aside className="border-b lg:border-b-0 lg:border-r"><div className="grid gap-2 border-b p-3"><Select value={filter} onValueChange={setFilter}><SelectTrigger aria-label="Filtrar estudantes"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os estudantes</SelectItem><SelectItem value="risk">Em risco</SelectItem><SelectItem value="attendance">Baixa frequência</SelectItem><SelectItem value="worsened">Pioraram</SelectItem><SelectItem value="discussed">Discutidos</SelectItem><SelectItem value="intervention">Com intervenção</SelectItem></SelectContent></Select><Select value={studentOrder} onValueChange={(value) => setStudentOrder(value as "priority" | "report")}><SelectTrigger aria-label="Ordenar estudantes"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="priority">Prioridade de risco</SelectItem><SelectItem value="report">Ordem do relatório (SIGEduc)</SelectItem></SelectContent></Select></div><TooltipProvider delayDuration={550}><div className="max-h-[620px] overflow-y-auto p-2">{students.map((student) => <div key={student.enrollmentId} className={`mb-1 flex w-full items-center rounded-xl transition ${selected?.enrollmentId === student.enrollmentId ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><button onClick={() => void chooseStudent(student.enrollmentId)} className="min-w-0 flex-1 p-3 text-left"><div className="flex items-start justify-between gap-2"><span className="flex min-w-0 items-center gap-1.5 text-sm font-medium leading-tight"><span className="truncate">{student.name}</span>{student.alerts.evolution === "worsened" && <Tooltip><TooltipTrigger asChild><span aria-label={`${student.name} piorou em relação ao bimestre anterior`} className={`shrink-0 ${selected?.enrollmentId === student.enrollmentId ? "text-primary-foreground" : "text-rose-600 dark:text-rose-400"}`}><TrendingDown className="h-4 w-4" /></span></TooltipTrigger><TooltipContent side="top" className="max-w-72">Passou de {student.alerts.previousLowGradeCount ?? 0} para {student.alerts.currentLowGradeCount} disciplinas com nota abaixo de 6,0.</TooltipContent></Tooltip>}</span>{drafts[student.enrollmentId]?.discussed && <Check className="h-4 w-4 shrink-0" />}</div></button>{student.alerts.reasons.length > 0 && <Tooltip><TooltipTrigger asChild><button type="button" aria-label={`Ver motivos do risco de ${student.name}`} className={`mr-2 grid h-8 w-8 shrink-0 place-items-center rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-ring ${selected?.enrollmentId === student.enrollmentId ? "text-primary-foreground hover:bg-primary-foreground/10" : "text-amber-600 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-950"}`}><CircleAlert className="h-5 w-5" /></button></TooltipTrigger><TooltipContent side="right" sideOffset={8} className="max-w-80 p-3"><p className="mb-1 font-semibold">Motivos do risco</p><ul className="space-y-1">{student.alerts.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></TooltipContent></Tooltip>}</div>)}</div></TooltipProvider></aside>{selected ? <StudentPanel student={selected} interventions={studentInterventions[selected.enrollmentId] ?? selected.interventions} setInterventions={(update) => updateStudentInterventions(selected.enrollmentId, update)} setOperationPending={setOperationPending} className={initialData.class.display_name} draft={drafts[selected.enrollmentId]} readOnly={initialData.readOnly} term={initialData.council.term} state={saveState[selected.enrollmentId] ?? "idle"} updateDraft={updateDraft} retry={() => void saveStudent(selected.enrollmentId)} previous={selectedIndex > 0 ? () => void chooseStudent(students[selectedIndex - 1].enrollmentId) : undefined} next={selectedIndex >= 0 && selectedIndex < students.length - 1 ? () => void chooseStudent(students[selectedIndex + 1].enrollmentId) : undefined} councilId={councilId} classId={classId} /> : <div className="grid place-items-center p-10 text-sm text-muted-foreground">Nenhum estudante neste filtro.</div>}</div></TabsContent>
-      <TabsContent forceMount value="class" className="data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-300"><CollectiveEditor data={initialData} councilId={councilId} classId={classId} setOperationPending={setOperationPending} /></TabsContent>
+      <TabsContent forceMount value="class" className="data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-300"><CollectiveEditor data={initialData} councilId={councilId} classId={classId} setOperationPending={setOperationPending} onInterventionCountChange={setClassInterventionCount} /></TabsContent>
       <TabsContent value="participants" className="data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-300"><ParticipantsEditor data={initialData} councilId={councilId} classId={classId} reload={reload} setOperationPending={setOperationPending} /></TabsContent>
       <TabsContent value="views" className="data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1 data-[state=active]:duration-300"><ClassVisualizations data={initialData} /></TabsContent>
     </Tabs>
@@ -263,6 +313,7 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
     try {
       const created = await councilFetch<Intervention>(`/api/class-councils/${councilId}/classes/${classId}/interventions`, { method: "POST", body: JSON.stringify({ enrollmentId: student.enrollmentId, description: submitted.description, responsibleName: submitted.responsible, dueDate: submitted.dueDate }) });
       setInterventions((current) => current.map((item) => item.id === optimisticId ? created : item));
+      updateDraft({ discussed: true });
     } catch (err) {
       setInterventions((current) => current.filter((item) => item.id !== optimisticId));
       setDescription((current) => current || submitted.description); setResponsible((current) => current || submitted.responsible); setDueDate((current) => current || submitted.dueDate); setShowInterventionForm(true);
@@ -292,10 +343,10 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
   const behaviorEntries = Object.entries(BEHAVIOR_LABELS) as Array<[BehaviorCategory, string]>;
   const behaviorColumnBreak = Math.ceil(behaviorEntries.length / 2);
   const behaviorColumns = [behaviorEntries.slice(0, behaviorColumnBreak), behaviorEntries.slice(behaviorColumnBreak)];
-  return <article className="min-w-0 p-4 sm:p-6"><div ref={identitySentinelRef} className="h-px" aria-hidden="true" /><div className="relative sticky top-20 z-20 mb-5">{identityIsFloating && <div aria-hidden="true" className="pointer-events-none absolute -left-px -right-px top-1/2 z-0 h-20 -translate-y-full bg-gradient-to-b from-background/80 via-background/95 to-background dark:hidden" />}<div className={`relative z-10 flex flex-wrap items-start justify-between gap-3 transition-all duration-200 ${identityIsFloating ? "rounded-xl border bg-background p-3 shadow-lg dark:bg-card" : "bg-transparent"}`}><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{student.name}</h2>{student.isPcd && <Badge variant="secondary" className="border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">PCD</Badge>}</div><p className="text-xs text-muted-foreground">Matrícula {student.enrollmentNumber} · Frequência {student.attendanceRate === null ? "não informada" : `${student.attendanceRate}%`}</p></div><div className="flex items-center gap-2"><SaveIndicator state={state} retry={retry} /><Badge variant="outline" className="max-w-32 truncate" title={className}>Turma {className}</Badge><Button variant="outline" size="icon" disabled={!previous} onClick={previous}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" disabled={!next} onClick={next}><ChevronRight className="h-4 w-4" /></Button></div></div></div>
+  return <article className="min-w-0 p-4 sm:p-6"><div ref={identitySentinelRef} className="h-px" aria-hidden="true" /><div className="relative sticky top-20 z-20 mb-5">{identityIsFloating && <div aria-hidden="true" className="pointer-events-none absolute -left-px -right-px top-1/2 z-0 h-20 -translate-y-full bg-gradient-to-b from-background/80 via-background/95 to-background dark:hidden" />}<div className={`relative z-10 flex flex-wrap items-start justify-between gap-3 transition-all duration-200 ${identityIsFloating ? "rounded-xl border bg-background p-3 shadow-lg dark:bg-card" : "bg-transparent"}`}><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{student.name}</h2>{student.isPcd && <Badge variant="secondary" className="border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">PCD</Badge>}</div><p className="text-xs text-muted-foreground">Matrícula {student.enrollmentNumber} · Frequência {student.attendanceRate === null ? "não informada" : `${student.attendanceRate}%`} · Raça/cor: {student.raceColor?.trim() || "não informada"}</p></div><div className="flex items-center gap-2"><SaveIndicator state={state} retry={retry} /><Badge variant="outline" className="max-w-32 truncate" title={className}>Turma {className}</Badge><Button variant="outline" size="icon" disabled={!previous} onClick={previous}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" disabled={!next} onClick={next}><ChevronRight className="h-4 w-4" /></Button></div></div></div>
     <section className="mb-5 rounded-xl border bg-muted/30 p-4"><h3 className="flex items-center gap-2 text-sm font-semibold"><CircleAlert className="h-4 w-4" />Alertas explicados</h3>{student.alerts.reasons.length ? <ul className="mt-2 space-y-1 text-sm text-amber-800 dark:text-amber-200">{student.alerts.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Nenhum alerta pelos critérios do conselho.</p>}</section>
     <TooltipProvider delayDuration={600}>
-      <div className="mb-5 overflow-x-auto rounded-xl border">
+      <div className="mb-2 overflow-x-auto rounded-xl border">
         <table className="w-full min-w-[520px] text-sm">
           <thead className="bg-muted/60">
             <tr>
@@ -337,6 +388,7 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
           </tbody>
         </table>
       </div>
+      <div className="mb-5 flex flex-wrap items-start gap-x-4 gap-y-1.5 rounded-lg bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1.5 font-medium text-foreground"><Info className="h-3.5 w-3.5" />Marcadores do SIGEduc</span><span><strong className="font-mono text-foreground">*</strong> nota não lançada</span><span><strong className="font-mono text-foreground">**</strong> frequência/faltas não iniciadas</span><span><strong className="font-mono text-foreground">-</strong> não completou os 3 instrumentos</span><span><strong className="font-mono text-foreground">s/n</strong> componente sem nota</span></div>
     </TooltipProvider>
     <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label>Realização de atividades</Label><Select disabled={readOnly} value={draft.activitiesStatus} onValueChange={(value) => updateDraft({ activitiesStatus: value as ActivitiesStatus })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="not_informed">Não informado</SelectItem><SelectItem value="regular">Regular</SelectItem><SelectItem value="irregular">Irregular</SelectItem><SelectItem value="does_not_do">Não realiza</SelectItem></SelectContent></Select></div><label className="flex items-center gap-2 self-end rounded-lg border p-3 text-sm"><Checkbox disabled={readOnly} checked={draft.discussed} onCheckedChange={(value) => updateDraft({ discussed: value === true })} />Estudante discutido</label><div className="space-y-2 sm:col-span-2"><Label>Observação pedagógica</Label><Textarea disabled={readOnly} value={draft.pedagogicalObservation} onChange={(event) => updateDraft({ pedagogicalObservation: event.target.value })} placeholder="Registre fatos observáveis e contexto, evitando diagnósticos e rótulos." /></div><div className="space-y-2 sm:col-span-2"><Label>Pontos positivos</Label><Textarea disabled={readOnly} value={draft.positiveNotes} onChange={(event) => updateDraft({ positiveNotes: event.target.value })} /></div></div>
     <section className="mt-5"><h3 className="text-sm font-semibold">Comportamentos observados</h3><p className="mt-1 text-xs text-muted-foreground">Registre situações observáveis e seu contexto.</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{behaviorColumns.map((column, columnIndex) => <div key={columnIndex} className="space-y-2">{column.map(([category, label]) => <BehaviorOption key={category} label={label} behavior={draft.behaviors.find((item) => item.category === category)} disabled={readOnly} onToggle={(checked) => toggleBehavior(category, checked)} onDescriptionChange={(value) => updateDraft({ behaviors: draft.behaviors.map((item) => item.category === category ? { ...item, description: value } : item) })} />)}</div>)}</div></section>
@@ -481,7 +533,7 @@ function StartClassDialog({ open, onOpenChange, data, councilId, classId, reload
 }
 
 const collectiveFields = [["class_strengths","Pontos positivos da turma"],["general_difficulties","Dificuldades gerais"],["behavior_and_coexistence","Comportamento e convivência"],["learning_aspects","Aspectos de aprendizagem"],["collective_strategies","Estratégias e intervenções coletivas"]] as const;
-function CollectiveEditor({ data, councilId, classId, setOperationPending }: { data: ClassWorkspaceData; councilId: string; classId: string; setOperationPending: (operation: string, pending: boolean) => void }) { return <div className="space-y-6"><div className="rounded-2xl border bg-white p-5 dark:bg-card"><h2 className="font-semibold">Análise coletiva</h2><p className="mt-1 text-sm text-muted-foreground">Todos os campos são opcionais e salvos automaticamente.</p><div className="mt-5 grid gap-5 lg:grid-cols-2">{collectiveFields.map(([field,label]) => <AutosaveText key={field} operationKey={`collective-${field}`} label={label} initial={data.class[field] ?? ""} disabled={data.readOnly} setOperationPending={setOperationPending} save={(value) => councilFetch(`/api/class-councils/${councilId}/classes/${classId}`, { method: "PATCH", body: JSON.stringify({ [field]: value }) })} />)}</div></div><ClassInterventions data={data} councilId={councilId} classId={classId} setOperationPending={setOperationPending} /></div>; }
+function CollectiveEditor({ data, councilId, classId, setOperationPending, onInterventionCountChange }: { data: ClassWorkspaceData; councilId: string; classId: string; setOperationPending: (operation: string, pending: boolean) => void; onInterventionCountChange: (count: number) => void }) { return <div className="space-y-6"><div className="rounded-2xl border bg-white p-5 dark:bg-card"><h2 className="font-semibold">Análise coletiva</h2><p className="mt-1 text-sm text-muted-foreground">Todos os campos são opcionais e salvos automaticamente.</p><div className="mt-5 grid gap-5 lg:grid-cols-2">{collectiveFields.map(([field,label]) => <AutosaveText key={field} operationKey={`collective-${field}`} label={label} initial={data.class[field] ?? ""} disabled={data.readOnly} setOperationPending={setOperationPending} save={(value) => councilFetch(`/api/class-councils/${councilId}/classes/${classId}`, { method: "PATCH", body: JSON.stringify({ [field]: value }) })} />)}</div></div><ClassInterventions data={data} councilId={councilId} classId={classId} setOperationPending={setOperationPending} onInterventionCountChange={onInterventionCountChange} /></div>; }
 function AutosaveText({ label, initial, disabled, operationKey, setOperationPending, save }: { label: string; initial: string; disabled: boolean; operationKey: string; setOperationPending: (operation: string, pending: boolean) => void; save: (value: string) => Promise<unknown> }) {
   const [value, setValue] = useState(initial);
   const [state, setState] = useState<SaveState>("idle");
@@ -510,7 +562,7 @@ function AutosaveText({ label, initial, disabled, operationKey, setOperationPend
   return <div className="space-y-2"><div className="flex justify-between gap-2"><Label>{label}</Label><SaveIndicator state={state} retry={() => { const operationId = `${operationKey}-retry-${++sequenceRef.current}`; void persist(value, operationId); }} /></div><Textarea disabled={disabled} value={value} onChange={(event) => setValue(event.target.value)} className="min-h-28" /></div>;
 }
 
-function ClassInterventions({ data, councilId, classId, setOperationPending }: { data: ClassWorkspaceData; councilId: string; classId: string; setOperationPending: (operation: string, pending: boolean) => void }) {
+function ClassInterventions({ data, councilId, classId, setOperationPending, onInterventionCountChange }: { data: ClassWorkspaceData; councilId: string; classId: string; setOperationPending: (operation: string, pending: boolean) => void; onInterventionCountChange: (count: number) => void }) {
   const [interventions, setInterventions] = useState(data.classInterventions);
   const [description, setDescription] = useState("");
   const [responsible, setResponsible] = useState("");
@@ -518,6 +570,7 @@ function ClassInterventions({ data, councilId, classId, setOperationPending }: {
   const [creating, setCreating] = useState(false);
   const pendingIdsRef = useRef(new Set<string>());
   const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
+  useEffect(() => { onInterventionCountChange(interventions.length); }, [interventions.length, onInterventionCountChange]);
   const [error, setError] = useState("");
 
   async function create() {

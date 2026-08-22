@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CouncilOverviewSkeleton } from "@/components/class-council/LoadingSkeletons";
 import { councilFetch } from "@/lib/class-council/client";
 import { classStatusBadgeClass, classStatusLabel } from "@/lib/class-council/presentation";
 
@@ -155,7 +156,7 @@ export default function CouncilDashboardPage() {
     return data.interventionDetails.filter((item) => `${item.description} ${item.studentName ?? ""} ${item.className} ${item.responsible_name ?? ""}`.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
   }, [activeMetric, data, normalizedSearch]);
 
-  if (!data && !error) return <div className="grid min-h-[70vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (!data && !error) return <CouncilOverviewSkeleton />;
   if (!data) return <main className="mx-auto max-w-5xl p-8"><p className="text-destructive">{error}</p></main>;
 
   const { council } = data;

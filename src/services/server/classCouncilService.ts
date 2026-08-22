@@ -5,6 +5,7 @@ import { COUNCIL_CRITERIA, resolveCouncilCriteria } from "@/lib/class-council/co
 import { collectSupabasePages, SUPABASE_READ_PAGE_SIZE } from "@/lib/class-council/pagination";
 import { parsePerformanceReport } from "@/lib/class-council/parsePerformanceReport";
 import { isPcdStatus } from "@/lib/class-council/normalize";
+import { hasPedagogicalContent } from "@/lib/class-council/studentRecord";
 import { CouncilDomainError, optionalText } from "@/lib/class-council/validation";
 import { assertClassCanComplete, assertCouncilCanComplete, findNextOpenClass } from "@/lib/class-council/stateRules";
 import { downloadImportFile } from "@/services/server/classCouncilImportService";
@@ -295,7 +296,7 @@ export async function getClassWorkspace(councilId: string, classId: string) {
   const enrollmentIds = (enrollmentResponse.data ?? []).map((item) => item.id);
 
   const [snapshotResponse, resultRows, subjectResponse, participantResponse, behaviorResponse, interventionResponse, classNavigationResponse] = await Promise.all([
-    supabaseAdmin.from("class_council_student_snapshots").select("enrollment_id, imported_name, attendance_rate, enrollment_status, pcd_status, report_position").eq("import_id", council.current_import_id).in("enrollment_id", enrollmentIds),
+    supabaseAdmin.from("class_council_student_snapshots").select("enrollment_id, imported_name, attendance_rate, enrollment_status, race_color, pcd_status, report_position").eq("import_id", council.current_import_id).in("enrollment_id", enrollmentIds),
     listImportResults(council.current_import_id, enrollmentIds, council.term),
     supabaseAdmin.from("class_council_subjects").select("id, display_name, normalized_name, teacher_name").eq("council_class_id", classId).order("display_name"),
     supabaseAdmin.from("class_council_participants").select("id, name, role_or_subject, position").eq("council_class_id", classId).order("position"),
@@ -347,6 +348,7 @@ export async function getClassWorkspace(councilId: string, classId: string) {
       reportPosition: snapshot?.report_position ?? reportPositions.get(enrollment.students.enrollment_number) ?? null,
       name,
       isPcd: isPcdStatus(snapshot?.pcd_status),
+      raceColor: snapshot?.race_color ?? null,
       attendanceRate: snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate),
       enrollmentStatus: snapshot?.enrollment_status ?? null,
       discussed: enrollment.discussed,
@@ -458,9 +460,14 @@ export async function updateStudentRecord(councilId: string, classId: string, en
   if (!enrollment) throw new CouncilDomainError("Estudante não encontrado nesta turma.", 404, "not_found");
   const validActivities = ["not_informed", "regular", "irregular", "does_not_do"];
   if (input.activitiesStatus && !validActivities.includes(input.activitiesStatus)) throw new CouncilDomainError("Situação das atividades inválida.");
-  const hasPedagogicalContent = Boolean(input.activitiesStatus && input.activitiesStatus !== "not_informed") || optionalText(input.pedagogicalObservation) !== null || optionalText(input.positiveNotes) !== null || Boolean(input.behaviors?.length);
+  const containsPedagogicalContent = hasPedagogicalContent({
+    activitiesStatus: input.activitiesStatus,
+    pedagogicalObservation: optionalText(input.pedagogicalObservation),
+    positiveNotes: optionalText(input.positiveNotes),
+    behaviors: input.behaviors,
+  });
   const update = {
-    ...(typeof input.discussed === "boolean" ? { discussed: input.discussed } : hasPedagogicalContent ? { discussed: true } : {}),
+    ...(typeof input.discussed === "boolean" ? { discussed: input.discussed } : containsPedagogicalContent ? { discussed: true } : {}),
     ...(input.activitiesStatus ? { activities_status: input.activitiesStatus } : {}),
     ...("pedagogicalObservation" in input ? { pedagogical_observation: optionalText(input.pedagogicalObservation) } : {}),
     ...("positiveNotes" in input ? { positive_notes: optionalText(input.positiveNotes) } : {}),
