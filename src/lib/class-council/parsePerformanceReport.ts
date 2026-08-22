@@ -94,10 +94,16 @@ export async function parsePerformanceReport(buffer: Buffer, context: ParseConte
   const identities = new Map<string, string>();
 
   if (metadata.detectedSchoolYear !== null && metadata.detectedSchoolYear !== context.schoolYear) {
+    const generatedMonth = metadata.generatedAt ? Number(metadata.generatedAt.slice(5, 7)) : null;
+    const canBeLatePreviousSchoolYear = metadata.detectedSchoolYear === context.schoolYear + 1
+      && generatedMonth !== null
+      && generatedMonth <= 2;
     issues.push({
-      severity: "error",
+      severity: canBeLatePreviousSchoolYear ? "warning" : "error",
       code: "SCHOOL_YEAR_MISMATCH",
-      message: `O relatório foi gerado em ${metadata.detectedSchoolYear}, mas o conselho é de ${context.schoolYear}.`,
+      message: canBeLatePreviousSchoolYear
+        ? `O relatório foi gerado no início de ${metadata.detectedSchoolYear} e pode corresponder ao ano letivo de ${context.schoolYear}. Confirme antes de prosseguir.`
+        : `O relatório foi gerado em ${metadata.detectedSchoolYear}, mas o conselho é de ${context.schoolYear}.`,
     });
   }
 

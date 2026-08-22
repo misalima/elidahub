@@ -92,6 +92,7 @@ export type StudentAlerts = {
   previousLowGradeCount: number | null;
   academicAlert: boolean;
   lowAttendance: boolean;
+  atRisk: boolean;
   evolution: "improved" | "stable" | "worsened" | "unavailable";
   reasons: string[];
 };

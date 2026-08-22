@@ -11,6 +11,7 @@ describe("regras de alertas do conselho", () => {
   it("gera alerta acadêmico com exatamente quatro notas abaixo de 6", () => {
     const alerts = calculateStudentAlerts(input([[2, 5.9], [2, 5], [2, 0], [2, 4], [2, 6], [2, null]]), 2);
     expect(alerts.academicAlert).toBe(true);
+    expect(alerts.atRisk).toBe(true);
     expect(alerts.currentLowGradeCount).toBe(4);
     expect(alerts.reasons).toContain("4 disciplinas com nota abaixo de 6,0");
   });
@@ -25,6 +26,7 @@ describe("regras de alertas do conselho", () => {
     expect(calculateStudentAlerts(input([], 80), 2).lowAttendance).toBe(false);
     const alerts = calculateStudentAlerts(input([], 79.99), 2);
     expect(alerts.lowAttendance).toBe(true);
+    expect(alerts.atRisk).toBe(true);
     expect(alerts.reasons).toContain("Frequência anual de 79,99% (abaixo de 80%)");
   });
 
@@ -43,12 +45,33 @@ describe("regras de alertas do conselho", () => {
     expect(calculateStudentAlerts(input([[2, 5]]), 2).evolution).toBe("unavailable");
   });
 
+  it("não transforma uma piora isolada em risco ou motivo de risco", () => {
+    const alerts = calculateStudentAlerts(input([[1, 5], [2, 5], [2, 5]]), 2);
+    expect(alerts.evolution).toBe("worsened");
+    expect(alerts.academicAlert).toBe(false);
+    expect(alerts.lowAttendance).toBe(false);
+    expect(alerts.atRisk).toBe(false);
+    expect(alerts.reasons).toEqual([]);
+  });
+
   it("não repete a quantidade atual ao explicar piora de quem já tem alerta acadêmico", () => {
     const alerts = calculateStudentAlerts(input([[1, 5], [1, 5], [2, 5], [2, 5], [2, 5], [2, 5]]), 2);
     expect(alerts.reasons).toEqual([
       "4 disciplinas com nota abaixo de 6,0",
       "Piora: eram 2 disciplinas com nota abaixo de 6,0 no bimestre anterior disponível",
     ]);
+  });
+
+  it("respeita os critérios persistidos no conselho", () => {
+    const alerts = calculateStudentAlerts(input([[2, 6.4], [2, 6.2]], 84), 2, {
+      lowGradeThreshold: 6.5,
+      lowGradeSubjectAlertCount: 2,
+      lowAttendanceThreshold: 85,
+    });
+    expect(alerts.academicAlert).toBe(true);
+    expect(alerts.lowAttendance).toBe(true);
+    expect(alerts.reasons).toContain("2 disciplinas com nota abaixo de 6,5");
+    expect(alerts.reasons).toContain("Frequência anual de 84% (abaixo de 85%)");
   });
 });
 

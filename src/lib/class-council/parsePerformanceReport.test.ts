@@ -42,11 +42,11 @@ describe.skipIf(!existsSync(reportPath))("parser com o relatório real (não ver
   });
 });
 
-async function anonymousWorkbook(rows: Array<[string, string, string, (string | number)?, (string | number)?]>) {
+async function anonymousWorkbook(rows: Array<[string, string, string, (string | number)?, (string | number)?]>, generatedAt = "21/08/2026 - 22:43") {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Relatório");
   sheet.addRow(["Relatório de Desempenho Escolar"]);
-  sheet.addRow(["Gerado em: 21/08/2026 - 22:43"]);
+  sheet.addRow([`Gerado em: ${generatedAt}`]);
   sheet.addRow(["ESCOLA: TESTE"]);
   sheet.addRow(["OFERTA DE ENSINO: ENSINO MÉDIO - SÉRIE: 1ª SÉRIE - TURNO: MATUTINO"]);
   sheet.addRow(["TURMA: EMMAT1A"]);
@@ -58,6 +58,17 @@ async function anonymousWorkbook(rows: Array<[string, string, string, (string | 
 }
 
 describe("validações bloqueantes do parser", () => {
+  it("trata como aviso um relatório gerado no início do ano seguinte", async () => {
+    const parsed = await parsePerformanceReport(
+      await anonymousWorkbook([["0001", "ALUNO A", "4° BIM", 8, 0]], "03/01/2027 - 08:00"),
+      { schoolYear: 2026, term: 4, offering: "regular" },
+    );
+    expect(parsed.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "SCHOOL_YEAR_MISMATCH", severity: "warning" }),
+    ]));
+    expect(parsed.summary.blockingErrorCount).toBe(0);
+  });
+
   it("detecta estudante sem matrícula", async () => {
     const parsed = await parsePerformanceReport(await anonymousWorkbook([["", "ALUNO A", "1° BIM"]]), { schoolYear: 2026, term: 1, offering: "regular" });
     expect(parsed.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: "MISSING_ENROLLMENT", severity: "error" })]));

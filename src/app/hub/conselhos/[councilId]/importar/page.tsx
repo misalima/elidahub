@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, Upload } from "lucide-react";
@@ -17,6 +17,7 @@ export default function ImportCouncilPage() {
   const [restoring, setRestoring] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const confirmingRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -39,9 +40,9 @@ export default function ImportCouncilPage() {
     catch (err) { setError(err instanceof Error ? err.message : "Falha ao processar."); } finally { setBusy(false); }
   }
   async function confirm() {
-    if (!preview) return; setBusy(true); setError("");
+    if (!preview || confirmingRef.current) return; confirmingRef.current = true; setBusy(true); setError("");
     try { const displayNames = Object.fromEntries(preview.classes.map((item) => [item.officialCode, item.displayName])); await councilFetch(`/api/class-councils/${councilId}/imports/${preview.importId}/confirm`, { method: "POST", body: JSON.stringify({ displayNames }) }); router.push(`/hub/conselhos/${councilId}`); }
-    catch (err) { setError(err instanceof Error ? err.message : "Falha ao confirmar."); } finally { setBusy(false); }
+    catch (err) { setError(err instanceof Error ? err.message : "Falha ao confirmar."); } finally { confirmingRef.current = false; setBusy(false); }
   }
   function choose(event: ChangeEvent<HTMLInputElement>) { setFile(event.target.files?.[0] ?? null); setPreview(null); setShowAllIssues(false); setError(""); }
   const blocked = (preview?.summary.blockingErrorCount ?? 0) > 0;

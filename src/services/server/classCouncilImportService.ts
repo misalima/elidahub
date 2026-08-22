@@ -163,7 +163,9 @@ export async function confirmImport(councilId: string, importId: string, actorId
     .maybeSingle();
   assertNoError(importError);
   if (!importRecord) throw new CouncilDomainError("Importação não encontrada.", 404, "not_found");
-  if (!["validated", "failed", "importing"].includes(importRecord.status)) throw new CouncilDomainError("A importação não está pronta para confirmação.", 409, "invalid_import_state");
+  if (importRecord.status === "confirmed") throw new CouncilDomainError("Esta importação já foi confirmada.", 409, "import_already_confirmed");
+  if (importRecord.status === "importing") throw new CouncilDomainError("A confirmação desta importação já está em andamento.", 409, "import_in_progress");
+  if (!["validated", "failed"].includes(importRecord.status)) throw new CouncilDomainError("A importação não está pronta para confirmação.", 409, "invalid_import_state");
 
   const { data: privateFile, error: downloadError } = await supabaseAdmin.storage.from(IMPORT_BUCKET).download(importRecord.original_file_path);
   assertNoError(downloadError);
@@ -185,8 +187,25 @@ export async function confirmImport(councilId: string, importId: string, actorId
     if (!displayNames[item.officialCode]?.trim()) throw new CouncilDomainError(`Confirme o nome curto da turma ${item.officialCode}.`, 409, "class_name_required");
   }
 
-  await supabaseAdmin.from("class_council_imports").update({ status: "importing" }).eq("id", importId);
+  const { data: claimedImport, error: claimError } = await supabaseAdmin
+    .from("class_council_imports")
+    .update({ status: "importing" })
+    .eq("id", importId)
+    .eq("council_id", councilId)
+    .in("status", ["validated", "failed"])
+    .select("id")
+    .maybeSingle();
+  assertNoError(claimError);
+  if (!claimedImport) throw new CouncilDomainError("A confirmação desta importação já foi iniciada em outra requisição.", 409, "import_in_progress");
   try {
+    // Enquanto current_import_id é nulo, qualquer turma existente é resíduo de
+    // uma tentativa interrompida. A limpeza em cascata torna a nova tentativa
+    // determinística e impede turmas invisíveis de bloquearem a conclusão.
+    const { error: cleanupError } = await supabaseAdmin
+      .from("class_council_classes")
+      .delete()
+      .eq("council_id", councilId);
+    assertNoError(cleanupError);
     await persistParsedReport(councilId, importId, actorId, parsed, displayNames);
     const [snapshotCount, resultCount] = await Promise.all([
       supabaseAdmin.from("class_council_student_snapshots").select("id", { count: "exact", head: true }).eq("import_id", importId),
@@ -205,7 +224,7 @@ export async function confirmImport(councilId: string, importId: string, actorId
     }
     return { confirmed: true, summary: parsed.summary };
   } catch (error) {
-    await supabaseAdmin.from("class_council_imports").update({ status: "failed" }).eq("id", importId);
+    await supabaseAdmin.from("class_council_imports").update({ status: "failed" }).eq("id", importId).eq("status", "importing");
     throw error;
   }
 }
@@ -253,9 +272,10 @@ async function persistParsedReport(councilId: string, importId: string, actorId:
 
   const snapshots = parsed.classes.flatMap((parsedClass) => {
     const councilClassId = classIds.get(parsedClass.officialCode)!;
-    return parsedClass.students.map((student) => ({
+    return parsedClass.students.map((student, reportPosition) => ({
       enrollment_id: enrollmentIds.get(`${councilClassId}:${studentIds.get(student.enrollmentNumber)!}`)!,
       import_id: importId,
+      report_position: reportPosition,
       imported_name: student.name,
       race_color: student.raceColor,
       pcd_status: student.pcdStatus,

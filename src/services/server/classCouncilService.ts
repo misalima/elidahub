@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { filterActiveEnrollments } from "@/lib/class-council/activeImport";
 import { calculateStudentAlerts, compareStudentPriority } from "@/lib/class-council/calculateAlerts";
-import { COUNCIL_CRITERIA } from "@/lib/class-council/constants";
+import { COUNCIL_CRITERIA, resolveCouncilCriteria } from "@/lib/class-council/constants";
 import { collectSupabasePages, SUPABASE_READ_PAGE_SIZE } from "@/lib/class-council/pagination";
 import { parsePerformanceReport } from "@/lib/class-council/parsePerformanceReport";
 import { isPcdStatus } from "@/lib/class-council/normalize";
@@ -9,7 +9,7 @@ import { CouncilDomainError, optionalText } from "@/lib/class-council/validation
 import { assertClassCanComplete, assertCouncilCanComplete, findNextOpenClass } from "@/lib/class-council/stateRules";
 import { downloadImportFile } from "@/services/server/classCouncilImportService";
 import type { ActivitiesStatus, BehaviorCategory, InterventionStatus } from "@/types/class-council";
-import type { Database } from "@/types/database.types";
+import type { Database, Json } from "@/types/database.types";
 
 function assertNoError(error: { message: string } | null) {
   if (error) throw new Error(error.message);
@@ -18,7 +18,7 @@ function assertNoError(error: { message: string } | null) {
 type CouncilEnrollmentRow = Pick<Database["public"]["Tables"]["class_council_enrollments"]["Row"], "id" | "council_class_id" | "student_id"> & {
   students: Pick<Database["public"]["Tables"]["students"]["Row"], "enrollment_number" | "canonical_name">;
 };
-type CouncilSnapshotRow = Pick<Database["public"]["Tables"]["class_council_student_snapshots"]["Row"], "enrollment_id" | "attendance_rate" | "imported_name">;
+type CouncilSnapshotRow = Pick<Database["public"]["Tables"]["class_council_student_snapshots"]["Row"], "enrollment_id" | "attendance_rate" | "imported_name" | "report_position">;
 type CouncilResultRow = Pick<Database["public"]["Tables"]["class_council_results"]["Row"], "enrollment_id" | "subject_id" | "term" | "grade" | "grade_marker" | "absences">;
 
 async function listCouncilEnrollments(classIds: string[]): Promise<CouncilEnrollmentRow[]> {
@@ -39,7 +39,7 @@ async function listImportSnapshots(importId: string): Promise<CouncilSnapshotRow
   return collectSupabasePages(async (from, to) => {
     const { data, error } = await supabaseAdmin
       .from("class_council_student_snapshots")
-      .select("enrollment_id, attendance_rate, imported_name")
+      .select("enrollment_id, attendance_rate, imported_name, report_position")
       .eq("import_id", importId)
       .order("id")
       .range(from, to);
@@ -83,11 +83,17 @@ async function listImportResults(importId: string, enrollmentIds?: string[], thr
 }
 
 async function getReportStudentPositions(councilId: string, importId: string, schoolYear: number, term: number, officialClassCode: string) {
-  const { buffer } = await downloadImportFile(councilId, importId);
-  const parsed = await parsePerformanceReport(buffer, { schoolYear, term, offering: "regular" });
-  const parsedClass = parsed.classes.find((item) => item.officialCode === officialClassCode);
-  if (!parsedClass) return new Map<string, number>();
-  return new Map(parsedClass.students.map((student, index) => [student.enrollmentNumber, index]));
+  try {
+    const { buffer } = await downloadImportFile(councilId, importId);
+    const parsed = await parsePerformanceReport(buffer, { schoolYear, term, offering: "regular" });
+    const parsedClass = parsed.classes.find((item) => item.officialCode === officialClassCode);
+    if (!parsedClass) return new Map<string, number>();
+    return new Map(parsedClass.students.map((student, index) => [student.enrollmentNumber, index]));
+  } catch {
+    // Importações anteriores à coluna report_position continuam acessíveis
+    // mesmo se o arquivo privado estiver temporariamente indisponível.
+    return new Map<string, number>();
+  }
 }
 
 export async function listCouncils() {
@@ -152,7 +158,7 @@ export async function getCouncilOverview(councilId: string) {
   assertNoError(classesError);
   const classIds = (classes ?? []).map((item) => item.id);
   if (!council.current_import_id || !classIds.length) {
-    return { council, classes: [], metrics: { students: 0, academicAlerts: 0, lowAttendance: 0, worsened: 0, pendingInterventions: 0 }, subjectRanking: [], studentDetails: [], interventionDetails: [] };
+    return { council, classes: [], metrics: { students: 0, atRisk: 0, lowAttendance: 0, worsened: 0, pendingInterventions: 0 }, subjectRanking: [], studentDetails: [], interventionDetails: [] };
   }
 
   const [enrollments, snapshotRows, resultRows, subjectResponse, interventionResponse] = await Promise.all([
@@ -169,14 +175,15 @@ export async function getCouncilOverview(councilId: string) {
     attendance_rate: item.attendance_rate === null ? null : Number(item.attendance_rate),
   }]));
   const activeEnrollments = filterActiveEnrollments(enrollments, snapshotRows);
+  const criteria = resolveCouncilCriteria(council.criteria);
   const resultsByEnrollment = new Map<string, Array<{ term: number; grade: number | null; subject_id: string }>>();
   for (const result of resultRows) {
     const results = resultsByEnrollment.get(result.enrollment_id) ?? [];
     results.push({ term: result.term, grade: result.grade === null ? null : Number(result.grade), subject_id: result.subject_id });
     resultsByEnrollment.set(result.enrollment_id, results);
   }
-  const classMetrics = new Map<string, { studentCount: number; alertCount: number }>();
-  let academicAlerts = 0;
+  const classMetrics = new Map<string, { studentCount: number; atRiskCount: number }>();
+  let atRisk = 0;
   let lowAttendance = 0;
   let worsened = 0;
   const classNames = new Map((classes ?? []).map((item) => [item.id, item.display_name]));
@@ -193,12 +200,12 @@ export async function getCouncilOverview(councilId: string) {
     const snapshot = snapshots.get(enrollment.id);
     const attendanceRate = snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate);
     const name = snapshot?.imported_name ?? enrollment.students.canonical_name;
-    const alerts = calculateStudentAlerts({ name, attendanceRate, results: resultsByEnrollment.get(enrollment.id) ?? [] }, council.term);
-    const metric = classMetrics.get(enrollment.council_class_id) ?? { studentCount: 0, alertCount: 0 };
+    const alerts = calculateStudentAlerts({ name, attendanceRate, results: resultsByEnrollment.get(enrollment.id) ?? [] }, council.term, criteria);
+    const metric = classMetrics.get(enrollment.council_class_id) ?? { studentCount: 0, atRiskCount: 0 };
     metric.studentCount += 1;
-    if (alerts.academicAlert) metric.alertCount += 1;
+    if (alerts.atRisk) metric.atRiskCount += 1;
     classMetrics.set(enrollment.council_class_id, metric);
-    academicAlerts += Number(alerts.academicAlert);
+    atRisk += Number(alerts.atRisk);
     lowAttendance += Number(alerts.lowAttendance);
     worsened += Number(alerts.evolution === "worsened");
     studentDetails.push({
@@ -220,7 +227,7 @@ export async function getCouncilOverview(councilId: string) {
     const key = subject.display_name;
     const count = subjectCounts.get(key) ?? { name: subject.display_name, low: 0, numeric: 0 };
     count.numeric += 1;
-    if (Number(result.grade) < COUNCIL_CRITERIA.lowGradeThreshold) count.low += 1;
+    if (Number(result.grade) < criteria.lowGradeThreshold) count.low += 1;
     subjectCounts.set(key, count);
   }
   const studentNamesByEnrollment = new Map(studentDetails.map((student) => [student.enrollmentId, student.name]));
@@ -229,7 +236,7 @@ export async function getCouncilOverview(councilId: string) {
     classes: (classes ?? []).filter((item) => classMetrics.has(item.id)).map((item) => ({ ...item, ...classMetrics.get(item.id)! })),
     metrics: {
       students: activeEnrollments.length,
-      academicAlerts,
+      atRisk,
       lowAttendance,
       worsened,
       pendingInterventions: interventionResponse.data?.length ?? 0,
@@ -268,7 +275,7 @@ export async function archiveCouncil(councilId: string, actorId: string) {
 }
 
 export async function getClassWorkspace(councilId: string, classId: string) {
-  const { data: council, error: councilError } = await supabaseAdmin.from("class_councils").select("id, term, status, current_import_id, school_year").eq("id", councilId).is("archived_at", null).maybeSingle();
+  const { data: council, error: councilError } = await supabaseAdmin.from("class_councils").select("id, term, status, current_import_id, school_year, criteria").eq("id", councilId).is("archived_at", null).maybeSingle();
   assertNoError(councilError);
   if (!council?.current_import_id) throw new CouncilDomainError("O conselho ainda não possui importação confirmada.", 409, "import_required");
   const { data: councilClass, error: classError } = await supabaseAdmin
@@ -287,17 +294,19 @@ export async function getClassWorkspace(councilId: string, classId: string) {
   assertNoError(enrollmentResponse.error);
   const enrollmentIds = (enrollmentResponse.data ?? []).map((item) => item.id);
 
-  const [snapshotResponse, resultRows, subjectResponse, participantResponse, behaviorResponse, interventionResponse, reportPositions, classNavigationResponse] = await Promise.all([
-    supabaseAdmin.from("class_council_student_snapshots").select("enrollment_id, imported_name, attendance_rate, enrollment_status, pcd_status").eq("import_id", council.current_import_id).in("enrollment_id", enrollmentIds),
+  const [snapshotResponse, resultRows, subjectResponse, participantResponse, behaviorResponse, interventionResponse, classNavigationResponse] = await Promise.all([
+    supabaseAdmin.from("class_council_student_snapshots").select("enrollment_id, imported_name, attendance_rate, enrollment_status, pcd_status, report_position").eq("import_id", council.current_import_id).in("enrollment_id", enrollmentIds),
     listImportResults(council.current_import_id, enrollmentIds, council.term),
     supabaseAdmin.from("class_council_subjects").select("id, display_name, normalized_name, teacher_name").eq("council_class_id", classId).order("display_name"),
     supabaseAdmin.from("class_council_participants").select("id, name, role_or_subject, position").eq("council_class_id", classId).order("position"),
     supabaseAdmin.from("class_council_behaviors").select("id, enrollment_id, category, description").in("enrollment_id", enrollmentIds),
     supabaseAdmin.from("class_council_interventions").select("id, origin_enrollment_id, target_type, description, responsible_name, due_date, status, outcome, cancellation_reason").eq("origin_class_id", classId).order("created_at"),
-    getReportStudentPositions(councilId, council.current_import_id, council.school_year, council.term, councilClass.official_code),
     supabaseAdmin.from("class_council_classes").select("id, display_name, status").eq("council_id", councilId).order("display_name"),
   ]);
   for (const response of [snapshotResponse, subjectResponse, participantResponse, behaviorResponse, interventionResponse, classNavigationResponse]) assertNoError(response.error);
+  const reportPositions = (snapshotResponse.data ?? []).some((snapshot) => snapshot.report_position === null)
+    ? await getReportStudentPositions(councilId, council.current_import_id, council.school_year, council.term, councilClass.official_code)
+    : new Map<string, number>();
 
   const snapshots = new Map((snapshotResponse.data ?? []).map((item) => [item.enrollment_id, item]));
   const resultsByEnrollment = new Map<string, CouncilResultRow[]>();
@@ -321,6 +330,7 @@ export async function getClassWorkspace(councilId: string, classId: string) {
   }
   const subjectMap = new Map((subjectResponse.data ?? []).map((item) => [item.id, item]));
   const activeClassEnrollments = filterActiveEnrollments(enrollmentResponse.data ?? [], snapshotResponse.data ?? []);
+  const criteria = resolveCouncilCriteria(council.criteria);
   const students = activeClassEnrollments.map((enrollment) => {
     const snapshot = snapshots.get(enrollment.id);
     const results = (resultsByEnrollment.get(enrollment.id) ?? []).map((result) => ({
@@ -329,12 +339,12 @@ export async function getClassWorkspace(councilId: string, classId: string) {
       subjectName: subjectMap.get(result.subject_id)?.display_name ?? "Disciplina",
     }));
     const name = snapshot?.imported_name ?? enrollment.students.canonical_name;
-    const alerts = calculateStudentAlerts({ name, attendanceRate: snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate), results }, council.term);
+    const alerts = calculateStudentAlerts({ name, attendanceRate: snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate), results }, council.term, criteria);
     return {
       enrollmentId: enrollment.id,
       studentId: enrollment.student_id,
       enrollmentNumber: enrollment.students.enrollment_number,
-      reportPosition: reportPositions.get(enrollment.students.enrollment_number) ?? null,
+      reportPosition: snapshot?.report_position ?? reportPositions.get(enrollment.students.enrollment_number) ?? null,
       name,
       isPcd: isPcdStatus(snapshot?.pcd_status),
       attendanceRate: snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate),
@@ -394,18 +404,13 @@ export async function replaceParticipants(councilId: string, classId: string, pa
   await requireEditableClass(councilId, classId);
   const normalized = participants.map((item, position) => ({ name: optionalText(item.name, 200), role_or_subject: optionalText(item.roleOrSubject, 200), position }));
   if (normalized.some((item) => !item.name)) throw new CouncilDomainError("O nome de cada participante é obrigatório.");
-  const { data: previous, error: previousError } = await supabaseAdmin.from("class_council_participants").select("id").eq("council_class_id", classId);
-  assertNoError(previousError);
-  if (normalized.length) {
-    const { error } = await supabaseAdmin.from("class_council_participants").insert(normalized.map((item) => ({ ...item, name: item.name!, council_class_id: classId, created_by: actorId, updated_by: actorId })));
-    assertNoError(error);
-  }
-  if (previous?.length) {
-    const { error: deleteError } = await supabaseAdmin.from("class_council_participants").delete().in("id", previous.map((item) => item.id));
-    assertNoError(deleteError);
-  }
-  await supabaseAdmin.from("class_council_classes").update({ status: "in_progress", updated_by: actorId }).eq("id", classId);
-  await markCouncilInProgress(councilId, actorId);
+  const { error } = await supabaseAdmin.rpc("replace_class_council_participants", {
+    p_council_id: councilId,
+    p_class_id: classId,
+    p_participants: normalized as unknown as Json,
+    p_actor_id: actorId,
+  });
+  assertNoError(error);
   return normalized;
 }
 
@@ -431,39 +436,17 @@ export async function startClassWithTeachers(councilId: string, classId: string,
   if (normalized.some((teacher) => !teacher.name)) throw new CouncilDomainError("O nome de cada professor é obrigatório.");
   if (new Set(normalized.map((teacher) => teacher.subjectId)).size !== normalized.length) throw new CouncilDomainError("Cada disciplina pode ser informada apenas uma vez.");
 
-  const { data: subjects, error: subjectsError } = await supabaseAdmin.from("class_council_subjects").select("id, display_name, teacher_name").eq("council_class_id", classId).in("id", normalized.map((teacher) => teacher.subjectId));
+  const { data: subjects, error: subjectsError } = await supabaseAdmin.from("class_council_subjects").select("id").eq("council_class_id", classId).in("id", normalized.map((teacher) => teacher.subjectId));
   assertNoError(subjectsError);
   if ((subjects ?? []).length !== normalized.length) throw new CouncilDomainError("Selecione apenas disciplinas válidas desta turma.");
-  const subjectNames = new Map((subjects ?? []).map((subject) => [subject.id, subject.display_name]));
-  const previousTeacherNames = new Map((subjects ?? []).map((subject) => [subject.id, subject.teacher_name]));
-
-  const { data: insertedParticipants, error: participantError } = await supabaseAdmin.from("class_council_participants").insert(normalized.map((teacher, position) => ({
-    council_class_id: classId,
-    name: teacher.name!,
-    role_or_subject: subjectNames.get(teacher.subjectId)!,
-    position,
-    created_by: actorId,
-    updated_by: actorId,
-  }))).select("id");
-  assertNoError(participantError);
-
-  let classStarted = false;
-  try {
-    const updates = await Promise.all(normalized.map((teacher) => supabaseAdmin.from("class_council_subjects").update({ teacher_name: teacher.name!, updated_by: actorId }).eq("id", teacher.subjectId).eq("council_class_id", classId)));
-    for (const update of updates) assertNoError(update.error);
-    const { data: startedClass, error: classError } = await supabaseAdmin.from("class_council_classes").update({ status: "in_progress", updated_by: actorId }).eq("id", classId).eq("council_id", councilId).eq("status", "not_started").select("id").maybeSingle();
-    assertNoError(classError);
-    if (!startedClass) throw new CouncilDomainError("Esta turma já foi iniciada.", 409, "class_already_started");
-    classStarted = true;
-    await markCouncilInProgress(councilId, actorId);
-    const { error: auditError } = await supabaseAdmin.from("class_council_audit_log").insert({ council_id: councilId, council_class_id: classId, actor_id: actorId, event_type: "class_started", entity_type: "class", entity_id: classId, metadata: { teacher_count: normalized.length } });
-    assertNoError(auditError);
-  } catch (error) {
-    await Promise.all(normalized.map((teacher) => supabaseAdmin.from("class_council_subjects").update({ teacher_name: previousTeacherNames.get(teacher.subjectId) ?? null, updated_by: actorId }).eq("id", teacher.subjectId).eq("council_class_id", classId)));
-    if (insertedParticipants?.length) await supabaseAdmin.from("class_council_participants").delete().in("id", insertedParticipants.map((item) => item.id));
-    if (classStarted) await supabaseAdmin.from("class_council_classes").update({ status: "not_started", updated_by: actorId }).eq("id", classId).eq("council_id", councilId);
-    throw error;
-  }
+  const { data: started, error: startError } = await supabaseAdmin.rpc("start_class_council_class", {
+    p_council_id: councilId,
+    p_class_id: classId,
+    p_teachers: normalized.map((teacher) => ({ name: teacher.name!, subject_id: teacher.subjectId })) as unknown as Json,
+    p_actor_id: actorId,
+  });
+  assertNoError(startError);
+  if (!started) throw new CouncilDomainError("Esta turma já foi iniciada.", 409, "class_already_started");
 
   return { started: true, teacherCount: normalized.length };
 }
@@ -580,7 +563,14 @@ export async function completeCouncil(councilId: string, actorId: string) {
   if (!council) throw new CouncilDomainError("Conselho não encontrado.", 404, "not_found");
   const { data: classes, error: classesError } = await supabaseAdmin.from("class_council_classes").select("id, status").eq("council_id", councilId);
   assertNoError(classesError);
-  assertCouncilCanComplete({ hasCurrentImport: Boolean(council.current_import_id), classStatuses: (classes ?? []).map((item) => item.status) });
+  const classIds = (classes ?? []).map((item) => item.id);
+  const [enrollments, snapshots] = council.current_import_id && classIds.length
+    ? await Promise.all([listCouncilEnrollments(classIds), listImportSnapshots(council.current_import_id)])
+    : [[], []];
+  const activeEnrollmentIds = new Set(snapshots.map((snapshot) => snapshot.enrollment_id));
+  const activeClassIds = new Set(enrollments.filter((enrollment) => activeEnrollmentIds.has(enrollment.id)).map((enrollment) => enrollment.council_class_id));
+  const activeClassStatuses = (classes ?? []).filter((item) => activeClassIds.has(item.id)).map((item) => item.status);
+  assertCouncilCanComplete({ hasCurrentImport: Boolean(council.current_import_id), classStatuses: activeClassStatuses });
   const { data, error } = await supabaseAdmin.from("class_councils").update({ status: "completed", completed_by: actorId, updated_by: actorId }).eq("id", councilId).not("current_import_id", "is", null).neq("status", "completed").select("id, status, completed_at").maybeSingle();
   assertNoError(error);
   if (!data) throw new CouncilDomainError("O conselho não pode ser concluído neste estado.", 409, "invalid_transition");

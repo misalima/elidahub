@@ -657,6 +657,7 @@ export type Database = {
           imported_name: string
           pcd_status: string | null
           race_color: string | null
+          report_position: number | null
         }
         Insert: {
           attendance_rate?: number | null
@@ -668,6 +669,7 @@ export type Database = {
           imported_name: string
           pcd_status?: string | null
           race_color?: string | null
+          report_position?: number | null
         }
         Update: {
           attendance_rate?: number | null
@@ -679,6 +681,7 @@ export type Database = {
           imported_name?: string
           pcd_status?: string | null
           race_color?: string | null
+          report_position?: number | null
         }
         Relationships: [
           {
@@ -1104,6 +1107,24 @@ export type Database = {
     Functions: {
       is_active_staff: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      replace_class_council_participants: {
+        Args: {
+          p_actor_id: string
+          p_class_id: string
+          p_council_id: string
+          p_participants: Json
+        }
+        Returns: undefined
+      }
+      start_class_council_class: {
+        Args: {
+          p_actor_id: string
+          p_class_id: string
+          p_council_id: string
+          p_teachers: Json
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       grade_enum: "1ª Série" | "2ª Série" | "3ª Série" | "EJA"
