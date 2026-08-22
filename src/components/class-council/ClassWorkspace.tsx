@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BarChart3, BookOpen, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Loader2, Plus, RotateCcw, Save, Trash2, TrendingDown, UserRound, Users } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BarChart3, BookOpen, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Loader2, Pencil, Plus, RotateCcw, Save, Trash2, TrendingDown, UserRound, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,20 @@ const workspaceTabs = [
 ] satisfies Array<{ value: WorkspaceTab; label: string; icon: typeof UserRound }>;
 
 const INDIVIDUAL_INTERVENTION_SUGGESTIONS = ["Conversa individual", "Conversa com o responsável"] as const;
+
+const INTERVENTION_STATUS_LABELS: Record<InterventionStatus, string> = {
+  pending: "Pendente",
+  in_progress: "Em andamento",
+  completed: "Concluída",
+  cancelled: "Cancelada",
+};
+
+const INTERVENTION_STATUS_CLASSES: Record<InterventionStatus, string> = {
+  pending: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-200",
+  in_progress: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-200",
+  completed: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200",
+  cancelled: "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300",
+};
 
 function formatGrade(result: Result | undefined): string {
   if (!result) return "—";
@@ -217,6 +231,8 @@ function BehaviorOption({ label, behavior, disabled, onToggle, onDescriptionChan
 
 function StudentPanel({ student, interventions, setInterventions, setOperationPending, className, draft, readOnly, term, state, updateDraft, retry, previous, next, councilId, classId }: { student: Student; interventions: Intervention[]; setInterventions: (update: (current: Intervention[]) => Intervention[]) => void; setOperationPending: (operation: string, pending: boolean) => void; className: string; draft: StudentDraft; readOnly: boolean; term: number; state: SaveState; updateDraft: (patch: Partial<StudentDraft>) => void; retry: () => void; previous?: () => void; next?: () => void; councilId: string; classId: string }) {
   const [description, setDescription] = useState(""); const [responsible, setResponsible] = useState(""); const [dueDate, setDueDate] = useState(""); const [creating, setCreating] = useState(false); const [error, setError] = useState(""); const [showInterventionSuggestions, setShowInterventionSuggestions] = useState(false);
+  const [showInterventionForm, setShowInterventionForm] = useState(interventions.length === 0);
+  const [expandedInterventionIds, setExpandedInterventionIds] = useState<Set<string>>(() => new Set());
   const pendingInterventionIdsRef = useRef(new Set<string>());
   const [pendingInterventionIds, setPendingInterventionIds] = useState<Set<string>>(() => new Set());
   const identitySentinelRef = useRef<HTMLDivElement>(null);
@@ -228,6 +244,12 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [student.enrollmentId]);
+  useEffect(() => {
+    setDescription(""); setResponsible(""); setDueDate(""); setError(""); setShowInterventionSuggestions(false);
+    setShowInterventionForm(interventions.length === 0); setExpandedInterventionIds(new Set());
+    // Reinitialize the student-specific editor only when navigating to another student.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student.enrollmentId]);
   const visibleTerms = Array.from({ length: term }, (_, index) => index + 1);
   const subjectRows = [...new Map(student.results.map((item) => [item.subject_id, { subjectId: item.subject_id, subjectName: item.subjectName }])).values()]
     .sort((a, b) => a.subjectName.localeCompare(b.subjectName, "pt-BR"));
@@ -237,13 +259,13 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
     const optimisticId = `optimistic-${crypto.randomUUID()}`;
     const operationId = `student-intervention-create-${optimisticId}`;
     const optimisticIntervention: Intervention = { id: optimisticId, description: submitted.description, responsible_name: responsible.trim() || null, due_date: dueDate || null, status: "pending", outcome: null, cancellation_reason: null, optimistic: true };
-    setOperationPending(operationId, true); setCreating(true); setError(""); setInterventions((current) => [...current, optimisticIntervention]); setDescription(""); setResponsible(""); setDueDate(""); setShowInterventionSuggestions(false);
+    setOperationPending(operationId, true); setCreating(true); setError(""); setInterventions((current) => [...current, optimisticIntervention]); setDescription(""); setResponsible(""); setDueDate(""); setShowInterventionSuggestions(false); setShowInterventionForm(false);
     try {
       const created = await councilFetch<Intervention>(`/api/class-councils/${councilId}/classes/${classId}/interventions`, { method: "POST", body: JSON.stringify({ enrollmentId: student.enrollmentId, description: submitted.description, responsibleName: submitted.responsible, dueDate: submitted.dueDate }) });
       setInterventions((current) => current.map((item) => item.id === optimisticId ? created : item));
     } catch (err) {
       setInterventions((current) => current.filter((item) => item.id !== optimisticId));
-      setDescription((current) => current || submitted.description); setResponsible((current) => current || submitted.responsible); setDueDate((current) => current || submitted.dueDate);
+      setDescription((current) => current || submitted.description); setResponsible((current) => current || submitted.responsible); setDueDate((current) => current || submitted.dueDate); setShowInterventionForm(true);
       setError(err instanceof Error ? err.message : "Falha ao criar.");
     } finally { setCreating(false); setOperationPending(operationId, false); }
   }
@@ -265,10 +287,12 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
     }
   }
   function toggleBehavior(category: BehaviorCategory, checked: boolean) { updateDraft({ behaviors: checked ? [...draft.behaviors, { category, description: null }] : draft.behaviors.filter((item) => item.category !== category) }); }
+  function toggleInterventionDetails(id: string) { setExpandedInterventionIds((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }
+  function closeInterventionForm() { setDescription(""); setResponsible(""); setDueDate(""); setShowInterventionSuggestions(false); setShowInterventionForm(false); }
   const behaviorEntries = Object.entries(BEHAVIOR_LABELS) as Array<[BehaviorCategory, string]>;
   const behaviorColumnBreak = Math.ceil(behaviorEntries.length / 2);
   const behaviorColumns = [behaviorEntries.slice(0, behaviorColumnBreak), behaviorEntries.slice(behaviorColumnBreak)];
-  return <article className="min-w-0 p-4 sm:p-6"><div ref={identitySentinelRef} className="h-px" aria-hidden="true" /><div className="relative sticky top-20 z-20 mb-5">{identityIsFloating && <div aria-hidden="true" className="pointer-events-none absolute -left-px -right-px top-1/2 z-0 h-20 -translate-y-full bg-gradient-to-b from-background/80 via-background/95 to-background" />}<div className={`relative z-10 flex flex-wrap items-start justify-between gap-3 bg-background transition-all duration-200 ${identityIsFloating ? "rounded-xl border p-3 shadow-lg" : ""}`}><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{student.name}</h2>{student.isPcd && <Badge variant="secondary" className="border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">PCD</Badge>}</div><p className="text-xs text-muted-foreground">Matrícula {student.enrollmentNumber} · Frequência {student.attendanceRate === null ? "não informada" : `${student.attendanceRate}%`}</p></div><div className="flex items-center gap-2"><SaveIndicator state={state} retry={retry} /><Badge variant="outline" className="max-w-32 truncate" title={className}>Turma {className}</Badge><Button variant="outline" size="icon" disabled={!previous} onClick={previous}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" disabled={!next} onClick={next}><ChevronRight className="h-4 w-4" /></Button></div></div></div>
+  return <article className="min-w-0 p-4 sm:p-6"><div ref={identitySentinelRef} className="h-px" aria-hidden="true" /><div className="relative sticky top-20 z-20 mb-5">{identityIsFloating && <div aria-hidden="true" className="pointer-events-none absolute -left-px -right-px top-1/2 z-0 h-20 -translate-y-full bg-gradient-to-b from-background/80 via-background/95 to-background dark:hidden" />}<div className={`relative z-10 flex flex-wrap items-start justify-between gap-3 transition-all duration-200 ${identityIsFloating ? "rounded-xl border bg-background p-3 shadow-lg dark:bg-card" : "bg-transparent"}`}><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{student.name}</h2>{student.isPcd && <Badge variant="secondary" className="border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">PCD</Badge>}</div><p className="text-xs text-muted-foreground">Matrícula {student.enrollmentNumber} · Frequência {student.attendanceRate === null ? "não informada" : `${student.attendanceRate}%`}</p></div><div className="flex items-center gap-2"><SaveIndicator state={state} retry={retry} /><Badge variant="outline" className="max-w-32 truncate" title={className}>Turma {className}</Badge><Button variant="outline" size="icon" disabled={!previous} onClick={previous}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" disabled={!next} onClick={next}><ChevronRight className="h-4 w-4" /></Button></div></div></div>
     <section className="mb-5 rounded-xl border bg-muted/30 p-4"><h3 className="flex items-center gap-2 text-sm font-semibold"><CircleAlert className="h-4 w-4" />Alertas explicados</h3>{student.alerts.reasons.length ? <ul className="mt-2 space-y-1 text-sm text-amber-800 dark:text-amber-200">{student.alerts.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Nenhum alerta pelos critérios do conselho.</p>}</section>
     <TooltipProvider delayDuration={600}>
       <div className="mb-5 overflow-x-auto rounded-xl border">
@@ -316,7 +340,55 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
     </TooltipProvider>
     <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label>Realização de atividades</Label><Select disabled={readOnly} value={draft.activitiesStatus} onValueChange={(value) => updateDraft({ activitiesStatus: value as ActivitiesStatus })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="not_informed">Não informado</SelectItem><SelectItem value="regular">Regular</SelectItem><SelectItem value="irregular">Irregular</SelectItem><SelectItem value="does_not_do">Não realiza</SelectItem></SelectContent></Select></div><label className="flex items-center gap-2 self-end rounded-lg border p-3 text-sm"><Checkbox disabled={readOnly} checked={draft.discussed} onCheckedChange={(value) => updateDraft({ discussed: value === true })} />Estudante discutido</label><div className="space-y-2 sm:col-span-2"><Label>Observação pedagógica</Label><Textarea disabled={readOnly} value={draft.pedagogicalObservation} onChange={(event) => updateDraft({ pedagogicalObservation: event.target.value })} placeholder="Registre fatos observáveis e contexto, evitando diagnósticos e rótulos." /></div><div className="space-y-2 sm:col-span-2"><Label>Pontos positivos</Label><Textarea disabled={readOnly} value={draft.positiveNotes} onChange={(event) => updateDraft({ positiveNotes: event.target.value })} /></div></div>
     <section className="mt-5"><h3 className="text-sm font-semibold">Comportamentos observados</h3><p className="mt-1 text-xs text-muted-foreground">Registre situações observáveis e seu contexto.</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{behaviorColumns.map((column, columnIndex) => <div key={columnIndex} className="space-y-2">{column.map(([category, label]) => <BehaviorOption key={category} label={label} behavior={draft.behaviors.find((item) => item.category === category)} disabled={readOnly} onToggle={(checked) => toggleBehavior(category, checked)} onDescriptionChange={(value) => updateDraft({ behaviors: draft.behaviors.map((item) => item.category === category ? { ...item, description: value } : item) })} />)}</div>)}</div></section>
-    <section className="mt-6 border-t pt-5"><h3 className="font-semibold">Intervenções</h3><div className="mt-3 space-y-3">{interventions.map((item) => { const saving = item.optimistic || pendingInterventionIds.has(item.id); return <div key={item.id} className={`rounded-lg border p-3 transition-opacity ${saving ? "opacity-70" : ""}`}><div className="mb-3 flex items-start justify-between gap-3"><p className="text-sm">{item.description}</p>{saving && <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Salvando</span>}</div><div className="grid gap-2 sm:grid-cols-2"><Select disabled={saving} value={item.status} onValueChange={(status) => void patchIntervention(item.id, { status: status as InterventionStatus })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="in_progress">Em andamento</SelectItem><SelectItem value="completed">Concluída</SelectItem><SelectItem value="cancelled">Cancelada</SelectItem></SelectContent></Select><Input disabled={saving} defaultValue={item.responsible_name ?? ""} placeholder="Responsável opcional" onBlur={(event) => void patchIntervention(item.id, { responsibleName: event.target.value })} />{item.status === "completed" && <Input disabled={saving} className="sm:col-span-2" defaultValue={item.outcome ?? ""} placeholder="Resultado/retorno opcional" onBlur={(event) => void patchIntervention(item.id, { outcome: event.target.value })} />}{item.status === "cancelled" && <Input disabled={saving} className="sm:col-span-2" defaultValue={item.cancellation_reason ?? ""} placeholder="Motivo do cancelamento opcional" onBlur={(event) => void patchIntervention(item.id, { cancellationReason: event.target.value })} />}</div>{item.due_date && <p className="mt-2 text-xs text-muted-foreground">Prazo: {new Date(`${item.due_date}T12:00:00`).toLocaleDateString("pt-BR")}</p>}</div>; })}</div>{!readOnly && <div className="mt-3 grid gap-2 sm:grid-cols-2"><div className="sm:col-span-2" onFocus={() => setShowInterventionSuggestions(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setShowInterventionSuggestions(false); }}><Textarea placeholder="Descrição da nova intervenção" value={description} onChange={(event) => setDescription(event.target.value)} />{showInterventionSuggestions && !description.trim() && <div className="mt-2 flex flex-wrap gap-2" aria-label="Sugestões de intervenção">{INDIVIDUAL_INTERVENTION_SUGGESTIONS.map((suggestion) => <Button key={suggestion} type="button" variant="outline" size="sm" onClick={() => { setDescription(suggestion); setShowInterventionSuggestions(false); }}>{suggestion}</Button>)}</div>}</div><Input placeholder="Responsável (opcional)" value={responsible} onChange={(event) => setResponsible(event.target.value)} /><Input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /><div className="sm:col-span-2"><Button onClick={addIntervention} disabled={creating || !description.trim()}><Plus className="h-4 w-4" />Adicionar intervenção</Button></div></div>}{error && <p className="mt-2 text-sm text-destructive">{error}</p>}</section>
+    <section className="mt-6 border-t pt-5">
+      <div className="flex items-center justify-between gap-3">
+        <div><h3 className="font-semibold">Intervenções</h3>{interventions.length > 0 && <p className="mt-0.5 text-xs text-muted-foreground">{interventions.length} {interventions.length === 1 ? "intervenção registrada" : "intervenções registradas"}</p>}</div>
+        {!readOnly && !showInterventionForm && <Button type="button" variant="outline" size="sm" onClick={() => setShowInterventionForm(true)}><Plus className="h-4 w-4" />Nova intervenção</Button>}
+      </div>
+      {interventions.length > 0 ? <div className="mt-3 space-y-2">{interventions.map((item) => {
+        const saving = item.optimistic || pendingInterventionIds.has(item.id);
+        const expanded = expandedInterventionIds.has(item.id);
+        return <div key={item.id} className={`overflow-hidden rounded-xl border bg-muted/20 transition-opacity ${saving ? "opacity-70" : ""}`}>
+          <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium leading-relaxed">{item.description}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5"><UserRound className="h-3.5 w-3.5" />{item.responsible_name || "Sem responsável"}</span>
+                <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />{item.due_date ? `Até ${new Date(`${item.due_date}T12:00:00`).toLocaleDateString("pt-BR")}` : "Sem prazo"}</span>
+                {saving && <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />Salvando</span>}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Select disabled={saving || readOnly} value={item.status} onValueChange={(status) => { const nextStatus = status as InterventionStatus; if (nextStatus === "completed" || nextStatus === "cancelled") setExpandedInterventionIds((current) => new Set(current).add(item.id)); void patchIntervention(item.id, { status: nextStatus }); }}>
+                <SelectTrigger aria-label={`Status da intervenção: ${item.description}`} className={`h-8 w-[146px] text-xs font-medium ${INTERVENTION_STATUS_CLASSES[item.status]}`}><SelectValue>{INTERVENTION_STATUS_LABELS[item.status]}</SelectValue></SelectTrigger>
+                <SelectContent><SelectItem value="pending">Pendente</SelectItem><SelectItem value="in_progress">Em andamento</SelectItem><SelectItem value="completed">Concluída</SelectItem><SelectItem value="cancelled">Cancelada</SelectItem></SelectContent>
+              </Select>
+              {!readOnly && !item.optimistic && <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={expanded ? "Recolher detalhes da intervenção" : "Editar detalhes da intervenção"} onClick={() => toggleInterventionDetails(item.id)}><Pencil className="h-3.5 w-3.5" /></Button>}
+            </div>
+          </div>
+          <AnimatePresence initial={false}>{expanded && !readOnly && <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2, ease: "easeOut" }} className="overflow-hidden">
+            <div className="grid gap-2 border-t bg-background/70 p-3 sm:grid-cols-2">
+              <div><Label className="mb-1.5 block text-xs">Responsável</Label><Input disabled={saving} defaultValue={item.responsible_name ?? ""} placeholder="Responsável opcional" onBlur={(event) => void patchIntervention(item.id, { responsibleName: event.target.value })} /></div>
+              <div><Label className="mb-1.5 block text-xs">Prazo</Label><Input disabled={saving} type="date" defaultValue={item.due_date ?? ""} onBlur={(event) => void patchIntervention(item.id, { dueDate: event.target.value })} /></div>
+              {item.status === "completed" && <div className="sm:col-span-2"><Label className="mb-1.5 block text-xs">Resultado ou retorno</Label><Input disabled={saving} defaultValue={item.outcome ?? ""} placeholder="Opcional" onBlur={(event) => void patchIntervention(item.id, { outcome: event.target.value })} /></div>}
+              {item.status === "cancelled" && <div className="sm:col-span-2"><Label className="mb-1.5 block text-xs">Motivo do cancelamento</Label><Input disabled={saving} defaultValue={item.cancellation_reason ?? ""} placeholder="Opcional" onBlur={(event) => void patchIntervention(item.id, { cancellationReason: event.target.value })} /></div>}
+            </div>
+          </motion.div>}</AnimatePresence>
+        </div>;
+      })}</div> : !showInterventionForm && <p className="mt-3 text-sm text-muted-foreground">Nenhuma intervenção registrada.</p>}
+      <AnimatePresence initial={false}>{!readOnly && showInterventionForm && <motion.div key="new-intervention" initial={{ height: 0, opacity: 0, marginTop: 0 }} animate={{ height: "auto", opacity: 1, marginTop: 12 }} exit={{ height: 0, opacity: 0, marginTop: 0 }} transition={{ duration: 0.22, ease: "easeOut" }} className="overflow-hidden">
+        <div className="rounded-xl border border-dashed bg-muted/10 p-3">
+          <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm font-medium">Nova intervenção</p>{interventions.length > 0 && <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Fechar formulário de intervenção" onClick={closeInterventionForm}><X className="h-4 w-4" /></Button>}</div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="sm:col-span-2" onFocus={() => setShowInterventionSuggestions(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setShowInterventionSuggestions(false); }}><Textarea placeholder="Descrição da nova intervenção" value={description} onChange={(event) => setDescription(event.target.value)} />{showInterventionSuggestions && !description.trim() && <div className="mt-2 flex flex-wrap gap-2" aria-label="Sugestões de intervenção">{INDIVIDUAL_INTERVENTION_SUGGESTIONS.map((suggestion) => <Button key={suggestion} type="button" variant="outline" size="sm" onClick={() => { setDescription(suggestion); setShowInterventionSuggestions(false); }}>{suggestion}</Button>)}</div>}</div>
+            <Input placeholder="Responsável (opcional)" value={responsible} onChange={(event) => setResponsible(event.target.value)} />
+            <Input type="date" aria-label="Prazo da intervenção" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+            <div className="flex items-center gap-2 sm:col-span-2"><Button onClick={addIntervention} disabled={creating || !description.trim()}>{creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Adicionar intervenção</Button>{interventions.length > 0 && <Button type="button" variant="ghost" onClick={closeInterventionForm}>Cancelar</Button>}</div>
+          </div>
+        </div>
+      </motion.div>}</AnimatePresence>
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+    </section>
   </article>;
 }
 
