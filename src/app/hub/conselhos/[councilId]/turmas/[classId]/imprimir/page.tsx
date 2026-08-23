@@ -23,6 +23,6 @@ export default function CouncilClassPrintPage() {
 
   if (error) return <main className="mx-auto max-w-3xl p-8"><p className="flex items-center gap-2 text-destructive"><AlertCircle className="h-5 w-5" />{error}</p></main>;
   if (!data) return <main className="grid min-h-[60vh] place-items-center"><p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" />Preparando impressão...</p></main>;
-  const documentTitle = `Conselho de Classe - ${data.council.term}º Bimestre ${data.council.school_year} - Turma ${data.class.display_name}`;
+  const documentTitle = `Turma ${data.class.display_name} - Conselho de Classe - ${data.council.term}º Bimestre ${data.council.school_year}`;
   return <CouncilPrintShell backHref={`/hub/conselhos/${councilId}/turmas/${classId}`} documentTitle={documentTitle} compact={compact} onCompactChange={setCompact}><CouncilClassPrintDocument data={data} /></CouncilPrintShell>;
 }

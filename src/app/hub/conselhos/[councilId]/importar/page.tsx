@@ -2,17 +2,20 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { AlertCircle, AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { classCouncilQueryKeys } from "@/hooks/useClassCouncils";
 import { councilFetch } from "@/lib/class-council/client";
 import type { ImportPreviewResponse } from "@/types/class-council";
 
 export default function ImportCouncilPage() {
   const { councilId } = useParams<{ councilId: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreviewResponse | null>(null);
   const [showAllIssues, setShowAllIssues] = useState(false);
@@ -43,7 +46,7 @@ export default function ImportCouncilPage() {
   }
   async function confirm() {
     if (!preview || confirmingRef.current) return; confirmingRef.current = true; setBusy(true); setError("");
-    try { const displayNames = Object.fromEntries(preview.classes.map((item) => [item.officialCode, item.displayName])); await councilFetch(`/api/class-councils/${councilId}/imports/${preview.importId}/confirm`, { method: "POST", body: JSON.stringify({ displayNames }) }); toast.success(preview.comparison ? `Versão ${preview.version} ativada com sucesso.` : "Relatório importado com sucesso."); router.push(`/hub/conselhos/${councilId}`); router.refresh(); }
+    try { const displayNames = Object.fromEntries(preview.classes.map((item) => [item.officialCode, item.displayName])); await councilFetch(`/api/class-councils/${councilId}/imports/${preview.importId}/confirm`, { method: "POST", body: JSON.stringify({ displayNames }) }); await Promise.all([queryClient.invalidateQueries({ queryKey: classCouncilQueryKeys.council(councilId), refetchType: "all" }), queryClient.invalidateQueries({ queryKey: classCouncilQueryKeys.list(), refetchType: "all" })]); toast.success(preview.comparison ? `Versão ${preview.version} ativada com sucesso.` : "Relatório importado com sucesso."); router.push(`/hub/conselhos/${councilId}`); router.refresh(); }
     catch (err) { setError(err instanceof Error ? err.message : "Falha ao confirmar."); } finally { confirmingRef.current = false; setBusy(false); }
   }
   function choose(event: ChangeEvent<HTMLInputElement>) { setFile(event.target.files?.[0] ?? null); setPreview(null); setShowAllIssues(false); setError(""); }

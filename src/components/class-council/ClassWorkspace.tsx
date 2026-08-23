@@ -135,6 +135,7 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
   const sequenceRef = useRef(0);
   const [saveState, setSaveState] = useState<Record<string, SaveState>>({});
   const [pendingOperations, setPendingOperations] = useState<Set<string>>(() => new Set());
+  const pendingOperationsRef = useRef(pendingOperations);
   const [actionError, setActionError] = useState("");
   const [completing, setCompleting] = useState(false);
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
@@ -143,6 +144,23 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
   const [startDialogOpen, setStartDialogOpen] = useState(initialData.class.status === "not_started");
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("students");
   useEffect(() => { draftsRef.current = drafts; }, [drafts]);
+  useEffect(() => {
+    const serverDrafts = initialDrafts(initialData.students);
+    setDrafts((current) => {
+      const next: Record<string, StudentDraft> = {};
+      for (const [enrollmentId, serverDraft] of Object.entries(serverDrafts)) {
+        const currentDraft = current[enrollmentId];
+        const currentSerialized = currentDraft ? JSON.stringify(currentDraft) : null;
+        const hasUnsavedChanges = Boolean(currentDraft && savedRef.current[enrollmentId] !== currentSerialized);
+        next[enrollmentId] = hasUnsavedChanges ? currentDraft : serverDraft;
+        if (!hasUnsavedChanges) savedRef.current[enrollmentId] = JSON.stringify(serverDraft);
+      }
+      return next;
+    });
+    if (![...pendingOperationsRef.current].some((operation) => operation.startsWith("student-intervention-"))) {
+      setStudentInterventions(initialStudentInterventions(initialData.students));
+    }
+  }, [initialData.students]);
   useEffect(() => { setStartDialogOpen(initialData.class.status === "not_started"); }, [initialData.class.id, initialData.class.status]);
   useEffect(() => { setClassInterventionCount(initialData.classInterventions.length); }, [initialData.class.id, initialData.classInterventions.length]);
 
@@ -150,6 +168,7 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
     setPendingOperations((current) => {
       const next = new Set(current);
       if (pending) next.add(operation); else next.delete(operation);
+      pendingOperationsRef.current = next;
       return next;
     });
   }, []);
@@ -264,7 +283,7 @@ export function ClassWorkspace({ initialData, councilId, classId, reload }: { in
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-    <div className="mb-5 flex flex-wrap items-start justify-between gap-4"><div><Button variant="ghost" asChild className="mb-2 -ml-3"><Link href={`/hub/conselhos/${councilId}`}><ArrowLeft className="h-4 w-4" />Voltar ao conselho</Link></Button><div className="flex items-center gap-3"><h1 className="text-2xl font-bold">Turma {initialData.class.display_name}</h1><Badge variant="secondary" className={classStatusBadgeClass(initialData.class.status)}>{classStatusLabel(initialData.class.status)}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{initialData.class.official_code} · {initialData.students.length} estudantes</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link href={`/hub/conselhos/${councilId}/turmas/${classId}/imprimir`} target="_blank"><Printer className="h-4 w-4" />Imprimir resumo</Link></Button>{!initialData.readOnly && <Button onClick={() => setCompletionDialogOpen(true)} disabled={completing || hasPendingSaves} title={hasPendingSaves ? "Aguarde o salvamento das alterações antes de concluir." : undefined}>{completing || hasPendingSaves ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{completing ? "Concluindo" : hasPendingSaves ? "Salvando alterações" : "Concluir turma"}</Button>}{initialData.class.status === "completed" && initialData.council.status !== "completed" && <Button variant="outline" onClick={reopenClass} disabled={reopening}><RotateCcw className={`h-4 w-4 ${reopening ? "animate-spin" : ""}`} />{reopening ? "Reabrindo" : "Reabrir turma"}</Button>}{initialData.class.status === "completed" && initialData.nextClass && <Button onClick={goToNextClass}><ArrowRight className="h-4 w-4" />Próxima turma</Button>}</div></div>{actionError && <div className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4" />{actionError}</div>}{initialData.readOnly && <div className="mb-4 flex items-center gap-2 rounded-xl border bg-muted/60 p-3 text-sm"><CheckCircle2 className="h-4 w-4" />Turma concluída: registros pedagógicos em modo somente leitura.{initialData.council.status !== "completed" ? " Reabra a turma para fazer correções." : ""}</div>}
+    <div className="mb-5 flex flex-wrap items-start justify-between gap-4"><div><Button variant="ghost" asChild className="mb-2 -ml-3"><Link href={`/hub/conselhos/${councilId}`}><ArrowLeft className="h-4 w-4" />Voltar ao conselho</Link></Button><div className="flex items-center gap-3"><h1 className="text-2xl font-bold">Turma {initialData.class.display_name}</h1><Badge variant="secondary" className={classStatusBadgeClass(initialData.class.status)}>{classStatusLabel(initialData.class.status)}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{initialData.class.official_code} · {initialData.students.length} estudantes</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link href={`/hub/conselhos/${councilId}/turmas/${classId}/imprimir`}><Printer className="h-4 w-4" />Imprimir resumo</Link></Button>{hasPendingSaves ? <Button variant="outline" disabled title="Aguarde o salvamento das alterações antes de imprimir os estudantes."><Loader2 className="h-4 w-4 animate-spin" />Salvando alterações</Button> : <Button variant="outline" asChild><Link href={`/hub/conselhos/${councilId}/turmas/${classId}/estudantes/imprimir`}><Printer className="h-4 w-4" />Imprimir estudantes</Link></Button>}{!initialData.readOnly && <Button onClick={() => setCompletionDialogOpen(true)} disabled={completing || hasPendingSaves} title={hasPendingSaves ? "Aguarde o salvamento das alterações antes de concluir." : undefined}>{completing || hasPendingSaves ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{completing ? "Concluindo" : hasPendingSaves ? "Salvando alterações" : "Concluir turma"}</Button>}{initialData.class.status === "completed" && initialData.council.status !== "completed" && <Button variant="outline" onClick={reopenClass} disabled={reopening}><RotateCcw className={`h-4 w-4 ${reopening ? "animate-spin" : ""}`} />{reopening ? "Reabrindo" : "Reabrir turma"}</Button>}{initialData.class.status === "completed" && initialData.nextClass && <Button onClick={goToNextClass}><ArrowRight className="h-4 w-4" />Próxima turma</Button>}</div></div>{actionError && <div className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4" />{actionError}</div>}{initialData.readOnly && <div className="mb-4 flex items-center gap-2 rounded-xl border bg-muted/60 p-3 text-sm"><CheckCircle2 className="h-4 w-4" />Turma concluída: registros pedagógicos em modo somente leitura.{initialData.council.status !== "completed" ? " Reabra a turma para fazer correções." : ""}</div>}
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as WorkspaceTab)}>
       <TabsList className="mx-auto mb-5 flex h-auto w-full max-w-5xl justify-start gap-1.5 overflow-x-auto overflow-y-hidden rounded-2xl border border-border/60 bg-muted/70 p-2 shadow-inner">
         {workspaceTabs.map(({ value, label, icon: Icon }) => (
@@ -381,7 +400,8 @@ function StudentPanel({ student, interventions, setInterventions, setOperationPe
   const numericGradeCount = currentTermSubjectResults.filter((item) => typeof item.result?.grade === "number").length;
   const enrollmentStatusNormalized = student.enrollmentStatus?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("pt-BR");
   const hasExceptionalEnrollmentStatus = Boolean(student.enrollmentStatus?.trim()) && enrollmentStatusNormalized !== "matriculado";
-  return <article className="min-w-0 p-4 sm:p-6"><div ref={identitySentinelRef} className="h-px" aria-hidden="true" /><div className="relative sticky top-20 z-20 mb-5">{identityIsFloating && <div aria-hidden="true" className="pointer-events-none absolute -left-px -right-px top-1/2 z-0 h-20 -translate-y-full bg-gradient-to-b from-background/80 via-background/95 to-background dark:hidden" />}<div className={`relative z-10 flex flex-wrap items-start justify-between gap-3 transition-all duration-200 ${identityIsFloating ? "rounded-xl border bg-background p-3 shadow-lg dark:bg-card" : "bg-transparent"}`}><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{student.name}</h2>{student.isPcd && <Badge variant="secondary" className="border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">PCD</Badge>}</div><p className="text-xs text-muted-foreground">Matrícula {student.enrollmentNumber} · Frequência {student.attendanceRate === null ? "não informada" : `${student.attendanceRate}%`} · Raça/cor: {student.raceColor?.trim() || "não informada"}</p></div><div className="flex items-center gap-2"><SaveIndicator state={state} retry={retry} /><Badge variant="outline" className="max-w-32 truncate" title={className}>Turma {className}</Badge><Button variant="outline" size="icon" disabled={!previous} onClick={previous}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" disabled={!next} onClick={next}><ChevronRight className="h-4 w-4" /></Button></div></div></div>
+  const printBlocked = state === "saving" || state === "error";
+  return <article className="min-w-0 p-4 sm:p-6"><div ref={identitySentinelRef} className="h-px" aria-hidden="true" /><div className="relative sticky top-20 z-20 mb-5">{identityIsFloating && <div aria-hidden="true" className="pointer-events-none absolute -left-px -right-px top-1/2 z-0 h-20 -translate-y-full bg-gradient-to-b from-background/80 via-background/95 to-background dark:hidden" />}<div className={`relative z-10 flex flex-wrap items-start justify-between gap-3 transition-all duration-200 ${identityIsFloating ? "rounded-xl border bg-background p-3 shadow-lg dark:bg-card" : "bg-transparent"}`}><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{student.name}</h2>{student.isPcd && <Badge variant="secondary" className="border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">PCD</Badge>}</div><p className="text-xs text-muted-foreground">Matrícula {student.enrollmentNumber} · Frequência {student.attendanceRate === null ? "não informada" : `${student.attendanceRate}%`} · Raça/cor: {student.raceColor?.trim() || "não informada"}</p></div><div className="flex items-center gap-2"><SaveIndicator state={state} retry={retry} />{printBlocked ? <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" disabled aria-label="Aguarde o salvamento para imprimir este estudante" title={state === "error" ? "Corrija o erro de salvamento antes de imprimir." : "Aguarde o salvamento antes de imprimir."}><Printer className="h-4 w-4" /></Button> : <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" asChild><Link href={`/hub/conselhos/${councilId}/turmas/${classId}/estudantes/imprimir?student=${encodeURIComponent(student.enrollmentId)}`} aria-label={`Imprimir resultados de ${student.name}`} title={`Imprimir resultados de ${student.name}`}><Printer className="h-4 w-4" /></Link></Button>}<Badge variant="outline" className="max-w-40 truncate px-3 py-1 text-sm font-semibold" title={className}>{className}</Badge><Button variant="outline" size="icon" disabled={!previous} onClick={previous}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" disabled={!next} onClick={next}><ChevronRight className="h-4 w-4" /></Button></div></div></div>
     {student.alerts.atRisk ? <section className="mb-5 rounded-xl border bg-muted/30 p-4"><h3 className="flex items-center gap-2 text-sm font-semibold"><CircleAlert className="h-4 w-4" />Alertas explicados</h3><ul className="mt-2 space-y-1 text-sm text-amber-800 dark:text-amber-200">{student.alerts.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></section> : <section className="mb-5 rounded-xl border border-blue-200/70 bg-blue-50/50 p-4 dark:border-blue-900 dark:bg-blue-950/20"><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="flex items-center gap-2 text-sm font-semibold"><BookOpenCheck className="h-4 w-4 text-blue-700 dark:text-blue-300" />Resumo acadêmico</h3><p className="mt-1 text-xs text-muted-foreground">O estudante não atende aos critérios atuais de risco.</p></div><Badge variant="outline" className="border-blue-200 bg-background/70 text-blue-800 dark:border-blue-800 dark:text-blue-200">{student.alerts.currentLowGradeCount} {student.alerts.currentLowGradeCount === 1 ? "disciplina" : "disciplinas"} abaixo de 6,0</Badge></div><div className="mt-3 grid gap-2 text-sm sm:grid-cols-2"><p className="flex items-start gap-2">{student.alerts.evolution === "worsened" ? <TrendingDown className="mt-0.5 h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" /> : student.alerts.evolution === "improved" ? <ArrowUp className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" /> : student.alerts.evolution === "stable" ? <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" /> : <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}{student.alerts.evolution === "worsened" ? `Piorou: passou de ${student.alerts.previousLowGradeCount} para ${student.alerts.currentLowGradeCount} disciplinas abaixo de 6,0.` : student.alerts.evolution === "improved" ? `Melhorou: passou de ${student.alerts.previousLowGradeCount} para ${student.alerts.currentLowGradeCount} disciplinas abaixo de 6,0.` : student.alerts.evolution === "stable" ? `Manteve ${student.alerts.currentLowGradeCount} ${student.alerts.currentLowGradeCount === 1 ? "disciplina" : "disciplinas"} abaixo de 6,0.` : "Sem bimestre anterior disponível para comparação."}</p><p className="flex items-start gap-2"><BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />Notas numéricas disponíveis em {numericGradeCount} de {currentTermSubjectResults.length} disciplinas.</p></div>{lowGradeSubjects.length > 0 ? <div className="mt-3"><LowGradeSubjectBadges subjects={lowGradeSubjects} /></div> : numericGradeCount > 0 ? <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-300">Nenhuma disciplina com nota abaixo de 6,0 neste bimestre.</p> : <p className="mt-3 text-sm text-muted-foreground">Ainda não há notas numéricas disponíveis para este bimestre.</p>}{hasExceptionalEnrollmentStatus && <p className="mt-3 border-t border-blue-200/70 pt-2 text-xs text-muted-foreground dark:border-blue-900">Situação da matrícula: <strong className="text-foreground">{student.enrollmentStatus}</strong></p>}</section>}
     {student.alerts.atRisk && <section className="-mt-3 mb-5 rounded-xl border bg-background/60 p-4">
       <h3 className="flex items-center gap-2 text-sm font-semibold"><BookOpen className="h-4 w-4 text-muted-foreground" />Contexto acadêmico</h3>
@@ -600,6 +620,7 @@ function CollectiveEditor({ data, councilId, classId, setOperationPending, onInt
 
 function AutosaveText({ label, placeholder, className, initial, disabled, operationKey, setOperationPending, save }: { label: string; placeholder: string; className?: string; initial: string; disabled: boolean; operationKey: string; setOperationPending: (operation: string, pending: boolean) => void; save: (value: string) => Promise<unknown> }) {
   const [value, setValue] = useState(initial);
+  const previousInitialRef = useRef(initial);
   const [state, setState] = useState<SaveState>("idle");
   const [focused, setFocused] = useState(false);
   const mounted = useRef(false);
@@ -607,6 +628,10 @@ function AutosaveText({ label, placeholder, className, initial, disabled, operat
   const saveRef = useRef(save);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { saveRef.current = save; }, [save]);
+  useEffect(() => {
+    setValue((current) => current === previousInitialRef.current ? initial : current);
+    previousInitialRef.current = initial;
+  }, [initial]);
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -651,6 +676,9 @@ function ClassInterventions({ data, councilId, classId, setOperationPending, onI
   const [creating, setCreating] = useState(false);
   const pendingIdsRef = useRef(new Set<string>());
   const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    setInterventions((current) => current.some((item) => item.optimistic) || pendingIdsRef.current.size > 0 ? current : data.classInterventions);
+  }, [data.classInterventions]);
   useEffect(() => { onInterventionCountChange(interventions.length); }, [interventions.length, onInterventionCountChange]);
   const [error, setError] = useState("");
 
@@ -693,14 +721,24 @@ function ClassInterventions({ data, councilId, classId, setOperationPending, onI
 }
 
 function ParticipantsEditor({ data, councilId, classId, reload, setOperationPending }: { data: ClassWorkspaceData; councilId: string; classId: string; reload: () => Promise<void>; setOperationPending: (operation: string, pending: boolean) => void }) {
-  const [participants, setParticipants] = useState(data.participants.map((item) => ({ name: item.name, roleOrSubject: item.role_or_subject ?? "" })));
-  const [teacherNames, setTeacherNames] = useState<Record<string, string>>(() => Object.fromEntries(data.subjects.map((subject) => [subject.id, subject.teacher_name ?? ""])));
+  const serverParticipants = useMemo(() => data.participants.map((item) => ({ name: item.name, roleOrSubject: item.role_or_subject ?? "" })), [data.participants]);
+  const serverTeacherNames = useMemo(() => Object.fromEntries(data.subjects.map((subject) => [subject.id, subject.teacher_name ?? ""])), [data.subjects]);
+  const [participants, setParticipants] = useState(serverParticipants);
+  const [teacherNames, setTeacherNames] = useState<Record<string, string>>(serverTeacherNames);
+  const previousServerParticipantsRef = useRef(serverParticipants);
+  const previousServerTeacherNamesRef = useRef(serverTeacherNames);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const teacherSaveSequenceRef = useRef(0);
   const suggestionListId = `class-teachers-${classId}`;
-  useEffect(() => { setParticipants(data.participants.map((item) => ({ name: item.name, roleOrSubject: item.role_or_subject ?? "" }))); }, [data.participants]);
-  useEffect(() => { setTeacherNames(Object.fromEntries(data.subjects.map((subject) => [subject.id, subject.teacher_name ?? ""]))); }, [data.subjects]);
+  useEffect(() => {
+    setParticipants((current) => JSON.stringify(current) === JSON.stringify(previousServerParticipantsRef.current) ? serverParticipants : current);
+    previousServerParticipantsRef.current = serverParticipants;
+  }, [serverParticipants]);
+  useEffect(() => {
+    setTeacherNames((current) => JSON.stringify(current) === JSON.stringify(previousServerTeacherNamesRef.current) ? serverTeacherNames : current);
+    previousServerTeacherNamesRef.current = serverTeacherNames;
+  }, [serverTeacherNames]);
   const teacherSuggestions = useMemo(() => [...new Map(Object.values(teacherNames)
     .map((name) => name.trim())
     .filter(Boolean)
