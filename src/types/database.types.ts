@@ -1198,29 +1198,149 @@ export type Database = {
         }
         Relationships: []
       }
+      student_occurrences: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          guardian_notified: boolean
+          id: string
+          notes: string | null
+          occurred_on: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by: string
+          guardian_notified?: boolean
+          id?: string
+          notes?: string | null
+          occurred_on: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          guardian_notified?: boolean
+          id?: string
+          notes?: string | null
+          occurred_on?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_occurrences_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_occurrences_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_occurrences_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_situation_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: number
+          new_situation: string
+          previous_situation: string
+          student_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: never
+          new_situation: string
+          previous_situation: string
+          student_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: never
+          new_situation?: string
+          previous_situation?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_situation_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_situation_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           canonical_name: string
           created_at: string
+          current_situation: string
           enrollment_number: string
           id: string
+          situation_updated_at: string | null
+          situation_updated_by: string | null
           updated_at: string
         }
         Insert: {
           canonical_name: string
           created_at?: string
+          current_situation?: string
           enrollment_number: string
           id?: string
+          situation_updated_at?: string | null
+          situation_updated_by?: string | null
           updated_at?: string
         }
         Update: {
           canonical_name?: string
           created_at?: string
+          current_situation?: string
           enrollment_number?: string
           id?: string
+          situation_updated_at?: string | null
+          situation_updated_by?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_situation_updated_by_fkey"
+            columns: ["situation_updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1229,6 +1349,14 @@ export type Database = {
     Functions: {
       is_active_staff: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      set_student_current_situation: {
+        Args: {
+          p_actor_id: string
+          p_situation: string
+          p_student_id: string
+        }
+        Returns: undefined
+      }
       replace_class_council_participants: {
         Args: {
           p_actor_id: string

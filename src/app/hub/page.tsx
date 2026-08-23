@@ -9,6 +9,7 @@ import {
   BookOpenCheck,
   FileText,
   LayoutDashboard,
+  UsersRound,
 } from "lucide-react";
 import { HubHeader } from "@/components/hub/HubHeader";
 import { PageHeader } from "@/components/hub/PageHeader";
@@ -40,7 +41,7 @@ export default function HubHomePage() {
     <div className="hub-app-background flex min-h-screen flex-col">
       <HubHeader />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 min-[1800px]:max-w-[1600px] min-[2400px]:max-w-[1800px]">
         <section className="relative mb-8 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/82 p-6 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/10 dark:bg-slate-900/72 sm:p-8">
           <div className="relative">
             <PageHeader
@@ -63,6 +64,16 @@ export default function HubHomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <RoleGate allowed={["admin", "gestor", "coordenador"]}>
+              <ModuleCard
+                href="/hub/alunos"
+                icon={UsersRound}
+                title="Estudantes"
+                description="Consulte prontuários, históricos pedagógicos e ocorrências da vida escolar."
+                accent="blue"
+              />
+            </RoleGate>
+
             <RoleGate allowed={["admin", "gestor", "coordenador"]}>
               <ModuleCard
                 href="/hub/dashboard"

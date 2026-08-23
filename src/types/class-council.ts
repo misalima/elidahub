@@ -1,7 +1,7 @@
 export type CouncilStatus = "draft" | "preparation" | "in_progress" | "completed" | "reopened" | "archived";
 export type CouncilClassStatus = "not_started" | "in_progress" | "completed";
 export type ActivitiesStatus = "not_informed" | "regular" | "irregular" | "does_not_do";
-export type AttendanceSituation = "regular" | "infrequent" | "dropout";
+export type AttendanceSituation = "regular" | "infrequent" | "dropout" | "transferred";
 export type InterventionStatus = "pending" | "in_progress" | "completed" | "cancelled";
 export type BehaviorCategory =
   | "excessive_talking"

@@ -43,7 +43,7 @@ export default function CouncilsPage() {
   if (isPending) return <CouncilListSkeleton />;
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 min-[1800px]:max-w-[1600px] min-[2400px]:max-w-[1800px]">
       <PageHeader
         icon={BookOpenCheck}
         eyebrow="Gestão pedagógica"

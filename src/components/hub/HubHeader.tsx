@@ -39,7 +39,7 @@ export function HubHeader({ module, mobileNavigation, className }: HubHeaderProp
         className,
       )}
     >
-      <div className="mx-auto flex h-[4.5rem] w-full max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[4.5rem] w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 min-[1800px]:max-w-[1600px] min-[2400px]:max-w-[1800px]">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {mobileNavigation ? <div className="shrink-0 md:hidden">{mobileNavigation}</div> : null}
 

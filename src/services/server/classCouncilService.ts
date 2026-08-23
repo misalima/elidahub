@@ -9,15 +9,17 @@ import { hasPedagogicalContent } from "@/lib/class-council/studentRecord";
 import { CouncilDomainError, optionalText } from "@/lib/class-council/validation";
 import { assertClassCanComplete, assertCouncilCanComplete, assertCouncilCanReopen, findNextOpenClass } from "@/lib/class-council/stateRules";
 import { downloadImportFile } from "@/services/server/classCouncilImportService";
+import { listStudentOccurrenceSummaries } from "@/services/server/studentOccurrenceService";
 import type { ActivitiesStatus, AttendanceSituation, BehaviorCategory, InterventionStatus } from "@/types/class-council";
 import type { Database, Json } from "@/types/database.types";
+import type { StudentOccurrenceSummary } from "@/types/student-occurrence";
 
 function assertNoError(error: { message: string } | null) {
   if (error) throw new Error(error.message);
 }
 
 type CouncilEnrollmentRow = Pick<Database["public"]["Tables"]["class_council_enrollments"]["Row"], "id" | "council_class_id" | "student_id" | "activities_status" | "attendance_situation"> & {
-  students: Pick<Database["public"]["Tables"]["students"]["Row"], "enrollment_number" | "canonical_name">;
+  students: Pick<Database["public"]["Tables"]["students"]["Row"], "enrollment_number" | "canonical_name" | "current_situation">;
 };
 type CouncilSnapshotRow = Pick<Database["public"]["Tables"]["class_council_student_snapshots"]["Row"], "enrollment_id" | "attendance_rate" | "imported_name" | "report_position">;
 type CouncilResultRow = Pick<Database["public"]["Tables"]["class_council_results"]["Row"], "enrollment_id" | "subject_id" | "term" | "grade" | "grade_marker" | "absences">;
@@ -27,7 +29,7 @@ async function listCouncilEnrollments(classIds: string[]): Promise<CouncilEnroll
   return collectSupabasePages(async (from, to) => {
     const { data, error } = await supabaseAdmin
       .from("class_council_enrollments")
-      .select("id, council_class_id, student_id, activities_status, attendance_situation, students(enrollment_number, canonical_name)")
+      .select("id, council_class_id, student_id, activities_status, attendance_situation, students(enrollment_number, canonical_name, current_situation)")
       .in("council_class_id", classIds)
       .order("id")
       .range(from, to);
@@ -207,13 +209,14 @@ export async function getCouncilOverview(councilId: string) {
     return { council, classes: [], imports: imports ?? [], metrics: { students: 0, monitoring: 0, atRisk: 0, retentionRisk: 0, completionRisk: 0, lowAttendance: 0, infrequent: 0, dropout: 0, worsened: 0, pendingInterventions: 0 }, subjectRanking: [], studentDetails: [], interventionDetails: [] };
   }
 
-  const [enrollments, snapshotRows, resultRows, subjectResponse, interventionResponse, participantResponse] = await Promise.all([
+  const [enrollments, snapshotRows, resultRows, subjectResponse, interventionResponse, participantResponse, occurrenceSummaries] = await Promise.all([
     listCouncilEnrollments(classIds),
     listImportSnapshots(council.current_import_id),
     listImportResults(council.current_import_id, undefined, council.term),
     supabaseAdmin.from("class_council_subjects").select("id, council_class_id, display_name").in("council_class_id", classIds),
     supabaseAdmin.from("class_council_interventions").select("id, status, description, responsible_name, due_date, origin_class_id, origin_enrollment_id, target_type").eq("origin_council_id", councilId).in("status", ["pending", "in_progress"]),
     supabaseAdmin.from("class_council_participants").select("council_class_id, name, role_or_subject, position").in("council_class_id", classIds).order("position"),
+    listStudentOccurrenceSummaries(),
   ]);
   for (const response of [subjectResponse, interventionResponse, participantResponse]) assertNoError(response.error);
 
@@ -230,7 +233,7 @@ export async function getCouncilOverview(councilId: string) {
     behaviorsByEnrollment.set(behavior.enrollment_id, current);
   }
   const activitiesByEnrollment = new Map(activeEnrollments.map((enrollment) => [enrollment.id, enrollment.activities_status]));
-  const attendanceSituationByEnrollment = new Map(activeEnrollments.map((enrollment) => [enrollment.id, enrollment.attendance_situation as AttendanceSituation]));
+  const attendanceSituationByEnrollment = new Map(activeEnrollments.map((enrollment) => [enrollment.id, enrollment.students.current_situation as AttendanceSituation]));
   const criteria = resolveCouncilCriteria(council.criteria);
   const resultsByEnrollment = new Map<string, Array<{ term: number; grade: number | null; gradeMarker: string | null; subject_id: string }>>();
   for (const result of resultRows) {
@@ -249,7 +252,9 @@ export async function getCouncilOverview(councilId: string) {
   let worsened = 0;
   const classNames = new Map((classes ?? []).map((item) => [item.id, item.display_name]));
   const classGradeLevels = new Map((classes ?? []).map((item) => [item.id, item.grade_level as 1 | 2 | 3 | null]));
+  const subjects = new Map((subjectResponse.data ?? []).map((subject) => [subject.id, subject]));
   const studentDetails: Array<{
+    studentId: string;
     enrollmentId: string;
     name: string;
     enrollmentNumber: string;
@@ -258,12 +263,13 @@ export async function getCouncilOverview(councilId: string) {
     attendanceRate: number | null;
     attendanceSituation: AttendanceSituation;
     alerts: ReturnType<typeof calculateStudentAlerts>;
+    occurrences: StudentOccurrenceSummary;
   }> = [];
   for (const enrollment of activeEnrollments) {
     const snapshot = snapshots.get(enrollment.id);
     const attendanceRate = snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate);
     const name = snapshot?.imported_name ?? enrollment.students.canonical_name;
-    const alertResults = (resultsByEnrollment.get(enrollment.id) ?? []).map((result) => ({ ...result, subjectId: result.subject_id }));
+    const alertResults = (resultsByEnrollment.get(enrollment.id) ?? []).map((result) => ({ ...result, subjectId: result.subject_id, subjectName: subjects.get(result.subject_id)?.display_name ?? "Disciplina" }));
     const alerts = calculateStudentAlerts({ name, attendanceRate, gradeLevel: classGradeLevels.get(enrollment.council_class_id) ?? null, results: alertResults }, council.term, criteria);
     const metric = classMetrics.get(enrollment.council_class_id) ?? { studentCount: 0, monitoringCount: 0, atRiskCount: 0 };
     metric.studentCount += 1;
@@ -275,21 +281,22 @@ export async function getCouncilOverview(councilId: string) {
     retentionRisk += Number(alerts.academicStatus === "retention_risk");
     completionRisk += Number(alerts.academicStatus === "completion_risk");
     lowAttendance += Number(alerts.lowAttendance);
-    infrequent += Number(enrollment.attendance_situation === "infrequent");
-    dropout += Number(enrollment.attendance_situation === "dropout");
+    infrequent += Number(enrollment.students.current_situation === "infrequent");
+    dropout += Number(enrollment.students.current_situation === "dropout");
     worsened += Number(alerts.evolution === "worsened");
     studentDetails.push({
+      studentId: enrollment.student_id,
       enrollmentId: enrollment.id,
       name,
       enrollmentNumber: enrollment.students.enrollment_number,
       classId: enrollment.council_class_id,
       className: classNames.get(enrollment.council_class_id) ?? "Turma",
       attendanceRate,
-      attendanceSituation: enrollment.attendance_situation as AttendanceSituation,
+      attendanceSituation: enrollment.students.current_situation as AttendanceSituation,
       alerts,
+      occurrences: occurrenceSummaries.get(enrollment.student_id) ?? { count: 0, latest: null },
     });
   }
-  const subjects = new Map((subjectResponse.data ?? []).map((subject) => [subject.id, subject]));
   const participantsByClass = new Map<string, Array<{ name: string; role_or_subject: string | null }>>();
   for (const participant of participantResponse.data ?? []) {
     const list = participantsByClass.get(participant.council_class_id) ?? [];
@@ -394,7 +401,7 @@ export async function getClassWorkspace(councilId: string, classId: string) {
 
   const enrollmentResponse = await supabaseAdmin
     .from("class_council_enrollments")
-    .select("id, student_id, discussed, activities_status, attendance_situation, pedagogical_observation, positive_notes, students(id, enrollment_number, canonical_name)")
+    .select("id, student_id, discussed, activities_status, attendance_situation, pedagogical_observation, positive_notes, students(id, enrollment_number, canonical_name, current_situation)")
     .eq("council_class_id", classId);
   assertNoError(enrollmentResponse.error);
   const enrollmentIds = (enrollmentResponse.data ?? []).map((item) => item.id);
@@ -462,7 +469,7 @@ export async function getClassWorkspace(councilId: string, classId: string) {
       enrollmentStatus: snapshot?.enrollment_status ?? null,
       discussed: enrollment.discussed,
       activitiesStatus: enrollment.activities_status,
-      attendanceSituation: enrollment.attendance_situation as AttendanceSituation,
+      attendanceSituation: enrollment.students.current_situation as AttendanceSituation,
       pedagogicalObservation: enrollment.pedagogical_observation,
       positiveNotes: enrollment.positive_notes,
       alerts,
@@ -565,12 +572,12 @@ export async function startClassWithTeachers(councilId: string, classId: string,
 
 export async function updateStudentRecord(councilId: string, classId: string, enrollmentId: string, input: { discussed?: boolean; activitiesStatus?: ActivitiesStatus; attendanceSituation?: AttendanceSituation; pedagogicalObservation?: unknown; positiveNotes?: unknown; behaviors?: Array<{ category: BehaviorCategory; description?: unknown }> }, actorId: string) {
   await requireEditableClass(councilId, classId);
-  const { data: enrollment, error: enrollmentError } = await supabaseAdmin.from("class_council_enrollments").select("id").eq("id", enrollmentId).eq("council_class_id", classId).maybeSingle();
+  const { data: enrollment, error: enrollmentError } = await supabaseAdmin.from("class_council_enrollments").select("id, student_id").eq("id", enrollmentId).eq("council_class_id", classId).maybeSingle();
   assertNoError(enrollmentError);
   if (!enrollment) throw new CouncilDomainError("Estudante não encontrado nesta turma.", 404, "not_found");
   const validActivities = ["not_informed", "regular", "irregular", "does_not_do"];
   if (input.activitiesStatus && !validActivities.includes(input.activitiesStatus)) throw new CouncilDomainError("Situação das atividades inválida.");
-  const validAttendanceSituations: AttendanceSituation[] = ["regular", "infrequent", "dropout"];
+  const validAttendanceSituations: AttendanceSituation[] = ["regular", "infrequent", "dropout", "transferred"];
   if (input.attendanceSituation && !validAttendanceSituations.includes(input.attendanceSituation)) throw new CouncilDomainError("Situação de frequência inválida.");
   const containsPedagogicalContent = hasPedagogicalContent({
     activitiesStatus: input.activitiesStatus,
@@ -589,6 +596,10 @@ export async function updateStudentRecord(councilId: string, classId: string, en
   };
   const { error } = await supabaseAdmin.from("class_council_enrollments").update(update).eq("id", enrollmentId);
   assertNoError(error);
+  if (input.attendanceSituation) {
+    const { error: situationError } = await supabaseAdmin.rpc("set_student_current_situation", { p_student_id: enrollment.student_id, p_situation: input.attendanceSituation, p_actor_id: actorId });
+    assertNoError(situationError);
+  }
   if (input.behaviors) {
     const allowed: BehaviorCategory[] = ["excessive_talking", "inappropriate_phone_use", "peer_conflicts", "disrespect_or_coexistence_difficulty", "low_participation", "recurring_lateness", "sleeping_in_class", "frequently_out_of_class", "activities_not_completed", "other"];
     if (input.behaviors.some((item) => !allowed.includes(item.category))) throw new CouncilDomainError("Categoria de comportamento inválida.");

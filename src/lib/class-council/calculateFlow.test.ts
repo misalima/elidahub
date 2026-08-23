@@ -48,6 +48,10 @@ describe("projeção de fluxo", () => {
     expect(projectStudentFlow(student("a", 0, { attendanceSituation: "dropout", attendanceRate: 98 })).status).toBe("abandonment");
   });
 
+  it("retira estudantes transferidos do cálculo mesmo com notas ou frequência baixas", () => {
+    expect(projectStudentFlow(student("a", 4, { attendanceSituation: "transferred", attendanceRate: 60 })).status).toBe("excluded_movement");
+  });
+
   it("mantém infrequência como acompanhamento, sem retenção automática", () => {
     expect(projectStudentFlow(student("a", 0, { attendanceSituation: "infrequent", attendanceRate: 90 })).status).toBe("projected_approved");
   });

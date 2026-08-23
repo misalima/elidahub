@@ -4,6 +4,7 @@ import { calculateStudentAlerts } from "@/lib/class-council/calculateAlerts";
 import { calculateProjectedFlow, type ProjectedFlowStudentInput } from "@/lib/class-council/calculateFlow";
 import { resolveCouncilCriteria } from "@/lib/class-council/constants";
 import { SUPABASE_READ_PAGE_SIZE } from "@/lib/class-council/pagination";
+import { listStudentOccurrenceSummaries } from "@/services/server/studentOccurrenceService";
 import type { DashboardClassSummary, DashboardMatrixCell, DashboardPeriod, DashboardQualityItem, DashboardStudent, PedagogicalDashboardData } from "@/types/dashboard";
 
 function assertNoError(error: { message: string } | null) {
@@ -104,13 +105,14 @@ export async function getPedagogicalDashboard(filters: DashboardFilters = {}): P
   const classIds = (classes ?? []).map((item) => item.id);
   if (!classIds.length) return emptyDashboard(periods);
 
-  const [enrollmentResponse, snapshotResponse, subjectResponse, importResponse, interventionResponse, results] = await Promise.all([
-    supabaseAdmin.from("class_council_enrollments").select("id, council_class_id, student_id, discussed, activities_status, attendance_situation, pedagogical_observation, positive_notes, students(enrollment_number, canonical_name)").in("council_class_id", classIds),
+  const [enrollmentResponse, snapshotResponse, subjectResponse, importResponse, interventionResponse, results, occurrenceSummaries] = await Promise.all([
+    supabaseAdmin.from("class_council_enrollments").select("id, council_class_id, student_id, discussed, activities_status, attendance_situation, pedagogical_observation, positive_notes, students(enrollment_number, canonical_name, current_situation)").in("council_class_id", classIds),
     supabaseAdmin.from("class_council_student_snapshots").select("enrollment_id, imported_name, attendance_rate, enrollment_status").eq("import_id", council.current_import_id),
     supabaseAdmin.from("class_council_subjects").select("id, council_class_id, normalized_name, display_name").in("council_class_id", classIds),
     supabaseAdmin.from("class_council_imports").select("id, version, source_generated_at, confirmed_at, warning_count").eq("id", council.current_import_id).single(),
     supabaseAdmin.from("class_council_interventions").select("id, origin_class_id, origin_enrollment_id, status").eq("origin_council_id", council.id).in("status", ["pending", "in_progress"]),
     readAllResults(council.current_import_id),
+    listStudentOccurrenceSummaries(),
   ]);
   for (const response of [enrollmentResponse, snapshotResponse, subjectResponse, importResponse, interventionResponse]) assertNoError(response.error);
 
@@ -151,6 +153,7 @@ export async function getPedagogicalDashboard(filters: DashboardFilters = {}): P
     const attendanceRate = snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate);
     const name = snapshot?.imported_name ?? enrollment.students.canonical_name;
     return {
+      studentId: enrollment.student_id,
       enrollmentId: enrollment.id,
       name,
       enrollmentNumber: enrollment.students.enrollment_number,
@@ -159,8 +162,9 @@ export async function getPedagogicalDashboard(filters: DashboardFilters = {}): P
       gradeLevel,
       attendanceRate,
       enrollmentStatus: snapshot?.enrollment_status ?? null,
-      attendanceSituation: enrollment.attendance_situation as DashboardStudent["attendanceSituation"],
+      attendanceSituation: enrollment.students.current_situation as DashboardStudent["attendanceSituation"],
       pendingInterventions: pendingByEnrollment.get(enrollment.id) ?? 0,
+      occurrences: occurrenceSummaries.get(enrollment.student_id) ?? { count: 0, latest: null },
       alerts: calculateStudentAlerts({ name, attendanceRate, gradeLevel, results: alertResults }, council.term, criteria),
     };
   });
@@ -237,6 +241,7 @@ export async function getPedagogicalDashboard(filters: DashboardFilters = {}): P
       lowAttendance: classStudents.filter((student) => student.alerts.lowAttendance).length,
       infrequent: classStudents.filter((student) => student.attendanceSituation === "infrequent").length,
       dropout: classStudents.filter((student) => student.attendanceSituation === "dropout").length,
+      transferred: classStudents.filter((student) => student.attendanceSituation === "transferred").length,
       behaviorRecords: classEnrollments.reduce((total, enrollment) => total + (behaviorsByEnrollment.get(enrollment.id) ?? 0), 0),
       pendingInterventions: pendingByClass.get(item.id) ?? 0,
       riskWithoutRecord: classEnrollments.filter((enrollment) => {

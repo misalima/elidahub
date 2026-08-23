@@ -1,5 +1,6 @@
 import type { AttendanceSituation, StudentAlerts } from "@/types/class-council";
 import type { ProjectedFlowStatus, ProjectedFlowSummary } from "@/lib/class-council/calculateFlow";
+import type { StudentOccurrenceSummary } from "@/types/student-occurrence";
 
 export type DashboardPeriod = {
   councilId: string;
@@ -41,6 +42,7 @@ export type DashboardClassSummary = {
   lowAttendance: number;
   infrequent: number;
   dropout: number;
+  transferred: number;
   behaviorRecords: number;
   pendingInterventions: number;
   riskWithoutRecord: number;
@@ -55,6 +57,7 @@ export type DashboardQualityItem = {
 };
 
 export type DashboardStudent = {
+  studentId: string;
   enrollmentId: string;
   name: string;
   enrollmentNumber: string;
@@ -65,6 +68,7 @@ export type DashboardStudent = {
   enrollmentStatus: string | null;
   attendanceSituation: AttendanceSituation;
   pendingInterventions: number;
+  occurrences: StudentOccurrenceSummary;
   projectedFlowStatus: ProjectedFlowStatus;
   projectedFailedSubjects: number | null;
   projectedConclusion: boolean | null;

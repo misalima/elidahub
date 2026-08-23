@@ -50,6 +50,9 @@ export function projectStudentFlow(
   if (student.attendanceSituation === "dropout") {
     return { id: student.id, status: "abandonment", projectedFailedSubjects: null, projectedConclusion: false };
   }
+  if (student.attendanceSituation === "transferred") {
+    return { id: student.id, status: "excluded_movement", projectedFailedSubjects: null, projectedConclusion: null };
+  }
   const enrollmentStatus = normalizeTechnicalText(student.enrollmentStatus);
   if (matchesStatus(enrollmentStatus, abandonmentStatuses)) {
     return { id: student.id, status: "abandonment", projectedFailedSubjects: null, projectedConclusion: false };

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SCHOOL_LOCATION, SCHOOL_NAME } from "@/constants/main/school";
 import { BEHAVIOR_LABELS } from "@/lib/class-council/constants";
 import { compareStudentReportOrder } from "@/lib/class-council/calculateAlerts";
+import { STUDENT_SITUATION_LABELS } from "@/lib/students/situations";
 import type { ClassWorkspaceData } from "./ClassWorkspace";
 
 type WorkspaceStudent = ClassWorkspaceData["students"][number];
@@ -18,12 +19,6 @@ const activityLabels = {
   regular: "Regular",
   irregular: "Irregular",
   does_not_do: "Não realiza",
-} as const;
-
-const attendanceSituationLabels = {
-  regular: "Regular",
-  infrequent: "Infrequente",
-  dropout: "Desistente",
 } as const;
 
 const interventionStatusLabels = {
@@ -124,7 +119,7 @@ function StudentPrintPage({ data, student, pageNumber, pageCount }: { data: Clas
           <h3 className="border-b border-slate-300 pb-1 text-[10px] font-bold uppercase tracking-wide">Registros do conselho</h3>
           {!hasCouncilRecord ? <p className="mt-1.5 text-[9px] italic text-slate-500">Nenhum registro individual foi realizado para este estudante.</p> : <dl className="mt-1.5 space-y-1.5 text-[9px] leading-relaxed">
             <div><dt className="font-semibold">Situação no conselho</dt><dd className="text-slate-700">{student.discussed ? "Estudante discutido" : "Não marcado como discutido"}</dd></div>
-            <div><dt className="font-semibold">Situação de frequência observada</dt><dd className="text-slate-700">{attendanceSituationLabels[student.attendanceSituation]}</dd></div>
+            <div><dt className="font-semibold">Situação de frequência e vínculo</dt><dd className="text-slate-700">{STUDENT_SITUATION_LABELS[student.attendanceSituation]}</dd></div>
             <div><dt className="font-semibold">Realização de atividades</dt><dd className="text-slate-700">{activityLabels[student.activitiesStatus]}</dd></div>
             {student.pedagogicalObservation?.trim() && <div><dt className="font-semibold">Observação pedagógica</dt><dd className="whitespace-pre-wrap text-slate-700">{student.pedagogicalObservation}</dd></div>}
             {student.positiveNotes?.trim() && <div><dt className="font-semibold">Pontos positivos</dt><dd className="whitespace-pre-wrap text-slate-700">{student.positiveNotes}</dd></div>}

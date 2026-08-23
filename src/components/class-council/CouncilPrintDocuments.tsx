@@ -34,7 +34,7 @@ export type CouncilPrintOverviewData = {
 
 const councilStatusLabels: Record<string, string> = { draft: "Rascunho", preparation: "Preparação", in_progress: "Em andamento", completed: "Concluído", reopened: "Reaberto" };
 const activityLabels: Record<string, string> = { not_informed: "Não informado", regular: "Regular", irregular: "Irregular", does_not_do: "Não realiza" };
-const attendanceSituationLabels: Record<string, string> = { regular: "Regular", infrequent: "Infrequente", dropout: "Desistente" };
+const attendanceSituationLabels: Record<string, string> = { regular: "Regular", infrequent: "Infrequente", dropout: "Desistente", transferred: "Transferido(a)" };
 
 function formatDate(value: string) {
   return new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR");
