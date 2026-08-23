@@ -23,7 +23,7 @@ export default function CouncilsLayout({ children }: { children: React.ReactNode
   }
 
   return <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-    <header className="sticky top-0 z-30 border-b bg-white/95 backdrop-blur dark:bg-card/95">
+    <header className="council-app-header sticky top-0 z-30 border-b bg-white/95 backdrop-blur dark:bg-card/95">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/hub/conselhos" className="flex min-w-0 items-center gap-3"><Image src="/logo_escola.png" alt={`Logo da ${SCHOOL_NAME}`} width={42} height={42} className="h-10 w-10 shrink-0 object-contain" priority /><span className="min-w-0"><strong className="block text-sm">Conselho de Classe</strong><span className="block max-w-[180px] truncate text-xs text-muted-foreground sm:max-w-[360px]"><span className="sm:hidden">{SCHOOL_SHORT_NAME}</span><span className="hidden sm:inline">{SCHOOL_NAME}</span></span></span></Link>
         <nav className="flex items-center gap-1">
