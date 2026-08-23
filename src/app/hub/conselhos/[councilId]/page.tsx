@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, BookOpenCheck, CalendarDays, CheckCircle2, ChevronRight, Clock3, Download, Loader2, Printer, RefreshCw, RotateCcw, Search, ShieldAlert, Trash2, TrendingDown, Upload, Users } from "lucide-react";
+import { AlertCircle, ArrowLeft, BookOpenCheck, CalendarDays, CheckCircle2, ChevronRight, CircleAlert, Clock3, Download, Loader2, Printer, RefreshCw, RotateCcw, Search, ShieldAlert, Trash2, TrendingDown, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { CouncilOverviewSkeleton } from "@/components/class-council/LoadingSkele
 import { classCouncilQueryKeys, useClassCouncil } from "@/hooks/useClassCouncils";
 import { councilFetch } from "@/lib/class-council/client";
 import { classStatusBadgeClass, classStatusLabel } from "@/lib/class-council/presentation";
+import type { StudentAlerts } from "@/types/class-council";
 
 type StudentDetail = {
   enrollmentId: string;
@@ -23,15 +24,7 @@ type StudentDetail = {
   classId: string;
   className: string;
   attendanceRate: number | null;
-  alerts: {
-    currentLowGradeCount: number;
-    previousLowGradeCount: number | null;
-    academicAlert: boolean;
-    lowAttendance: boolean;
-    atRisk: boolean;
-    evolution: "improved" | "stable" | "worsened" | "unavailable";
-    reasons: string[];
-  };
+  alerts: StudentAlerts;
 };
 
 type InterventionDetail = {
@@ -50,13 +43,13 @@ type Overview = {
   council: { id: string; school_year: number; term: number; meeting_date: string; status: string; current_import_id: string | null };
   classes: Array<{ id: string; official_code: string; display_name: string; status: string; studentCount?: number; atRiskCount?: number; class_strengths: string | null; general_difficulties: string | null; behavior_and_coexistence: string | null; learning_aspects: string | null; collective_strategies: string | null; participants: Array<{ name: string; role_or_subject: string | null }> }>;
   imports: Array<{ id: string; version: number; status: string; original_file_name: string; file_size_bytes: number; created_at: string; confirmed_at: string | null }>;
-  metrics: { students: number; atRisk: number; lowAttendance: number; worsened: number; pendingInterventions: number };
+  metrics: { students: number; monitoring: number; atRisk: number; retentionRisk: number; completionRisk: number; lowAttendance: number; worsened: number; pendingInterventions: number };
   studentDetails: StudentDetail[];
   interventionDetails: InterventionDetail[];
   subjectRanking: Array<{ name: string; low: number; numeric: number; percentage: number }>;
 };
 
-type MetricKey = "students" | "atRisk" | "lowAttendance" | "worsened" | "pendingInterventions";
+type MetricKey = "students" | "monitoring" | "atRisk" | "lowAttendance" | "worsened" | "pendingInterventions";
 
 const statusLabels: Record<string, string> = { draft: "Rascunho", preparation: "Preparação", in_progress: "Em andamento", completed: "Concluído", reopened: "Reaberto" };
 const interventionStatusLabels: Record<string, string> = { pending: "Pendente", in_progress: "Em andamento" };
@@ -68,6 +61,7 @@ function formatAttendance(rate: number | null): string {
 
 const metricStyles: Record<MetricKey, { card: string; icon: string }> = {
   students: { card: "border-blue-200/70 bg-blue-50/60 hover:bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20", icon: "text-blue-600 dark:text-blue-400" },
+  monitoring: { card: "border-amber-200/80 bg-amber-50/70 hover:bg-amber-100/70 dark:border-amber-900 dark:bg-amber-950/25", icon: "text-amber-600 dark:text-amber-400" },
   atRisk: { card: "border-rose-200/80 bg-rose-50/70 hover:bg-rose-100/70 dark:border-rose-900 dark:bg-rose-950/25", icon: "text-rose-600 dark:text-rose-400" },
   lowAttendance: { card: "border-blue-200/70 bg-blue-50/60 hover:bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20", icon: "text-blue-600 dark:text-blue-400" },
   worsened: { card: "border-blue-200/70 bg-blue-50/60 hover:bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20", icon: "text-blue-600 dark:text-blue-400" },
@@ -140,6 +134,7 @@ export default function CouncilDashboardPage() {
     if (!data || activeMetric === "pendingInterventions") return [];
     const selected = data.studentDetails.filter((student) => {
       if (activeMetric === "atRisk") return student.alerts.atRisk;
+      if (activeMetric === "monitoring") return student.alerts.academicStatus === "monitoring";
       if (activeMetric === "lowAttendance") return student.alerts.lowAttendance;
       if (activeMetric === "worsened") return student.alerts.evolution === "worsened";
       return true;
@@ -175,9 +170,10 @@ export default function CouncilDashboardPage() {
   const completed = data.classes.filter((item) => item.status === "completed").length;
   const metricCards: Array<{ key: MetricKey; label: string; value: number; icon: typeof Users; description: string }> = [
     { key: "students", label: "Estudantes", value: data.metrics.students, icon: Users, description: "Todos os estudantes ativos nesta importação" },
-    { key: "atRisk", label: "Em risco", value: data.metrics.atRisk, icon: ShieldAlert, description: "Quatro ou mais disciplinas com nota abaixo de 6,0 ou frequência anual abaixo de 80%" },
-    { key: "lowAttendance", label: "Baixa frequência", value: data.metrics.lowAttendance, icon: Clock3, description: "Frequência anual abaixo de 80%" },
-    { key: "worsened", label: "Pioraram", value: data.metrics.worsened, icon: TrendingDown, description: "Mais disciplinas abaixo de 6,0 que no bimestre anterior" },
+    { key: "monitoring", label: "Monitoramento", value: data.metrics.monitoring, icon: CircleAlert, description: "Estudantes fora do ritmo, ainda sem risco projetado" },
+    { key: "atRisk", label: "Em risco", value: data.metrics.atRisk, icon: ShieldAlert, description: "Risco acadêmico projetado ou frequência abaixo do limite formal" },
+    { key: "lowAttendance", label: "Baixa frequência", value: data.metrics.lowAttendance, icon: Clock3, description: "Atenção preventiva abaixo de 80%, separada do risco acadêmico" },
+    { key: "worsened", label: "Pioraram", value: data.metrics.worsened, icon: TrendingDown, description: "Mais disciplinas fora do ritmo que no bimestre anterior" },
     { key: "pendingInterventions", label: "Intervenções pendentes", value: data.metrics.pendingInterventions, icon: AlertCircle, description: "Intervenções pendentes ou em andamento" },
   ];
   const selectedMetric = metricCards.find((item) => item.key === activeMetric);
@@ -208,9 +204,9 @@ export default function CouncilDashboardPage() {
     </div>
     {(error || queryError) && <div className="mb-5 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4" />{error || (queryError instanceof Error ? queryError.message : "Não foi possível atualizar o conselho.")}</div>}
 
-    <section className="mb-6 rounded-2xl border bg-blue-50/60 p-5 dark:bg-blue-950/20"><div className="flex gap-3"><BookOpenCheck className="mt-0.5 h-5 w-5 text-blue-700" /><div><h2 className="font-semibold">Critérios deste conselho</h2><p className="mt-1 text-sm text-muted-foreground">Um estudante está em risco quando possui 4 ou mais disciplinas com nota numérica abaixo de 6,0 ou frequência anual abaixo de 80%. Piora é uma tendência separada, identificada quando aumenta a quantidade de disciplinas com nota baixa em relação ao bimestre anterior disponível. Marcadores nunca contam como zero.</p></div></div></section>
+    <section className="mb-6 rounded-2xl border bg-blue-50/60 p-5 dark:bg-blue-950/20"><div className="flex gap-3"><BookOpenCheck className="mt-0.5 h-5 w-5 text-blue-700" /><div><h2 className="font-semibold">Critérios deste conselho</h2><p className="mt-1 text-sm text-muted-foreground">O cálculo usa a pontuação acumulada: 1ª e 2ª séries entram em monitoramento a partir de 3 disciplinas fora do ritmo e em risco quando mais de 4 exigem média superior a 7. Na 3ª série, o monitoramento começa em 2; o risco considera 4 sob pressão ou 3 críticas. Frequência e notas faltantes são indicadores separados, e marcadores nunca contam como zero.</p></div></div></section>
 
-    <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <section className="grid grid-cols-2 gap-3 lg:grid-cols-6">
       {metricCards.map(({ key, label, value, icon: Icon }) => <button key={key} type="button" onClick={() => { setActiveMetric(key); setDetailSearch(""); }} className={`group rounded-2xl border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${metricStyles[key].card}`}>
         <div className="flex items-start justify-between gap-2"><Icon className={`h-5 w-5 ${metricStyles[key].icon}`} /><ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" /></div>
         <p className="mt-3 text-2xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{label}</p><span className="mt-2 block text-[11px] font-medium text-muted-foreground/80">Ver detalhes</span>

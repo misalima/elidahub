@@ -15,6 +15,7 @@ export interface AuthUser {
   id: string;
   email: string;
   role: string;
+  isActive: boolean;
   fullName: string | null;
   avatarUrl: string | null;
 }
@@ -40,6 +41,7 @@ function normalizeCachedUser(value: unknown): AuthUser | null {
   const candidate = value as Partial<AuthUser> & {
     full_name?: string | null;
     avatar_url?: string | null;
+    is_active?: boolean;
   };
 
   if (!candidate.id || !candidate.email || !candidate.role) return null;
@@ -48,6 +50,7 @@ function normalizeCachedUser(value: unknown): AuthUser | null {
     id: candidate.id,
     email: candidate.email,
     role: candidate.role,
+    isActive: candidate.isActive ?? candidate.is_active ?? true,
     fullName: candidate.fullName ?? candidate.full_name ?? null,
     avatarUrl: candidate.avatarUrl ?? candidate.avatar_url ?? null,
   };
@@ -113,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             id: session.user.id,
             email: session.user.email || "",
             role: "coordenador",
+            isActive: true,
             fullName: null,
             avatarUrl: null,
           };
@@ -121,17 +125,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const { data, error } = await supabase
           .from("profiles")
-          .select("role, full_name, avatar_url")
+          .select("role, is_active, full_name, avatar_url")
           .eq("id", session.user.id)
           .maybeSingle();
 
         if (error && cachedUser) return;
         if (error) throw error;
 
+        if (data && !data.is_active) {
+          document.cookie = "sb_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+          localStorage.removeItem(USER_CACHE_KEY);
+          setUser(null);
+          window.setTimeout(() => void supabase.auth.signOut(), 0);
+          return;
+        }
+
         const nextUser: AuthUser = {
           id: session.user.id,
           email: session.user.email || cachedUser?.email || "",
           role: data?.role || cachedUser?.role || "coordenador",
+          isActive: data?.is_active ?? cachedUser?.isActive ?? true,
           fullName: data?.full_name ?? cachedUser?.fullName ?? null,
           avatarUrl: data?.avatar_url ?? cachedUser?.avatarUrl ?? null,
         };
@@ -163,16 +176,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const { data, error: profileError } = await supabase
           .from("profiles")
-          .select("role, full_name, avatar_url")
+          .select("role, is_active, full_name, avatar_url")
           .eq("id", session.user.id)
           .maybeSingle();
 
         if (profileError) throw profileError;
+        if (data && !data.is_active) {
+          await supabase.auth.signOut();
+          throw new Error("Esta conta está desativada.");
+        }
 
         const nextUser: AuthUser = {
           id: session.user.id,
           email: session.user.email || "",
           role: data?.role || "coordenador",
+          isActive: data?.is_active ?? true,
           fullName: data?.full_name ?? null,
           avatarUrl: data?.avatar_url ?? null,
         };
@@ -198,7 +216,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from("profiles")
       .update(payload)
       .eq("id", user.id)
-      .select("role, full_name, avatar_url")
+      .select("role, is_active, full_name, avatar_url")
       .single();
 
     if (error) return { error: error.message };
@@ -206,6 +224,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const nextUser: AuthUser = {
       ...user,
       role: data.role,
+      isActive: data.is_active,
       fullName: data.full_name,
       avatarUrl: data.avatar_url,
     };

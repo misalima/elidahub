@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { filterActiveEnrollments } from "@/lib/class-council/activeImport";
 import { calculateStudentAlerts, compareStudentPriority } from "@/lib/class-council/calculateAlerts";
-import { BEHAVIOR_LABELS, COUNCIL_CRITERIA, resolveCouncilCriteria } from "@/lib/class-council/constants";
+import { BEHAVIOR_LABELS, COUNCIL_CRITERIA, councilCriteriaToJson, resolveCouncilCriteria, type CouncilCriteria } from "@/lib/class-council/constants";
 import { collectSupabasePages, SUPABASE_READ_PAGE_SIZE } from "@/lib/class-council/pagination";
 import { parsePerformanceReport } from "@/lib/class-council/parsePerformanceReport";
 import { isPcdStatus } from "@/lib/class-council/normalize";
@@ -9,14 +9,14 @@ import { hasPedagogicalContent } from "@/lib/class-council/studentRecord";
 import { CouncilDomainError, optionalText } from "@/lib/class-council/validation";
 import { assertClassCanComplete, assertCouncilCanComplete, assertCouncilCanReopen, findNextOpenClass } from "@/lib/class-council/stateRules";
 import { downloadImportFile } from "@/services/server/classCouncilImportService";
-import type { ActivitiesStatus, BehaviorCategory, InterventionStatus } from "@/types/class-council";
+import type { ActivitiesStatus, AttendanceSituation, BehaviorCategory, InterventionStatus } from "@/types/class-council";
 import type { Database, Json } from "@/types/database.types";
 
 function assertNoError(error: { message: string } | null) {
   if (error) throw new Error(error.message);
 }
 
-type CouncilEnrollmentRow = Pick<Database["public"]["Tables"]["class_council_enrollments"]["Row"], "id" | "council_class_id" | "student_id" | "activities_status"> & {
+type CouncilEnrollmentRow = Pick<Database["public"]["Tables"]["class_council_enrollments"]["Row"], "id" | "council_class_id" | "student_id" | "activities_status" | "attendance_situation"> & {
   students: Pick<Database["public"]["Tables"]["students"]["Row"], "enrollment_number" | "canonical_name">;
 };
 type CouncilSnapshotRow = Pick<Database["public"]["Tables"]["class_council_student_snapshots"]["Row"], "enrollment_id" | "attendance_rate" | "imported_name" | "report_position">;
@@ -27,7 +27,7 @@ async function listCouncilEnrollments(classIds: string[]): Promise<CouncilEnroll
   return collectSupabasePages(async (from, to) => {
     const { data, error } = await supabaseAdmin
       .from("class_council_enrollments")
-      .select("id, council_class_id, student_id, activities_status, students(enrollment_number, canonical_name)")
+      .select("id, council_class_id, student_id, activities_status, attendance_situation, students(enrollment_number, canonical_name)")
       .in("council_class_id", classIds)
       .order("id")
       .range(from, to);
@@ -128,12 +128,40 @@ export async function listCouncils() {
   }));
 }
 
+async function getAnnualCouncilCriteria(schoolYear: number): Promise<CouncilCriteria> {
+  const { data, error } = await supabaseAdmin
+    .from("pedagogical_risk_policies")
+    .select("version, annual_required_points, term_expected_points, partial_progression_limit, grade_1_2_attention_count, grade_3_attention_count, pressure_required_average, critical_required_average, attendance_attention_threshold, attendance_retention_threshold, source_reference")
+    .lte("school_year", schoolYear)
+    .order("school_year", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  assertNoError(error);
+  if (!data) return COUNCIL_CRITERIA;
+  return {
+    ...COUNCIL_CRITERIA,
+    policyVersion: data.version,
+    annualRequiredPoints: Number(data.annual_required_points),
+    termExpectedPoints: Number(data.term_expected_points),
+    partialProgressionLimit: data.partial_progression_limit,
+    grade12AttentionCount: data.grade_1_2_attention_count,
+    grade3AttentionCount: data.grade_3_attention_count,
+    pressureRequiredAverage: Number(data.pressure_required_average),
+    criticalRequiredAverage: Number(data.critical_required_average),
+    attendanceAttentionThreshold: Number(data.attendance_attention_threshold),
+    attendanceRetentionThreshold: Number(data.attendance_retention_threshold),
+    lowAttendanceThreshold: Number(data.attendance_attention_threshold),
+    sourceReference: data.source_reference,
+  };
+}
+
 export async function createCouncil(input: { schoolYear: number; term: number; meetingDate: string }, actorId: string) {
   const schoolYear = Number(input.schoolYear);
   const term = Number(input.term);
   if (!Number.isInteger(schoolYear) || schoolYear < 2020 || schoolYear > 2100) throw new CouncilDomainError("Ano letivo inválido.");
   if (![1, 2, 3, 4].includes(term)) throw new CouncilDomainError("Bimestre inválido.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.meetingDate)) throw new CouncilDomainError("Data do conselho inválida.");
+  const criteria = await getAnnualCouncilCriteria(schoolYear);
   const { data, error } = await supabaseAdmin
     .from("class_councils")
     .insert({
@@ -143,11 +171,7 @@ export async function createCouncil(input: { schoolYear: number; term: number; m
       meeting_date: input.meetingDate,
       created_by: actorId,
       updated_by: actorId,
-      criteria: {
-        low_grade_threshold: COUNCIL_CRITERIA.lowGradeThreshold,
-        low_grade_subject_alert_count: COUNCIL_CRITERIA.lowGradeSubjectAlertCount,
-        low_attendance_threshold: COUNCIL_CRITERIA.lowAttendanceThreshold,
-      },
+      criteria: councilCriteriaToJson(criteria),
     })
     .select("id, school_year, term, offering, meeting_date, status")
     .single();
@@ -168,7 +192,7 @@ export async function getCouncilOverview(councilId: string) {
 
   const { data: classes, error: classesError } = await supabaseAdmin
     .from("class_council_classes")
-    .select("id, official_code, display_name, grade_label, shift, status, completed_at, class_strengths, general_difficulties, behavior_and_coexistence, learning_aspects, collective_strategies")
+    .select("id, official_code, display_name, grade_label, grade_level, shift, status, completed_at, class_strengths, general_difficulties, behavior_and_coexistence, learning_aspects, collective_strategies")
     .eq("council_id", councilId)
     .order("display_name");
   assertNoError(classesError);
@@ -180,7 +204,7 @@ export async function getCouncilOverview(councilId: string) {
   assertNoError(importsError);
   const classIds = (classes ?? []).map((item) => item.id);
   if (!council.current_import_id || !classIds.length) {
-    return { council, classes: [], imports: imports ?? [], metrics: { students: 0, atRisk: 0, lowAttendance: 0, worsened: 0, pendingInterventions: 0 }, subjectRanking: [], studentDetails: [], interventionDetails: [] };
+    return { council, classes: [], imports: imports ?? [], metrics: { students: 0, monitoring: 0, atRisk: 0, retentionRisk: 0, completionRisk: 0, lowAttendance: 0, infrequent: 0, dropout: 0, worsened: 0, pendingInterventions: 0 }, subjectRanking: [], studentDetails: [], interventionDetails: [] };
   }
 
   const [enrollments, snapshotRows, resultRows, subjectResponse, interventionResponse, participantResponse] = await Promise.all([
@@ -206,18 +230,25 @@ export async function getCouncilOverview(councilId: string) {
     behaviorsByEnrollment.set(behavior.enrollment_id, current);
   }
   const activitiesByEnrollment = new Map(activeEnrollments.map((enrollment) => [enrollment.id, enrollment.activities_status]));
+  const attendanceSituationByEnrollment = new Map(activeEnrollments.map((enrollment) => [enrollment.id, enrollment.attendance_situation as AttendanceSituation]));
   const criteria = resolveCouncilCriteria(council.criteria);
-  const resultsByEnrollment = new Map<string, Array<{ term: number; grade: number | null; subject_id: string }>>();
+  const resultsByEnrollment = new Map<string, Array<{ term: number; grade: number | null; gradeMarker: string | null; subject_id: string }>>();
   for (const result of resultRows) {
     const results = resultsByEnrollment.get(result.enrollment_id) ?? [];
-    results.push({ term: result.term, grade: result.grade === null ? null : Number(result.grade), subject_id: result.subject_id });
+    results.push({ term: result.term, grade: result.grade === null ? null : Number(result.grade), gradeMarker: result.grade_marker, subject_id: result.subject_id });
     resultsByEnrollment.set(result.enrollment_id, results);
   }
-  const classMetrics = new Map<string, { studentCount: number; atRiskCount: number }>();
+  const classMetrics = new Map<string, { studentCount: number; monitoringCount: number; atRiskCount: number }>();
+  let monitoring = 0;
   let atRisk = 0;
+  let retentionRisk = 0;
+  let completionRisk = 0;
   let lowAttendance = 0;
+  let infrequent = 0;
+  let dropout = 0;
   let worsened = 0;
   const classNames = new Map((classes ?? []).map((item) => [item.id, item.display_name]));
+  const classGradeLevels = new Map((classes ?? []).map((item) => [item.id, item.grade_level as 1 | 2 | 3 | null]));
   const studentDetails: Array<{
     enrollmentId: string;
     name: string;
@@ -225,19 +256,27 @@ export async function getCouncilOverview(councilId: string) {
     classId: string;
     className: string;
     attendanceRate: number | null;
+    attendanceSituation: AttendanceSituation;
     alerts: ReturnType<typeof calculateStudentAlerts>;
   }> = [];
   for (const enrollment of activeEnrollments) {
     const snapshot = snapshots.get(enrollment.id);
     const attendanceRate = snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate);
     const name = snapshot?.imported_name ?? enrollment.students.canonical_name;
-    const alerts = calculateStudentAlerts({ name, attendanceRate, results: resultsByEnrollment.get(enrollment.id) ?? [] }, council.term, criteria);
-    const metric = classMetrics.get(enrollment.council_class_id) ?? { studentCount: 0, atRiskCount: 0 };
+    const alertResults = (resultsByEnrollment.get(enrollment.id) ?? []).map((result) => ({ ...result, subjectId: result.subject_id }));
+    const alerts = calculateStudentAlerts({ name, attendanceRate, gradeLevel: classGradeLevels.get(enrollment.council_class_id) ?? null, results: alertResults }, council.term, criteria);
+    const metric = classMetrics.get(enrollment.council_class_id) ?? { studentCount: 0, monitoringCount: 0, atRiskCount: 0 };
     metric.studentCount += 1;
+    if (alerts.academicStatus === "monitoring") metric.monitoringCount += 1;
     if (alerts.atRisk) metric.atRiskCount += 1;
     classMetrics.set(enrollment.council_class_id, metric);
+    monitoring += Number(alerts.academicStatus === "monitoring");
     atRisk += Number(alerts.atRisk);
+    retentionRisk += Number(alerts.academicStatus === "retention_risk");
+    completionRisk += Number(alerts.academicStatus === "completion_risk");
     lowAttendance += Number(alerts.lowAttendance);
+    infrequent += Number(enrollment.attendance_situation === "infrequent");
+    dropout += Number(enrollment.attendance_situation === "dropout");
     worsened += Number(alerts.evolution === "worsened");
     studentDetails.push({
       enrollmentId: enrollment.id,
@@ -246,6 +285,7 @@ export async function getCouncilOverview(councilId: string) {
       classId: enrollment.council_class_id,
       className: classNames.get(enrollment.council_class_id) ?? "Turma",
       attendanceRate,
+      attendanceSituation: enrollment.attendance_situation as AttendanceSituation,
       alerts,
     });
   }
@@ -268,16 +308,13 @@ export async function getCouncilOverview(councilId: string) {
     subjectCounts.set(key, count);
   }
   const studentNamesByEnrollment = new Map(studentDetails.map((student) => [student.enrollmentId, student.name]));
-  const formattedLowGradeThreshold = criteria.lowGradeThreshold.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
   const studentProblemsByEnrollment = new Map(studentDetails.map((student) => {
     const problems = new Set<string>();
-    if (student.alerts.currentLowGradeCount > 0) {
-      problems.add(`${student.alerts.currentLowGradeCount} ${student.alerts.currentLowGradeCount === 1 ? "disciplina" : "disciplinas"} com nota abaixo de ${formattedLowGradeThreshold}`);
-    }
-    if (student.alerts.lowAttendance && student.attendanceRate !== null) {
-      problems.add(`Frequência anual de ${student.attendanceRate.toLocaleString("pt-BR")}%`);
-    }
+    for (const reason of student.alerts.reasons) problems.add(reason);
     const activitiesStatus = activitiesByEnrollment.get(student.enrollmentId);
+    const attendanceSituation = attendanceSituationByEnrollment.get(student.enrollmentId);
+    if (attendanceSituation === "infrequent") problems.add("Infrequente conforme registro do conselho");
+    if (attendanceSituation === "dropout") problems.add("Desistente conforme registro do conselho");
     if (activitiesStatus === "does_not_do") problems.add("Não realiza atividades");
     if (activitiesStatus === "irregular") problems.add("Realização irregular de atividades");
     for (const behavior of behaviorsByEnrollment.get(student.enrollmentId) ?? []) {
@@ -288,7 +325,7 @@ export async function getCouncilOverview(councilId: string) {
       problems.add(label);
     }
     if (student.alerts.evolution === "worsened" && student.alerts.previousLowGradeCount !== null) {
-      problems.add(`Piora: de ${student.alerts.previousLowGradeCount} para ${student.alerts.currentLowGradeCount} disciplinas com nota baixa`);
+      problems.add(`Piora: de ${student.alerts.previousLowGradeCount} para ${student.alerts.currentLowGradeCount} disciplinas fora do ritmo`);
     }
     return [student.enrollmentId, [...problems]] as const;
   }));
@@ -298,8 +335,13 @@ export async function getCouncilOverview(councilId: string) {
     imports: imports ?? [],
     metrics: {
       students: activeEnrollments.length,
+      monitoring,
       atRisk,
+      retentionRisk,
+      completionRisk,
       lowAttendance,
+      infrequent,
+      dropout,
       worsened,
       pendingInterventions: interventionResponse.data?.length ?? 0,
     },
@@ -352,7 +394,7 @@ export async function getClassWorkspace(councilId: string, classId: string) {
 
   const enrollmentResponse = await supabaseAdmin
     .from("class_council_enrollments")
-    .select("id, student_id, discussed, activities_status, pedagogical_observation, positive_notes, students(id, enrollment_number, canonical_name)")
+    .select("id, student_id, discussed, activities_status, attendance_situation, pedagogical_observation, positive_notes, students(id, enrollment_number, canonical_name)")
     .eq("council_class_id", classId);
   assertNoError(enrollmentResponse.error);
   const enrollmentIds = (enrollmentResponse.data ?? []).map((item) => item.id);
@@ -403,10 +445,11 @@ export async function getClassWorkspace(councilId: string, classId: string) {
     const results = (resultsByEnrollment.get(enrollment.id) ?? []).map((result) => ({
       ...result,
       grade: result.grade === null ? null : Number(result.grade),
+      subjectId: result.subject_id,
       subjectName: subjectMap.get(result.subject_id)?.display_name ?? "Disciplina",
     }));
     const name = snapshot?.imported_name ?? enrollment.students.canonical_name;
-    const alerts = calculateStudentAlerts({ name, attendanceRate: snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate), results }, council.term, criteria);
+    const alerts = calculateStudentAlerts({ name, attendanceRate: snapshot?.attendance_rate === null || snapshot?.attendance_rate === undefined ? null : Number(snapshot.attendance_rate), gradeLevel: councilClass.grade_level as 1 | 2 | 3 | null, results }, council.term, criteria);
     return {
       enrollmentId: enrollment.id,
       studentId: enrollment.student_id,
@@ -419,6 +462,7 @@ export async function getClassWorkspace(councilId: string, classId: string) {
       enrollmentStatus: snapshot?.enrollment_status ?? null,
       discussed: enrollment.discussed,
       activitiesStatus: enrollment.activities_status,
+      attendanceSituation: enrollment.attendance_situation as AttendanceSituation,
       pedagogicalObservation: enrollment.pedagogical_observation,
       positiveNotes: enrollment.positive_notes,
       alerts,
@@ -519,15 +563,18 @@ export async function startClassWithTeachers(councilId: string, classId: string,
   return { started: true, teacherCount: normalized.length };
 }
 
-export async function updateStudentRecord(councilId: string, classId: string, enrollmentId: string, input: { discussed?: boolean; activitiesStatus?: ActivitiesStatus; pedagogicalObservation?: unknown; positiveNotes?: unknown; behaviors?: Array<{ category: BehaviorCategory; description?: unknown }> }, actorId: string) {
+export async function updateStudentRecord(councilId: string, classId: string, enrollmentId: string, input: { discussed?: boolean; activitiesStatus?: ActivitiesStatus; attendanceSituation?: AttendanceSituation; pedagogicalObservation?: unknown; positiveNotes?: unknown; behaviors?: Array<{ category: BehaviorCategory; description?: unknown }> }, actorId: string) {
   await requireEditableClass(councilId, classId);
   const { data: enrollment, error: enrollmentError } = await supabaseAdmin.from("class_council_enrollments").select("id").eq("id", enrollmentId).eq("council_class_id", classId).maybeSingle();
   assertNoError(enrollmentError);
   if (!enrollment) throw new CouncilDomainError("Estudante não encontrado nesta turma.", 404, "not_found");
   const validActivities = ["not_informed", "regular", "irregular", "does_not_do"];
   if (input.activitiesStatus && !validActivities.includes(input.activitiesStatus)) throw new CouncilDomainError("Situação das atividades inválida.");
+  const validAttendanceSituations: AttendanceSituation[] = ["regular", "infrequent", "dropout"];
+  if (input.attendanceSituation && !validAttendanceSituations.includes(input.attendanceSituation)) throw new CouncilDomainError("Situação de frequência inválida.");
   const containsPedagogicalContent = hasPedagogicalContent({
     activitiesStatus: input.activitiesStatus,
+    attendanceSituation: input.attendanceSituation,
     pedagogicalObservation: optionalText(input.pedagogicalObservation),
     positiveNotes: optionalText(input.positiveNotes),
     behaviors: input.behaviors,
@@ -535,6 +582,7 @@ export async function updateStudentRecord(councilId: string, classId: string, en
   const update = {
     ...(typeof input.discussed === "boolean" ? { discussed: input.discussed } : containsPedagogicalContent ? { discussed: true } : {}),
     ...(input.activitiesStatus ? { activities_status: input.activitiesStatus } : {}),
+    ...(input.attendanceSituation ? { attendance_situation: input.attendanceSituation } : {}),
     ...("pedagogicalObservation" in input ? { pedagogical_observation: optionalText(input.pedagogicalObservation) } : {}),
     ...("positiveNotes" in input ? { positive_notes: optionalText(input.positiveNotes) } : {}),
     updated_by: actorId,

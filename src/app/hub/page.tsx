@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowUpRight,
+  BarChart3,
   BookOpenCheck,
   FileText,
   LayoutDashboard,
@@ -61,7 +62,17 @@ export default function HubHomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <RoleGate allowed={["admin", "gestor", "coordenador"]}>
+              <ModuleCard
+                href="/hub/dashboard"
+                icon={BarChart3}
+                title="Dashboard pedagógico"
+                description="Acompanhe ritmo acadêmico, riscos, e outros dados em uma visão consolidada."
+                accent="violet"
+              />
+            </RoleGate>
+
             <ModuleCard
               href="/hub/simulados"
               icon={FileText}
@@ -103,18 +114,22 @@ function ModuleCard({
   icon: typeof FileText;
   title: string;
   description: string;
-  accent: "blue" | "emerald";
+  accent: "blue" | "emerald" | "violet";
 }) {
-  const styles =
-    accent === "blue"
-      ? {
+  const styles = accent === "blue"
+    ? {
           icon: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/70 dark:text-sky-300",
           hover: "hover:border-sky-300/80 dark:hover:border-sky-800",
-        }
-      : {
+      }
+    : accent === "emerald"
+      ? {
           icon: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300",
           hover: "hover:border-emerald-300/80 dark:hover:border-emerald-800",
-        };
+      }
+      : {
+          icon: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/70 dark:text-violet-300",
+          hover: "hover:border-violet-300/80 dark:hover:border-violet-800",
+      };
 
   return (
     <Link
