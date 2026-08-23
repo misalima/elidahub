@@ -40,10 +40,7 @@ export default function HubHomePage() {
       <HubHeader />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <section className="relative mb-8 overflow-hidden rounded-[2rem] border border-sky-200/60 bg-gradient-to-br from-white via-sky-50/80 to-blue-100/70 p-6 shadow-[0_24px_70px_-42px_rgba(2,132,199,0.65)] dark:border-sky-900/50 dark:from-slate-900 dark:via-sky-950/40 dark:to-blue-950/50 sm:p-8">
-          <div className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-sky-300/30 blur-3xl dark:bg-sky-600/15" />
-          <div className="pointer-events-none absolute -bottom-24 left-1/3 size-52 rounded-full bg-indigo-300/20 blur-3xl dark:bg-indigo-600/10" />
-
+        <section className="relative mb-8 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/82 p-6 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/10 dark:bg-slate-900/72 sm:p-8">
           <div className="relative">
             <PageHeader
               icon={LayoutDashboard}
@@ -111,12 +108,10 @@ function ModuleCard({
   const styles =
     accent === "blue"
       ? {
-          glow: "bg-sky-300/35 dark:bg-sky-600/15",
           icon: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/70 dark:text-sky-300",
           hover: "hover:border-sky-300/80 dark:hover:border-sky-800",
         }
       : {
-          glow: "bg-emerald-300/30 dark:bg-emerald-600/15",
           icon: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300",
           hover: "hover:border-emerald-300/80 dark:hover:border-emerald-800",
         };
@@ -126,7 +121,6 @@ function ModuleCard({
       href={href}
       className={`group relative min-h-64 overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-6 shadow-[0_18px_55px_-38px_rgba(15,23,42,0.5)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_-38px_rgba(15,23,42,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-900/75 dark:focus-visible:ring-offset-slate-950 ${styles.hover}`}
     >
-      <span className={`pointer-events-none absolute -right-14 -top-16 size-48 rounded-full blur-3xl transition-transform duration-500 group-hover:scale-125 ${styles.glow}`} />
       <span className="relative flex h-full flex-col">
         <span className="flex items-start">
           <span className={`flex size-12 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-300 group-hover:-rotate-2 group-hover:scale-105 ${styles.icon}`}>
