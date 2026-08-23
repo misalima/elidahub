@@ -147,6 +147,22 @@
 }
 
 @layer components {
+  .hub-app-background {
+    background-color: #f8fafc;
+    background-image:
+      radial-gradient(circle at 8% -10%, rgb(186 230 253 / 36%), transparent 31rem),
+      radial-gradient(circle at 92% 8%, rgb(199 210 254 / 24%), transparent 28rem),
+      linear-gradient(to bottom, rgb(248 250 252 / 96%), rgb(241 245 249 / 92%));
+  }
+
+  .dark .hub-app-background {
+    background-color: #020617;
+    background-image:
+      radial-gradient(circle at 8% -10%, rgb(3 105 161 / 20%), transparent 31rem),
+      radial-gradient(circle at 92% 8%, rgb(49 46 129 / 16%), transparent 28rem),
+      linear-gradient(to bottom, rgb(2 6 23 / 98%), rgb(15 23 42 / 96%));
+  }
+
   .council-skeleton {
     position: relative;
     overflow: hidden;
