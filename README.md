@@ -1,114 +1,67 @@
-# FelixHub
+# ÉlidaHub
 
-O FelixHub é uma plataforma abrangente desenvolvida para centralizar e otimizar a comunicação entre a escola e toda a comunidade escolar. Nosso objetivo é criar um ambiente unificado onde informações, agendamentos e interações fluam de forma eficiente e transparente.
+Plataforma de apoio à gestão pedagógica da Escola Estadual Profª. Maria Élida Dias Carvalho Pereira.
 
-## Módulo Inicial: Vem que Dá Tempo (VQDT)
+## Funcionalidades
 
-O módulo "Vem que Dá Tempo" (VQDT) é dedicado ao gerenciamento de agendamentos e à comunicação direta entre os bolsistas do programa (coordenadora e professores) e os cidadãos participantes.
+- Diretório e prontuário de estudantes, com ocorrências e situação escolar atual.
+- Dashboard pedagógico e indicadores de risco.
+- Conselho de Classe, importação de desempenho, intervenções e documentos em PDF.
+- Gestão de usuários, papéis de acesso e auditoria administrativa.
+- Perfil do usuário com atualização de nome, senha e avatar.
+- Criação, gestão e impressão de simulados e banco de questões.
+- Folhas de frequência e recursos do Professor Mentor.
+- Site institucional e consulta de boletins.
 
-### Funcionalidades Principais do VQDT:
+## Tecnologias
 
-*   **Gerenciamento de Agendamentos:** Criação, visualização, edição e controle de agendamentos para cursos e provas.
-*   **Comunicação via WhatsApp:** Envio automático de mensagens de confirmação, avisos em massa, e reagendamentos para os cidadãos inscritos.
-*   **Bot Automatizado:** Bot que responde dúvidas frequentes por texto, interpreta respostas simples dos cidadãos e encaminha casos complexos para atendimento humano.
-*   **Painel de Gestão:** Interface web para a equipe gestora acompanhar agendamentos, histórico de mensagens, status de atendimento e enviar mensagens diretamente.
-*   **Controle de Presença e Metas:** Acompanhamento do status de comparecimento e definição de metas mensais de agendamento.
-*   **Relatórios e Exportação:** Geração de relatórios básicos e exportação de dados em formatos CSV ou Excel.
+- Next.js 15 com App Router e React 19.
+- TypeScript e Tailwind CSS.
+- Supabase para PostgreSQL, autenticação e armazenamento.
+- TanStack Query, Radix UI e shadcn/ui.
+- Vitest para testes automatizados.
 
-### Tecnologias Utilizadas:
+## Configuração local
 
-*   **Frontend:** [Next.js](https://nextjs.org/) com App Router.
-*   **Banco de Dados e Autenticação:** [Supabase](https://supabase.com/) (PostgreSQL e Supabase Auth).
-*   **Componentes UI:** [Shadcn UI](https://ui.shadcn.com/) e Tailwind CSS.
-*   **Integração WhatsApp:** Provavelmente API Z-API para envio e recebimento de mensagens (ainda analisando outras possíveis soluções).
-*   **Bot:** Implementação própria com possibilidade de integração opcional com OpenAI GPT.
+Pré-requisitos: Node.js 20 ou superior, npm e um projeto Supabase compatível.
 
-### Estrutura do Banco de Dados (Schemas `public` e `vqdt`):
+```bash
+git clone git@github.com:misalima/elidahub.git
+cd elidahub
+npm ci
+cp .env.example .env.local
+npm run dev
+```
 
-O banco de dados é dividido em dois schemas principais para organizar as informações:
+Preencha em `.env.local` as seguintes variáveis:
 
-*   **`public`:** Tabelas gerais como perfis de usuários (`profiles`), mensagens (`messages`) e FAQ (`faq_entries`).
-*   **`vqdt`:** Tabelas específicas do módulo, incluindo cidadãos (`citizens`), agendamentos (`schedules`), agendamentos de cidadãos (`citizen_schedules`), metas mensais (`monthly_targets`) e lotes de mensagens em massa (`bulk_message_batches`).
+- `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_SUPABASE_SERVICE_ROLE_KEY`
+- `TEACHER_ACCESS_PASSWORD`
 
-### Diagramas do banco
-O primeiro é o diagrama do schema "public". O segundo, do schema "vqdt": 
-<figure>
-  <img width="589" height="639" alt="public_erd" src="https://github.com/user-attachments/assets/0ba61d2d-2c03-4575-a92c-b51a24d1309d" />
-</figure> 
+A aplicação local estará disponível em [http://localhost:3000](http://localhost:3000).
 
+## Banco de dados
 
-<figure>
-  <img width="655" height="695" alt="vqdt_erd" src="https://github.com/user-attachments/assets/1ba3e65f-e8af-4bad-8110-fe91aa739d1b" />
-</figure>
+As migrations versionadas estão em `supabase/migrations`. Antes de aplicá-las, confira se o Supabase CLI está conectado ao projeto da Escola Maria Élida e faça um backup do banco.
 
-## Como rodar o projeto
+```bash
+supabase db push --dry-run
+supabase db push
+```
 
-### Pré-requisitos
+Nunca reutilize as credenciais ou o vínculo do projeto Supabase do FelixHub.
 
-1. **Node.js**: Certifique-se de ter o Node.js instalado (versão recomendada: 18 ou superior).
-2. **Gerenciador de pacotes**: Utilize o `npm` ou `yarn` para instalar as dependências.
-3. **Variáveis de ambiente**: Configure as variáveis de ambiente conforme o arquivo `.env.example`.
+## Validação
 
-### Passos para rodar localmente
+```bash
+npm run type-check
+npm test
+npm run build
+```
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/misalima/felixhub.git
-   cd felixhub
-   ```
+## Identidade da escola
 
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-
-3. Configure as variáveis de ambiente:
-   - Copie o arquivo `.env.example` para `.env.local`:
-     ```bash
-     cp .env.example .env.local
-     ```
-   - Edite o arquivo `.env.local` e preencha os valores necessários.
-
-4. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-
-5. Acesse o projeto no navegador:
-   - O projeto estará disponível em [http://localhost:3000](http://localhost:3000).
-
-### Comandos úteis
-
-- **Iniciar o servidor de desenvolvimento**:
-  ```bash
-  npm run dev
-  ```
-- **Build para produção**:
-  ```bash
-  npm run build
-  ```
-- **Iniciar o servidor em produção**:
-  ```bash
-  npm run start
-  ```
-- **Verificar erros de lint**:
-  ```bash
-  npm run lint
-  ```
-- **Corrigir erros de lint**:
-  ```bash
-  npm run lint:fix
-  ```
-- **Checar tipos TypeScript**:
-  ```bash
-  npm run type-check
-  ```
-
-### Fluxo de login
-
-1. Acesse a página de login em `/vqdt/login`.
-2. Insira suas credenciais.
-3. Após o login, você será redirecionado para o dashboard.
-
-
-
+Nome do Hub, dados institucionais, contatos, equipe e navegação ficam centralizados em `src/constants/main/school.ts`. As cores globais ficam em `src/app/globals.css`.

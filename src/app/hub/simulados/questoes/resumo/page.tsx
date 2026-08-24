@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, 
   SelectContent, 
@@ -38,6 +39,7 @@ export default function ResumoQuestoesPage() {
   const [filterArea, setFilterArea] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showEJA, setShowEJA] = useState(false);
+  const [hideUsed, setHideUsed] = useState(false);
   
   // State for question preview modal
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -47,7 +49,12 @@ export default function ResumoQuestoesPage() {
   
   // Custom fetch to get all questions without filters
   const { data: response, isLoading } = useQuestions({ pageSize: 0 });
-  const questions = useMemo(() => response?.data || [], [response]);
+  const allQuestions = useMemo(() => response?.data || [], [response]);
+
+  const questions = useMemo(() => {
+    if (!hideUsed) return allQuestions;
+    return allQuestions.filter(q => !q.exam_questions || q.exam_questions.length === 0);
+  }, [allQuestions, hideUsed]);
 
   const stats = useMemo(() => {
     // Current questions filtered by Level for the context of Area counts
@@ -103,9 +110,9 @@ export default function ResumoQuestoesPage() {
       byArea,
       byLevel,
       totalByLevel,
-      totalCount: questions.length
+      totalCount: allQuestions.length
     };
-  }, [questions, filterArea, filterLevel]);
+  }, [questions, allQuestions, filterArea, filterLevel]);
 
   const getDisciplinePriority = (subject: string) => {
     // Core subjects
@@ -149,11 +156,11 @@ export default function ResumoQuestoesPage() {
   };
 
   const getAreaColor = (area: string) => {
-    if (area.includes('Linguagens')) return 'from-rose-50/50 to-rose-100/30 border-rose-200/50 text-rose-700 dark:from-rose-950/20 dark:to-rose-900/10 dark:border-rose-900/50 dark:text-rose-400';
-    if (area.includes('Humanas')) return 'from-amber-50/50 to-amber-100/30 border-amber-200/50 text-amber-700 dark:from-amber-950/20 dark:to-amber-900/10 dark:border-amber-900/50 dark:text-amber-400';
-    if (area.includes('Natureza')) return 'from-sky-50/50 to-sky-100/30 border-sky-200/50 text-sky-700 dark:from-sky-950/20 dark:to-sky-900/10 dark:border-sky-900/50 dark:text-sky-400';
-    if (area.includes('Matemática')) return 'from-emerald-50/50 to-emerald-100/30 border-emerald-200/50 text-emerald-700 dark:from-emerald-950/20 dark:to-emerald-900/10 dark:border-emerald-900/50 dark:text-emerald-400';
-    return 'from-slate-50/50 to-slate-100/30 border-slate-200/50 text-slate-700 dark:from-slate-900/40 dark:to-slate-950/40 dark:border-slate-800 dark:text-slate-400';
+    if (area.includes('Linguagens')) return 'bg-white/85 border-rose-200/70 text-rose-700 dark:bg-card dark:border-rose-900/50 dark:text-rose-400';
+    if (area.includes('Humanas')) return 'bg-white/85 border-amber-200/70 text-amber-700 dark:bg-card dark:border-amber-900/50 dark:text-amber-400';
+    if (area.includes('Natureza')) return 'bg-white/85 border-sky-200/70 text-sky-700 dark:bg-card dark:border-sky-900/50 dark:text-sky-400';
+    if (area.includes('Matemática')) return 'bg-white/85 border-emerald-200/70 text-emerald-700 dark:bg-card dark:border-emerald-900/50 dark:text-emerald-400';
+    return 'bg-white/85 border-slate-200/70 text-slate-700 dark:bg-card dark:border-slate-800 dark:text-slate-400';
   };
 
   const getLevelColor = (level: string) => {
@@ -222,6 +229,20 @@ export default function ResumoQuestoesPage() {
             {showEJA ? "Ocultar EJA" : "Incluir EJA"}
           </Button>
 
+          <div className="flex items-center space-x-2 bg-card border rounded-xl h-11 px-4 shadow-sm transition-all hover:border-primary/30">
+            <Checkbox
+              id="hide-used-questions"
+              checked={hideUsed}
+              onCheckedChange={(checked) => setHideUsed(!!checked)}
+            />
+            <label
+              htmlFor="hide-used-questions"
+              className="text-xs font-semibold leading-none cursor-pointer text-muted-foreground select-none"
+            >
+              Mostrar apenas questões novas
+            </label>
+          </div>
+
           <div className="flex items-center gap-2 bg-card border rounded-xl p-1.5 px-3 shadow-sm h-11">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <div className="flex items-center gap-2">
@@ -260,7 +281,7 @@ export default function ResumoQuestoesPage() {
       {/* Totais por Área - Horizontal Scroll on Mobile */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {KNOWLEDGE_AREAS.map(area => (
-          <Card key={area} className={`relative group overflow-hidden border shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br ${getAreaColor(area)}`}>
+          <Card key={area} className={`relative group overflow-hidden border shadow-sm hover:shadow-md transition-all duration-300 ${getAreaColor(area)}`}>
             <div className="absolute top-0 left-0 w-full h-1 bg-current opacity-10" />
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-[10px] font-bold uppercase tracking-widest opacity-80 current-color">

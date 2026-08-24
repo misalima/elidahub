@@ -124,4 +124,70 @@
   body {
     @apply bg-background text-foreground;
   }
+  button:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  summary,
+  [role="button"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  label:has(input[type="checkbox"]:not(:disabled)),
+  label:has(input[type="radio"]:not(:disabled)) {
+    cursor: pointer;
+  }
+}
+
+@keyframes council-skeleton-shimmer {
+  0% {
+    transform: translateX(-180%) skewX(-18deg);
+  }
+  55%,
+  100% {
+    transform: translateX(320%) skewX(-18deg);
+  }
+}
+
+@layer components {
+  .hub-app-background {
+    background-color: #f8fafc;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgb(252 101 205 / 10%), transparent 34%),
+      radial-gradient(circle at 88% 14%, rgb(208 178 90 / 13%), transparent 30%),
+      linear-gradient(145deg, rgb(248 250 252) 0%, rgb(250 248 252) 48%, rgb(248 250 252) 100%);
+  }
+
+  .dark .hub-app-background {
+    background-color: #020617;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgb(252 101 205 / 9%), transparent 34%),
+      radial-gradient(circle at 88% 14%, rgb(208 178 90 / 8%), transparent 30%),
+      linear-gradient(145deg, rgb(2 6 23) 0%, rgb(15 14 27) 48%, rgb(2 6 23) 100%);
+  }
+
+  .council-skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: color-mix(in oklab, var(--accent) 78%, var(--background));
+  }
+
+  .council-skeleton::after {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 55%;
+    content: "";
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 68%), transparent);
+    animation: council-skeleton-shimmer 1.85s ease-in-out infinite;
+  }
+
+  .dark .council-skeleton::after {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 9%), transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .council-skeleton::after {
+    animation: none;
+  }
 }

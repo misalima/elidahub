@@ -1,26 +1,37 @@
 "use client";
 
-import { useUser } from "@/hooks/useUser";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { FileText, LogOut, LayoutDashboard } from "lucide-react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowUpRight,
+  BarChart3,
+  BookOpenCheck,
+  FileText,
+  LayoutDashboard,
+  UsersRound,
+} from "lucide-react";
+import { HubHeader } from "@/components/hub/HubHeader";
+import { PageHeader } from "@/components/hub/PageHeader";
+import { RoleGate } from "@/components/RoleGate";
+import { HUB_NAME } from "@/constants/main/school";
+import { useUser } from "@/hooks/useUser";
 
 export default function HubHomePage() {
-  const { user, loading, logout } = useUser();
+  const { user, loading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/hub/login");
-    }
+    if (!loading && !user) router.replace("/hub/login");
   }, [user, loading, router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      <div className="hub-app-background grid min-h-screen place-items-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-9 animate-spin rounded-full border-[3px] border-primary/20 border-t-primary" />
+          <p className="text-xs font-medium text-muted-foreground">Preparando seu painel...</p>
+        </div>
       </div>
     );
   }
@@ -28,71 +39,141 @@ export default function HubHomePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-card border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Image
-            src="/logo_escola.png"
-            alt="Logo"
-            width={40}
-            height={40}
-            className="object-contain"
-          />
-          <div>
-            <h1 className="text-sm font-bold text-foreground">ÉlidaHub</h1>
-            <p className="text-xs text-muted-foreground">Portal da Coordenação</p>
+    <div className="hub-app-background flex min-h-screen flex-col">
+      <HubHeader />
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 min-[1800px]:max-w-[1600px] min-[2400px]:max-w-[1800px]">
+        <section className="relative mb-8 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/82 p-6 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/10 dark:bg-slate-900/72 sm:p-8">
+          <div className="relative">
+            <PageHeader
+              icon={LayoutDashboard}
+              title="Painel de módulos"
+              description="Tudo o que a coordenação precisa, organizado em um só lugar. Escolha uma área para começar."
+              className="mb-0"
+            />
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <p className="text-sm font-medium text-muted-foreground hidden sm:block">
-            {user.email}
-          </p>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            Sair
-          </button>
-        </div>
-      </header>
+        </section>
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 md:p-10 max-w-6xl mx-auto w-full">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <LayoutDashboard className="w-6 h-6" />
-            Painel de Módulos
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Selecione o módulo que deseja acessar.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link
-            href="/hub/simulados"
-            className="group flex flex-col p-6 rounded-2xl border bg-white dark:bg-card hover:shadow-md hover:border-primary/50 transition-all"
-          >
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <FileText className="w-6 h-6 text-primary" />
+        <section aria-labelledby="modules-title">
+          <div className="mb-4 px-1">
+            <div>
+              <h2 id="modules-title" className="text-sm font-bold text-slate-900 dark:text-white">
+                Seus módulos
+              </h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Acessos disponíveis para o seu perfil.</p>
             </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">Simulados</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Módulo de criação, gerenciamento e impressão de simulados e banco de questões.
-            </p>
-          </Link>
-          
-          {/* Espaço para módulos futuros */}
-        </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <RoleGate allowed={["admin", "gestor", "coordenador"]}>
+              <ModuleCard
+                href="/hub/alunos"
+                icon={UsersRound}
+                title="Estudantes"
+                description="Consulte prontuários, históricos pedagógicos e ocorrências da vida escolar."
+                accent="gold"
+              />
+            </RoleGate>
+
+            <RoleGate allowed={["admin", "gestor", "coordenador"]}>
+              <ModuleCard
+                href="/hub/dashboard"
+                icon={BarChart3}
+                title="Dashboard pedagógico"
+                description="Acompanhe ritmo acadêmico, riscos, e outros dados em uma visão consolidada."
+                accent="violet"
+              />
+            </RoleGate>
+
+            <ModuleCard
+              href="/hub/simulados"
+              icon={FileText}
+              title="Simulados"
+              description="Crie avaliações, gerencie o banco de questões e prepare materiais para impressão."
+              accent="pink"
+            />
+
+            <RoleGate allowed={["admin", "gestor", "coordenador"]}>
+              <ModuleCard
+                href="/hub/conselhos"
+                icon={BookOpenCheck}
+                title="Conselho de Classe"
+                description="Importe desempenhos, conduza reuniões por turma e acompanhe intervenções."
+                accent="emerald"
+              />
+            </RoleGate>
+          </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="py-6 text-center text-xs text-muted-foreground border-t bg-white dark:bg-card leading-relaxed">
-        ÉlidaHub · Plataforma de gestão escolar<br />
-        All rights reserved  &copy; {new Date().getFullYear()} Desenvolvido por Misael Lima
+      <footer className="border-t border-slate-200/70 bg-white/55 px-4 py-5 text-center text-[11px] leading-relaxed text-muted-foreground backdrop-blur dark:border-white/10 dark:bg-slate-950/45">
+        <strong className="font-semibold text-slate-600 dark:text-slate-300">{HUB_NAME}</strong> · Plataforma de gestão escolar
+        <span className="mx-2 text-slate-300 dark:text-slate-700">•</span>
+        © {new Date().getFullYear()} Misael Lima
       </footer>
     </div>
+  );
+}
+
+function ModuleCard({
+  href,
+  icon: Icon,
+  title,
+  description,
+  accent,
+}: {
+  href: string;
+  icon: typeof FileText;
+  title: string;
+  description: string;
+  accent: "gold" | "pink" | "emerald" | "violet";
+}) {
+  const styles = accent === "gold"
+    ? {
+          icon: "border-gold/50 bg-gold/10 text-secondary dark:border-gold/30 dark:bg-gold/10 dark:text-gold",
+          hover: "hover:border-gold/70 dark:hover:border-gold/40",
+      }
+    : accent === "pink"
+      ? {
+          icon: "border-primary/30 bg-primary/10 text-primary dark:border-primary/25 dark:bg-primary/10 dark:text-primary",
+          hover: "hover:border-primary/45 dark:hover:border-primary/35",
+        }
+    : accent === "emerald"
+      ? {
+          icon: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300",
+          hover: "hover:border-emerald-300/80 dark:hover:border-emerald-800",
+      }
+      : {
+          icon: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/70 dark:text-violet-300",
+          hover: "hover:border-violet-300/80 dark:hover:border-violet-800",
+      };
+
+  return (
+    <Link
+      href={href}
+      className={`group relative min-h-64 overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-6 shadow-[0_18px_55px_-38px_rgba(15,23,42,0.5)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_-38px_rgba(15,23,42,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-900/75 dark:focus-visible:ring-offset-slate-950 ${styles.hover}`}
+    >
+      <span className="relative flex h-full flex-col">
+        <span className="flex items-start">
+          <span className={`flex size-12 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-300 group-hover:-rotate-2 group-hover:scale-105 ${styles.icon}`}>
+            <Icon className="size-5" />
+          </span>
+        </span>
+
+        <span className="mt-auto pt-9">
+          <span className="flex items-center justify-between gap-3">
+            <strong className="text-xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+              {title}
+            </strong>
+            <span className="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-300 group-hover:translate-x-1 group-hover:border-primary/35 group-hover:text-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:group-hover:border-primary/35 dark:group-hover:text-primary">
+              <ArrowUpRight className="size-4" />
+            </span>
+          </span>
+          <span className="mt-2 block max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
+            {description}
+          </span>
+        </span>
+      </span>
+    </Link>
   );
 }

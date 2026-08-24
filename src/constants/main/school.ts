@@ -6,6 +6,8 @@
 export const SCHOOL_NAME =
   "Escola Estadual Profª. Maria Élida Dias Carvalho Pereira";
 export const SCHOOL_SHORT_NAME = "E.E. Profª. Maria Élida";
+export const HUB_NAME = "ÉlidaHub";
+export const HUB_USER_CACHE_KEY = "elidahub_user";
 export const SCHOOL_LOCATION = "São Sebastião – AL";
 export const SCHOOL_MOTTO = "Scientia Potentia Est";
 
