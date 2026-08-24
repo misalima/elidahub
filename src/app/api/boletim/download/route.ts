@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { generateBoletimDownloadUrl } from "@/services/server/boletimService";
+import { STUDENT_REPORTS_ENABLED } from "@/constants/main/school";
 
 export async function POST(req: Request) {
+  if (!STUDENT_REPORTS_ENABLED) {
+    return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+  }
+
   try {
     const body = await req.json();
     const { alunoId, dataNascimento } = body;

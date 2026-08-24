@@ -9,7 +9,8 @@ export const SCHOOL_SHORT_NAME = "E.E. Profª. Maria Élida";
 export const HUB_NAME = "ÉlidaHub";
 export const HUB_USER_CACHE_KEY = "elidahub_user";
 export const SCHOOL_LOCATION = "São Sebastião – AL";
-export const SCHOOL_MOTTO = "Scientia Potentia Est";
+export const LANDING_PAGE_UNDER_CONSTRUCTION = true;
+export const STUDENT_REPORTS_ENABLED = false;
 
 // ── Números ──────────────────────────────────────────────────
 export const SCHOOL_STATS = [

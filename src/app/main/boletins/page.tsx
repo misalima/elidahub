@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { STUDENT_REPORTS_ENABLED } from "@/constants/main/school";
 
 interface Aluno {
   id: string;
@@ -9,6 +11,14 @@ interface Aluno {
 }
 
 export default function PaginaBoletim() {
+  if (!STUDENT_REPORTS_ENABLED) {
+    notFound();
+  }
+
+  return <ConteudoPaginaBoletim />;
+}
+
+function ConteudoPaginaBoletim() {
   const [turmas, setTurmas] = useState<string[]>([]);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
 
