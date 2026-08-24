@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/main/Header";
-import { Footer } from "@/components/main/Footer";
+import { MainShell } from "@/components/main/MainShell";
 import {
   SCHOOL_NAME,
   SCHOOL_LOCATION,
-  SCHOOL_MOTTO,
 } from "@/constants/main/school";
 
 export const metadata: Metadata = {
   title: `${SCHOOL_NAME} | ${SCHOOL_LOCATION}`,
-  description: `Site oficial da ${SCHOOL_NAME}, localizada em ${SCHOOL_LOCATION}. "${SCHOOL_MOTTO}" — Ensino Médio Regular e EJA nos turnos matutino, vespertino e noturno.`,
+  description: `Site oficial da ${SCHOOL_NAME}, localizada em ${SCHOOL_LOCATION}. Ensino Médio Regular e EJA nos turnos matutino, vespertino e noturno.`,
   keywords: [
     "Escola Estadual",
     "Professora Maria Élida",
@@ -30,13 +28,5 @@ export const metadata: Metadata = {
 export default function MainLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <>
-      <Header />
-      <main id="main-content" tabIndex={-1}>
-        {children}
-      </main>
-      <Footer />
-    </>
-  );
+  return <MainShell>{children}</MainShell>;
 }

@@ -42,15 +42,6 @@ export function Hero() {
 
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-32">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-gold/20 border border-gold/30 text-gold text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-8 backdrop-blur-sm">
-          <span
-            className="inline-block w-1.5 h-1.5 bg-gold rounded-full animate-pulse"
-            aria-hidden="true"
-          />
-          Scientia Potentia Est
-        </div>
-
         {/* Title */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
           Formando cidadãos,{" "}
