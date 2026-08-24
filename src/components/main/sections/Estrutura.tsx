@@ -23,7 +23,7 @@ export function Estrutura() {
     <section
       id="estrutura"
       aria-labelledby="estrutura-heading"
-      className="py-20 lg:py-28 bg-slate-50"
+      className="bg-slate-50 py-20 dark:bg-slate-900 lg:py-28"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -33,11 +33,11 @@ export function Estrutura() {
           </Badge>
           <h2
             id="estrutura-heading"
-            className="text-3xl sm:text-4xl font-extrabold text-secondary mb-4"
+            className="mb-4 text-3xl font-extrabold text-secondary dark:text-slate-50 sm:text-4xl"
           >
             Nossa <span className="text-primary">estrutura</span>
           </h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <p className="mx-auto max-w-xl text-lg text-gray-500 dark:text-slate-300">
             Espaços pensados para o aprendizado, o convívio e o desenvolvimento
             integral dos estudantes.
           </p>
@@ -52,7 +52,7 @@ export function Estrutura() {
               return (
                 <div
                   key={facility.id}
-                  className="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 group"
+                  className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md dark:border-white/10 dark:bg-card dark:hover:border-primary/40"
                 >
                   <div
                     className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors flex-shrink-0"
@@ -62,7 +62,7 @@ export function Estrutura() {
                       <Icon className="w-5 h-5 text-primary" aria-hidden="true" />
                     )}
                   </div>
-                  <span className="text-gray-700 font-medium text-sm leading-snug">
+                  <span className="text-sm font-medium leading-snug text-gray-700 dark:text-slate-200">
                     {facility.label}
                   </span>
                 </div>
@@ -77,7 +77,7 @@ export function Estrutura() {
               return (
                 <div
                   key={facility.id}
-                  className="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 group sm:w-[calc(33.333%-10px)]"
+                  className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md dark:border-white/10 dark:bg-card dark:hover:border-primary/40 sm:w-[calc(33.333%-10px)]"
                 >
                   <div
                     className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors flex-shrink-0"
@@ -87,7 +87,7 @@ export function Estrutura() {
                       <Icon className="w-5 h-5 text-primary" aria-hidden="true" />
                     )}
                   </div>
-                  <span className="text-gray-700 font-medium text-sm leading-snug">
+                  <span className="text-sm font-medium leading-snug text-gray-700 dark:text-slate-200">
                     {facility.label}
                   </span>
                 </div>

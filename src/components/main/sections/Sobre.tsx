@@ -6,7 +6,7 @@ export function Sobre() {
     <section
       id="sobre"
       aria-labelledby="sobre-heading"
-      className="py-20 lg:py-28 bg-white"
+      className="bg-white py-20 dark:bg-slate-950 lg:py-28"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -19,14 +19,14 @@ export function Sobre() {
             </div>
             <h2
               id="sobre-heading"
-              className="text-3xl sm:text-4xl font-extrabold text-secondary leading-tight mb-6"
+              className="mb-6 text-3xl font-extrabold leading-tight text-secondary dark:text-slate-50 sm:text-4xl"
             >
               Uma história de{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary">
+              <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent dark:from-gold dark:to-primary">
                 mais de 75 anos
               </span>
             </h2>
-            <p className="text-gray-600 text-lg leading-relaxed mb-8">
+            <p className="mb-8 text-lg leading-relaxed text-gray-600 dark:text-slate-300">
               Fundada entre 1948 e 1950 e oficializada em 1989, somos referência
               no município de São Sebastião – AL. Vinculada à SEDUC/AL e à 5ª
               GEE (Arapiraca), somos a principal oferta de Ensino Médio da
@@ -38,15 +38,15 @@ export function Sobre() {
             </p>
 
             <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 bg-secondary/5 border border-secondary/10 text-secondary px-4 py-2 rounded-full text-sm font-medium">
+              <div className="flex items-center gap-2 rounded-full border border-secondary/10 bg-secondary/5 px-4 py-2 text-sm font-medium text-secondary dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                 <BookOpen className="w-4 h-4 text-primary" aria-hidden="true" />
                 Ensino Médio Regular
               </div>
-              <div className="flex items-center gap-2 bg-secondary/5 border border-secondary/10 text-secondary px-4 py-2 rounded-full text-sm font-medium">
+              <div className="flex items-center gap-2 rounded-full border border-secondary/10 bg-secondary/5 px-4 py-2 text-sm font-medium text-secondary dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                 <Award className="w-4 h-4 text-primary" aria-hidden="true" />
                 EJA – Educação de Jovens e Adultos
               </div>
-              <div className="flex items-center gap-2 bg-secondary/5 border border-secondary/10 text-secondary px-4 py-2 rounded-full text-sm font-medium">
+              <div className="flex items-center gap-2 rounded-full border border-secondary/10 bg-secondary/5 px-4 py-2 text-sm font-medium text-secondary dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                 <Building2 className="w-4 h-4 text-primary" aria-hidden="true" />
                 3 Turnos de atendimento
               </div>

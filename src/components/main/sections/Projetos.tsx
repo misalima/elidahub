@@ -21,7 +21,7 @@ export function Projetos() {
     <section
       id="projetos"
       aria-labelledby="projetos-heading"
-      className="py-20 lg:py-28 bg-white"
+      className="bg-white py-20 dark:bg-slate-950 lg:py-28"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -31,11 +31,11 @@ export function Projetos() {
           </Badge>
           <h2
             id="projetos-heading"
-            className="text-3xl sm:text-4xl font-extrabold text-secondary mb-4"
+            className="mb-4 text-3xl font-extrabold text-secondary dark:text-slate-50 sm:text-4xl"
           >
             Nossos <span className="text-primary">projetos</span>
           </h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <p className="mx-auto max-w-xl text-lg text-gray-500 dark:text-slate-300">
             Ações que promovem protagonismo, ciência, inclusão e a valorização
             da cultura local.
           </p>
@@ -48,7 +48,7 @@ export function Projetos() {
             return (
               <Card
                 key={project.id}
-                className="group border-slate-200 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                className="group overflow-hidden border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 dark:border-white/10 dark:hover:border-primary/40"
               >
                 {/* Top accent bar */}
                 <div
@@ -68,12 +68,12 @@ export function Projetos() {
                     </div>
                     <Badge
                       variant="secondary"
-                      className="bg-secondary/5 text-secondary text-xs font-semibold"
+                      className="bg-secondary/5 text-xs font-semibold text-secondary dark:bg-white/10 dark:text-slate-200"
                     >
                       {project.badge}
                     </Badge>
                   </div>
-                  <CardTitle className="text-secondary text-xl font-bold">
+                  <CardTitle className="text-xl font-bold text-secondary dark:text-slate-50">
                     {project.title}
                   </CardTitle>
                   <CardDescription className="text-primary font-medium text-sm">
@@ -82,7 +82,7 @@ export function Projetos() {
                 </CardHeader>
 
                 <CardContent>
-                  <p className="text-gray-600 text-sm leading-relaxed">
+                  <p className="text-sm leading-relaxed text-gray-600 dark:text-slate-300">
                     {project.description}
                   </p>
                 </CardContent>
