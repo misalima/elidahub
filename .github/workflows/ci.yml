@@ -7,6 +7,10 @@ on:
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-anon-key' }}
+      NEXT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NEXT_SUPABASE_SERVICE_ROLE_KEY || 'ci-service-role-key' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -14,36 +18,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Set environment variables
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NEXT_SUPABASE_SERVICE_ROLE_KEY }}
-        run: echo "Environment variables set"
-
       - name: Run ESLint
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NEXT_SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run lint
 
       - name: Run TypeScript check
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NEXT_SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run type-check
 
       - name: Build project
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NEXT_SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run build
