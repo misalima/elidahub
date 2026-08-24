@@ -48,11 +48,3 @@ export const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
     fetch: customFetch,
   },
 });
-
-// Gracefully catch any unhandled background session recovery/refresh rejections on mount.
-if (typeof window !== 'undefined' && !publicRoute) {
-  supabase.auth.initialize().catch((err) => {
-    // eslint-disable-next-line no-console
-    console.warn("[Supabase Client] Auth initialization handled gracefully:", err);
-  });
-}
