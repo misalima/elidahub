@@ -1,23 +1,94 @@
 import { collectSupabasePages } from "@/lib/class-council/pagination";
+import { resolveCouncilCriteria } from "@/lib/class-council/constants";
+import { interventionClassGroupKey } from "@/lib/interventions/grouping";
 import { CouncilDomainError } from "@/lib/class-council/validation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { updateIntervention } from "@/services/server/classCouncilService";
 import type { InterventionReportData, InterventionReportItem, InterventionTargetType } from "@/types/intervention";
-import type { InterventionStatus } from "@/types/class-council";
+import type { BehaviorCategory, InterventionStatus } from "@/types/class-council";
+import type { Json } from "@/types/database.types";
 
-type RelatedCouncil = { id: string; school_year: number; term: number; meeting_date: string };
+type RelatedCouncil = { id: string; school_year: number; term: number; meeting_date: string; current_import_id: string | null; criteria: Json | null };
 type RelatedClass = { id: string; display_name: string; official_code: string };
 type RelatedStudent = { id: string; canonical_name: string; enrollment_number: string };
+type ContextEnrollment = { id: string; pedagogical_observation: string | null };
+type ContextBehavior = { enrollment_id: string; category: string; description: string | null };
+type ContextResult = { enrollment_id: string; import_id: string; term: number; grade: number | null };
+export type ListInterventionsOptions = {
+  year?: number | "latest" | "all";
+  status?: "open" | "all" | InterventionStatus;
+  classKeys?: string[];
+  targetType?: "all" | InterventionTargetType;
+  responsible?: "all" | "none" | string;
+  overdueOnly?: boolean;
+  search?: string;
+  cursor?: number;
+  limit?: number;
+  all?: boolean;
+  metadataOnly?: boolean;
+  studentIds?: string[];
+};
+
+const CONTEXT_BATCH_SIZE = 100;
 
 function relation<T>(value: T | T[] | null): T | null {
   return Array.isArray(value) ? value[0] ?? null : value;
 }
 
-export async function listInterventions(): Promise<InterventionReportData> {
+function batches<T>(values: T[], size = CONTEXT_BATCH_SIZE) {
+  return Array.from({ length: Math.ceil(values.length / size) }, (_, index) => values.slice(index * size, (index + 1) * size));
+}
+
+async function loadCouncilContexts(enrollmentIds: string[], importIds: string[]) {
+  if (!enrollmentIds.length) return { enrollments: [] as ContextEnrollment[], behaviors: [] as ContextBehavior[], results: [] as ContextResult[] };
+
+  const responses = await Promise.all(batches(enrollmentIds).map(async (enrollmentBatch) => {
+    const [enrollmentResponse, behaviorResponse, results] = await Promise.all([
+      supabaseAdmin.from("class_council_enrollments").select("id, pedagogical_observation").in("id", enrollmentBatch),
+      supabaseAdmin.from("class_council_behaviors").select("enrollment_id, category, description").in("enrollment_id", enrollmentBatch),
+      importIds.length
+        ? collectSupabasePages(async (from, to) => {
+          const { data, error } = await supabaseAdmin
+            .from("class_council_results")
+            .select("enrollment_id, import_id, term, grade")
+            .in("enrollment_id", enrollmentBatch)
+            .in("import_id", importIds)
+            .order("id")
+            .range(from, to);
+          if (error) throw new Error(error.message);
+          return data ?? [];
+        })
+        : Promise.resolve([]),
+    ]);
+    if (enrollmentResponse.error) throw new Error(enrollmentResponse.error.message);
+    if (behaviorResponse.error) throw new Error(behaviorResponse.error.message);
+    return {
+      enrollments: enrollmentResponse.data ?? [],
+      behaviors: behaviorResponse.data ?? [],
+      results,
+    };
+  }));
+
+  return {
+    enrollments: responses.flatMap((response) => response.enrollments) as ContextEnrollment[],
+    behaviors: responses.flatMap((response) => response.behaviors) as ContextBehavior[],
+    results: responses.flatMap((response) => response.results) as ContextResult[],
+  };
+}
+
+function normalizeSearch(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
+}
+
+function isOpenStatus(status: string) {
+  return status === "pending" || status === "in_progress";
+}
+
+export async function listInterventions(options: ListInterventionsOptions = { all: true }): Promise<InterventionReportData> {
   const rows = await collectSupabasePages(async (from, to) => {
     const { data, error } = await supabaseAdmin
       .from("class_council_interventions")
-      .select("id, target_type, description, responsible_name, due_date, status, outcome, cancellation_reason, created_at, updated_at, origin_council:class_councils!class_council_interventions_origin_council_id_fkey(id, school_year, term, meeting_date), origin_class:class_council_classes!class_council_interventions_origin_class_id_fkey(id, display_name, official_code), student:students!class_council_interventions_target_student_id_fkey(id, canonical_name, enrollment_number)")
+      .select("id, target_type, description, responsible_name, due_date, status, outcome, cancellation_reason, created_at, updated_at, status_changed_at, started_at, completed_at, cancelled_at, origin_enrollment_id, origin_council:class_councils!class_council_interventions_origin_council_id_fkey(id, school_year, term, meeting_date, current_import_id, criteria), origin_class:class_council_classes!class_council_interventions_origin_class_id_fkey(id, display_name, official_code), student:students!class_council_interventions_target_student_id_fkey(id, canonical_name, enrollment_number)")
       .order("created_at", { ascending: false })
       .order("id")
       .range(from, to);
@@ -25,12 +96,74 @@ export async function listInterventions(): Promise<InterventionReportData> {
     return data ?? [];
   });
 
-  const items = rows.flatMap((row) => {
+  const validRows = rows.flatMap((row) => {
     const council = relation(row.origin_council as RelatedCouncil | RelatedCouncil[] | null);
     const councilClass = relation(row.origin_class as RelatedClass | RelatedClass[] | null);
     const student = relation(row.student as RelatedStudent | RelatedStudent[] | null);
     if (!council || !councilClass) return [];
-    return [{
+    const classKey = interventionClassGroupKey({ schoolYear: council.school_year, classCode: councilClass.official_code, className: councilClass.display_name });
+    return [{ row, council, councilClass, student, classKey }];
+  });
+  const years = [...new Set(validRows.map(({ council }) => council.school_year))].sort((a, b) => b - a);
+  const effectiveYear = options.year === "latest" ? years[0] ?? null : typeof options.year === "number" ? options.year : null;
+  const yearRows = validRows.filter(({ council }) => effectiveYear === null || council.school_year === effectiveYear);
+  const scopedRows = yearRows.filter(({ classKey }) => !options.classKeys?.length || options.classKeys.includes(classKey));
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Maceio", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const summary = {
+    pending: scopedRows.filter(({ row }) => row.status === "pending").length,
+    inProgress: scopedRows.filter(({ row }) => row.status === "in_progress").length,
+    overdue: scopedRows.filter(({ row }) => isOpenStatus(row.status) && Boolean(row.due_date && row.due_date < today)).length,
+    withoutResponsible: scopedRows.filter(({ row }) => isOpenStatus(row.status) && !row.responsible_name).length,
+    withoutDueDate: scopedRows.filter(({ row }) => isOpenStatus(row.status) && !row.due_date).length,
+  };
+  const classes = [...new Map(validRows.map(({ council, councilClass, classKey }) => [classKey, { key: classKey, year: council.school_year, name: councilClass.display_name, code: councilClass.official_code }])).values()]
+    .sort((a, b) => b.year - a.year || a.name.localeCompare(b.name, "pt-BR"));
+  const responsibles = [...new Map(validRows.flatMap(({ council, row }) => row.responsible_name?.trim() ? [[`${council.school_year}:${row.responsible_name.trim()}`, { year: council.school_year, name: row.responsible_name.trim() }]] : [])).values()]
+    .sort((a, b) => b.year - a.year || a.name.localeCompare(b.name, "pt-BR"));
+
+  const normalizedSearch = normalizeSearch(options.search ?? "");
+  const filteredRows = scopedRows.filter(({ row, councilClass, student }) => {
+    if (options.status === "open" && !isOpenStatus(row.status)) return false;
+    if (options.status && options.status !== "all" && options.status !== "open" && row.status !== options.status) return false;
+    if (options.targetType && options.targetType !== "all" && row.target_type !== options.targetType) return false;
+    if (options.responsible === "none" && row.responsible_name) return false;
+    if (options.responsible && options.responsible !== "all" && options.responsible !== "none" && row.responsible_name !== options.responsible) return false;
+    if (options.overdueOnly && (!isOpenStatus(row.status) || !row.due_date || row.due_date >= today)) return false;
+    if (options.studentIds?.length && (!student || !options.studentIds.includes(student.id))) return false;
+    if (normalizedSearch && !normalizeSearch(`${student?.canonical_name ?? "intervenção coletiva"} ${student?.enrollment_number ?? ""} ${row.description} ${councilClass.display_name} ${row.responsible_name ?? ""}`).includes(normalizedSearch)) return false;
+    return true;
+  });
+  const cursor = Math.max(0, options.cursor ?? 0);
+  const limit = Math.min(200, Math.max(1, options.limit ?? 40));
+  const selectedRows = options.metadataOnly ? [] : options.all ? filteredRows : filteredRows.slice(cursor, cursor + limit);
+
+  const enrollmentIds = [...new Set(selectedRows.map(({ row }) => row.origin_enrollment_id).filter((id): id is string => Boolean(id)))];
+  const councils = new Map<string, RelatedCouncil>();
+  for (const item of selectedRows) councils.set(item.council.id, item.council);
+  const importIds = [...new Set([...councils.values()].map((council) => council.current_import_id).filter((id): id is string => Boolean(id)))];
+  const context = await loadCouncilContexts(enrollmentIds, importIds);
+  const enrollmentById = new Map(context.enrollments.map((enrollment) => [enrollment.id, enrollment]));
+  const behaviorsByEnrollment = new Map<string, ContextBehavior[]>();
+  for (const behavior of context.behaviors) {
+    const values = behaviorsByEnrollment.get(behavior.enrollment_id) ?? [];
+    values.push(behavior);
+    behaviorsByEnrollment.set(behavior.enrollment_id, values);
+  }
+  const resultsByEnrollment = new Map<string, ContextResult[]>();
+  for (const result of context.results) {
+    const values = resultsByEnrollment.get(result.enrollment_id) ?? [];
+    values.push(result);
+    resultsByEnrollment.set(result.enrollment_id, values);
+  }
+
+  const items = selectedRows.map(({ row, council, councilClass, student }) => {
+    const enrollmentId = row.origin_enrollment_id;
+    const enrollment = enrollmentId ? enrollmentById.get(enrollmentId) : null;
+    const criteria = resolveCouncilCriteria(council.criteria);
+    const lowGradeCount = enrollmentId && council.current_import_id
+      ? (resultsByEnrollment.get(enrollmentId) ?? []).filter((result) => result.import_id === council.current_import_id && result.term === council.term && result.grade !== null && Number(result.grade) < criteria.lowGradeThreshold).length
+      : 0;
+    return {
       id: row.id,
       targetType: row.target_type as InterventionTargetType,
       description: row.description,
@@ -41,10 +174,10 @@ export async function listInterventions(): Promise<InterventionReportData> {
       cancellationReason: row.cancellation_reason,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      statusChangedAt: row.updated_at,
-      startedAt: row.status === "in_progress" || row.status === "completed" ? row.updated_at : null,
-      completedAt: row.status === "completed" ? row.updated_at : null,
-      cancelledAt: row.status === "cancelled" ? row.updated_at : null,
+      statusChangedAt: row.status_changed_at,
+      startedAt: row.started_at,
+      completedAt: row.completed_at,
+      cancelledAt: row.cancelled_at,
       origin: {
         councilId: council.id,
         schoolYear: council.school_year,
@@ -55,10 +188,24 @@ export async function listInterventions(): Promise<InterventionReportData> {
         classCode: councilClass.official_code,
       },
       student: student ? { id: student.id, name: student.canonical_name, enrollmentNumber: student.enrollment_number } : null,
-    } satisfies InterventionReportItem];
+      councilContext: enrollmentId ? {
+        lowGradeCount,
+        behaviors: (behaviorsByEnrollment.get(enrollmentId) ?? []).map((behavior) => ({
+          category: behavior.category as BehaviorCategory,
+          description: behavior.description,
+        })),
+        pedagogicalObservation: enrollment?.pedagogical_observation ?? null,
+      } : null,
+    } satisfies InterventionReportItem;
   });
 
-  return { generatedAt: new Date().toISOString(), items };
+  return {
+    generatedAt: new Date().toISOString(),
+    items,
+    total: filteredRows.length,
+    nextCursor: !options.all && cursor + items.length < filteredRows.length ? cursor + items.length : null,
+    meta: { years, effectiveYear, classes, responsibles, summary },
+  };
 }
 
 export async function updateInterventionById(interventionId: string, input: { status?: InterventionStatus; outcome?: unknown; cancellationReason?: unknown; responsibleName?: unknown; dueDate?: unknown }, actorId: string) {
