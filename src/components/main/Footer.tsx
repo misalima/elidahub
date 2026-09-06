@@ -25,7 +25,7 @@ export function Footer() {
             </div>
             <div>
               <p className="font-bold text-sm leading-tight">{SCHOOL_NAME}</p>
-              <p className="text-white/70 text-xs leading-tight mt-0.5">
+              <p className="text-white/70 text-sm leading-tight mt-0.5">
                 São Sebastião – AL
               </p>
             </div>
@@ -34,7 +34,7 @@ export function Footer() {
           {/* Copyright */}
           <div className="text-center md:text-right text-sm text-white/70">
             <p>© {year} {SCHOOL_NAME}</p>
-            <p className="mt-1 text-white/60 text-xs">
+            <p className="mt-1 text-white/60 text-sm">
               Desenvolvido por{" "}
               <a
                 href="https://github.com/misalima"
@@ -50,7 +50,7 @@ export function Footer() {
         </div>
 
         <div
-          className="mt-8 pt-6 border-t border-white/10 text-center text-xs text-white/50"
+          className="mt-8 pt-6 border-t border-white/10 text-center text-sm text-white/50"
           aria-hidden="true"
         >
           Vinculada à SEDUC/AL · 5ª GEE – Arapiraca

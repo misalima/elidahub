@@ -51,7 +51,7 @@ export function Contato() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <Badge className="bg-gold/20 text-gold border-gold/30 text-xs font-semibold uppercase tracking-wider px-3 py-1 mb-4">
+          <Badge className="bg-gold/20 text-gold border-gold/30 text-sm font-semibold uppercase tracking-wider px-3 py-1 mb-4">
             Contato
           </Badge>
           <h2
