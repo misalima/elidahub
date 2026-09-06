@@ -79,7 +79,7 @@ export function HubHeader({ module, mobileNavigation, className }: HubHeaderProp
                   {HUB_NAME}
                 </strong>
               </span>
-              <span className="block truncate text-[11px] font-medium text-slate-500 dark:text-slate-400 sm:text-xs">
+              <span className="block truncate text-sm font-medium text-slate-500 dark:text-slate-400 sm:text-sm">
                 {module ? (
                   <>
                     <span className="lg:hidden">{module.label}</span>
@@ -127,13 +127,13 @@ export function HubHeader({ module, mobileNavigation, className }: HubHeaderProp
                   src={user?.avatarUrl}
                   fullName={user?.fullName}
                   email={user?.email}
-                  className="size-9 rounded-xl text-xs shadow-[0_8px_18px_-8px_rgba(252,101,205,0.85)]"
+                  className="size-9 rounded-xl text-sm shadow-[0_8px_18px_-8px_rgba(252,101,205,0.85)]"
                 />
                 <span className="hidden max-w-36 min-w-0 text-left sm:block">
-                  <span className="block truncate text-xs font-bold text-slate-800 dark:text-white">
+                  <span className="block truncate text-sm font-bold text-slate-800 dark:text-white">
                     {displayName}
                   </span>
-                  <span className="block truncate text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                  <span className="block truncate text-sm font-medium text-slate-500 dark:text-slate-400">
                     {roleLabel}
                   </span>
                 </span>
@@ -159,14 +159,14 @@ export function HubHeader({ module, mobileNavigation, className }: HubHeaderProp
                       <span className="block truncate text-sm font-bold text-slate-900 dark:text-white">
                         {displayName}
                       </span>
-                      <span className="block truncate text-xs font-normal text-slate-500 dark:text-slate-400">
+                      <span className="block truncate text-sm font-normal text-slate-500 dark:text-slate-400">
                         {user?.email}
                       </span>
                     </span>
                   </span>
                 </DropdownMenu.Label>
 
-                <div className="mx-2 mb-2 flex items-center gap-2 rounded-xl border border-gold/35 bg-gold/10 px-3 py-2 text-xs font-medium text-secondary dark:border-gold/25 dark:bg-gold/10 dark:text-gold">
+                <div className="mx-2 mb-2 flex items-center gap-2 rounded-xl border border-gold/35 bg-gold/10 px-3 py-2 text-sm font-medium text-secondary dark:border-gold/25 dark:bg-gold/10 dark:text-gold">
                   <ShieldCheck className="size-4" />
                   {roleLabel} · {SCHOOL_SHORT_NAME}
                 </div>
