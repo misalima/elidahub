@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/providers/AuthProvider";
+import { getLoginErrorMessage } from "@/lib/loginError";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 
@@ -17,6 +18,7 @@ export default function HubLoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   // Se já estiver logado, vai direto para a home do hub
   useEffect(() => {
@@ -27,15 +29,24 @@ export default function HubLoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setLoginError(null);
     setSubmitting(true);
-    const { error } = await login(email, password);
-    if (error) {
-      toast.error("E-mail ou senha incorretos.");
+    try {
+      const { error } = await login(email, password);
+      if (error) {
+        setLoginError(error);
+        toast.error(error);
+        return;
+      }
+      toast.success("Bem-vindo!");
+      router.push("/hub");
+    } catch (error) {
+      const message = getLoginErrorMessage(error);
+      setLoginError(message);
+      toast.error(message);
+    } finally {
       setSubmitting(false);
-      return;
     }
-    toast.success("Bem-vindo!");
-    router.push("/hub");
   }
 
   if (loading || user) {
@@ -107,6 +118,11 @@ export default function HubLoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {loginError && (
+              <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {loginError}
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="email">E-mail</Label>
               <Input

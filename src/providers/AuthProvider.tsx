@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { HUB_USER_CACHE_KEY } from "@/constants/main/school";
 import { supabase } from "@/lib/supabaseClient";
+import { getLoginErrorMessage } from "@/lib/loginError";
 
 export interface AuthUser {
   id: string;
@@ -215,7 +216,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return { error: null };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : "Erro ao fazer login" };
+      return { error: getLoginErrorMessage(error) };
     }
   };
 
